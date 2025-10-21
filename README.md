@@ -1,94 +1,153 @@
-# 10x Astro Starter
+# 10x Smart Budget AI
 
-A modern, opinionated starter template for building fast, accessible, and AI-friendly web applications.
+A personal finance application that leverages AI to provide smart budgeting and financial insights.
+
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [AI Ready](#ai-ready)
+- [Getting Started Locally](#getting-started-locally)
+- [Getting Started for Production](#getting-started-for-production)
+- [Available Scripts](#available-scripts)
+- [Project Scope](#project-scope)
+- [Project Status](#project-status)
+- [License](#license)
 
 ## Tech Stack
 
-- [Astro](https://astro.build/) v5.5.5 - Modern web framework for building fast, content-focused websites
-- [React](https://react.dev/) v19.0.0 - UI library for building interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4.0.17 - Utility-first CSS framework
+- **Framework**: [Astro](https://astro.build/) 5
+- **UI Framework**: [React](https://react.dev/) 19
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) 4
+- **UI Components**: [Shadcn/ui](https://ui.shadcn.com/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/) 5
+- **Package Manager**: [npm](https://www.npmjs.com/)
+- **Node.js version**: 22.14.0
 
-## Prerequisites
+## Project Structure
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
-
-## Getting Started
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
+```
+./
+├── public/ - public assets
+└── src/ - source code
+    ├── assets/ - static internal assets
+    ├── components/ - Client-side components written in Astro (static) and React (dynamic)
+    │   └── ui/ - Client-side components from Shadcn/ui
+    ├── db/ - Supabase clients and types
+    ├── layouts/ - Astro layouts
+    ├── lib/ - Services and helpers
+    ├── middleware/
+    │   └── index.ts - Astro middleware
+    ├── pages/ - Astro pages
+    │   └── api/ - API endpoints
+    └── types.ts - Shared types for backend and frontend (Entities, DTOs)
 ```
 
-2. Install dependencies:
+## AI Ready
 
-```bash
-npm install
+This project is designed to be **AI Ready**, with a clear separation of concerns that allows for easy integration of artificial intelligence features. The backend is prepared to handle AI-powered logic, such as providing smart budget recommendations and financial insights, while the frontend is set up to consume and display this data effectively.
+
+The use of Supabase for the backend and a well-defined API structure in Astro allows for seamless communication between the client and any AI services.
+
+## Getting Started Locally
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+Make sure you have Node.js version `22.14.0` or higher installed. You can use a tool like [nvm](https://github.com/nvm-sh/nvm) to manage Node.js versions.
+
+```sh
+nvm use
 ```
 
-3. Run the development server:
+### Installation
 
-```bash
+1. Clone the repo
+   ```sh
+   git clone https://github.com/your_username/10x-smart-budget-ai.git
+   ```
+2. Install NPM packages
+   ```sh
+   npm install
+   ```
+
+### Running the application
+
+```sh
 npm run dev
 ```
 
-4. Build for production:
+## Getting Started for Production
 
-```bash
-npm run build
+To build and run the application in a production environment, follow these steps.
+
+### Prerequisites
+
+Ensure you have Node.js version `22.14.0` or higher installed.
+
+### Build
+
+1. Install dependencies
+   ```sh
+   npm install
+   ```
+2. Build the application
+   ```sh
+   npm run build
+   ```
+
+### Running the application
+
+After building, you can preview the production build with:
+
+```sh
+npm run preview
 ```
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
+In the project directory, you can run:
 
-## Project Structure
+- `npm run dev`: Runs the app in the development mode.
+- `npm run build`: Builds the app for production to the `build` folder.
+- `npm run preview`: Serves the production build locally for preview.
+- `npm run lint`: Lints the project files using ESLint.
+- `npm run lint:fix`: Lints and automatically fixes problems in project files.
+- `npm run format`: Formats the code using Prettier.
 
-```md
-.
-├── src/
-│   ├── layouts/    # Astro layouts
-│   ├── pages/      # Astro pages
-│   │   └── api/    # API endpoints
-│   ├── components/ # UI components (Astro & React)
-│   └── assets/     # Static assets
-├── public/         # Public assets
-```
+## Project Scope
 
-## AI Development Support
+Based on the Project Requirements Document (PRD), the scope for the Minimum Viable Product (MVP) of SmartBudgetAI includes the following key features:
 
-This project is configured with AI development tools to enhance the development experience, providing guidelines for:
+### 1. User Account Management
+- **Registration:** Users can sign up with an email and password.
+- **Login:** Registered users can log in to access their account.
+- **Account Deletion:** Users can permanently delete their account and all associated data.
 
-- Project structure
-- Coding practices
-- Frontend development
-- Styling with Tailwind
-- Accessibility best practices
-- Astro and React guidelines
+### 2. Transaction Management (CRUD)
+- **Add Transaction:** A modal window allows users to add new transactions with fields for amount (in PLN), description, and date.
+- **View Transactions:** A list of transactions for the current month is displayed on the main screen, with navigation to previous and next months.
+- **Edit Transaction:** Users can modify the amount, description, and date of existing transactions.
+- **Delete Transaction:** Users can remove individual transactions.
 
-### Cursor IDE
+### 3. AI-Powered Categorization
+- **Automatic Categorization:** When a transaction is added, its description is sent to an AI model to be automatically assigned a category from a predefined list.
+- **Error Handling:** Ifd the AI fails to assign a category, the transaction is automatically labeled as "Other."
 
-The project includes AI rules in `.cursor/rules/` directory that help Cursor IDE understand the project structure and provide better code suggestions.
+### 4. Main Dashboard
+- **Default View:** The main screen after login, showing data for the current month.
+- **Expense Chart:** A bar chart displaying the top 5 spending categories and an "Other" category for the rest.
+- **AI Summary:** A brief, 2-3 sentence natural language summary of the last month's spending, generated by AI.
+- **Empty State:** A message encouraging users to add their first transaction if there are none for the current month.
 
-### GitHub Copilot
+### 5. Feedback Collection
+- A simple pop-up to collect user feedback on the application's usefulness on a scale of 1 to 5, with an optional comment field.
 
-AI instructions for GitHub Copilot are available in `.github/copilot-instructions.md`
+## Project Status
 
-### Windsurf
-
-The `.windsurfrules` file contains AI configuration for Windsurf.
-
-## Contributing
-
-Please follow the AI guidelines and coding practices defined in the AI configuration files when contributing to this project.
+The project is currently in the **initial development phase**.
 
 ## License
 
-MIT
+Distributed under the MIT License. See `LICENSE` for more information.
