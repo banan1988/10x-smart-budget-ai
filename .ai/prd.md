@@ -18,27 +18,28 @@ Jasne, oto finalna wersja założeń do dokumentu wymagań projektowych (PRD) dl
 *   **Technologia:** Autentykacja realizowana przy użyciu Supabase (Email/Password provider).
 
 **2.2. Zarządzanie Transakcjami (CRUD)**
+*   **Typy Transakcji:** Aplikacja obsługuje dwa typy transakcji: **przychody** (income) i **wydatki** (expense).
 *   **Dodawanie:**
     *   Uruchamiane przez przycisk "Dodaj transakcję" na głównym ekranie.
-    *   Interfejs w formie okna modalnego (pop-up).
-    *   Pola formularza: `kwota` (PLN), `opis`, `data` (domyślnie ustawiona na bieżący dzień).
+    *   Interfejs w formie okna modalnego (pop-up) z możliwością wyboru typu transakcji.
+    *   Pola formularza: `typ` (przychód/wydatek), `kwota` (PLN), `opis`, `data` (domyślnie ustawiona na bieżący dzień).
     *   Przyciski akcji: "Zapisz" (zapisuje i zamyka okno) oraz "Zapisz i dodaj kolejną" (zapisuje i czyści formularz do ponownego użycia).
 *   **Wyświetlanie:**
-    *   Lista transakcji na głównym ekranie, domyślnie dla bieżącego miesiąca.
+    *   Lista transakcji na głównym ekranie, domyślnie dla bieżącego miesiąca, z wyraźnym oznaczeniem przychodów i wydatków.
     *   Prosta nawigacja za pomocą przycisków "< Poprzedni miesiąc" i "Następny miesiąc >".
-*   **Edycja:** Użytkownik może edytować wszystkie pola istniejącej transakcji (`kwota`, `opis`, `data`).
+*   **Edycja:** Użytkownik może edytować wszystkie pola istniejącej transakcji (`typ`, `kwota`, `opis`, `data`).
 *   **Usuwanie:** Użytkownik może usunąć pojedynczą transakcję.
-
-**2.3. Kategoryzacja AI**
-*   **Automatyzacja:** Po dodaniu transakcji, jej `opis` jest wysyłany do modelu AI w celu przypisania kategorii.
-*   **Źródło Kategorii:** AI wybiera kategorię z predefiniowanej, globalnej listy przechowywanej w tabeli `categories` w bazie danych.
-*   **Format Odpowiedzi AI:** AI zwraca unikalny identyfikator (`id`) kategorii, a nie jej nazwę.
-*   **Obsługa Błędów:** W przypadku, gdy AI nie zwróci poprawnego `id` kategorii, transakcji automatycznie przypisywana jest kategoria "Inne".
+**2.3. Kategoryzacja AI (tylko dla wydatków)**
+*   **Automatyzacja:** Po dodaniu transakcji typu **wydatek**, jej `opis` jest wysyłany do modelu AI w celu przypisania kategorii. Transakcje typu **przychód** nie podlegają kategoryzacji.
+*   **Źródło Kategorii:** AI wybiera kategorię z predefiniowanej, globalnej listy (`categories`), operując na unikalnym, tekstowym kluczu (np. 'food', 'transport').
+*   **Format Odpowiedzi AI:** AI zwraca `key` kategorii (np. "food"). Aplikacja jest odpowiedzialna za znalezienie odpowiedniego `id` kategorii na podstawie tego klucza.
+*   **Obsługa Błędów:** W przypadku, gdy AI nie zwróci poprawnego `key` kategorii, transakcji automatycznie przypisywana jest kategoria "Inne".
 
 **2.4. Pulpit Główny (Dashboard)**
+*   **Podsumowanie Finansowe:** Wyświetlanie kluczowych wartości: `Przychody`, `Wydatki` oraz `Bilans` (Przychody - Wydatki).
 *   **Domyślny Widok:** Pierwszy ekran po zalogowaniu, prezentujący dane dla bieżącego miesiąca.
 *   **Wykres Wydatków:** Prosty wykres słupkowy pokazujący 5 kategorii z najwyższymi sumami wydatków oraz jeden słupek "Inne" agregujący pozostałe.
-*   **Podsumowanie AI:** Krótki (2-3 zdania) opis wydatków z ostatniego miesiąca w języku naturalnym, generowany przez AI.
+*   **Podsumowanie Finansowe:** Wyświetlanie kluczowych wartości (`Przychody`, `Wydatki`, `Bilans`) oraz krótkiego, tekstowego podsumowania wydatków wygenerowanego przez AI.
 *   **Stan Pusty (Empty State):** Jeśli w danym miesiącu nie ma transakcji, wyświetlany jest komunikat zachęcający do dodania pierwszej z nich.
 
 **2.5. Zbieranie Opinii**
@@ -51,15 +52,17 @@ Jasne, oto finalna wersja założeń do dokumentu wymagań projektowych (PRD) dl
 *   **Obsługa Błędów:** Aplikacja posiada globalny system powiadomień (typu "toast"/"snackbar") informujący użytkownika o powodzeniu lub niepowodzeniu operacji (np. dodawania transakcji).
 *   **Struktura Bazy Danych (Supabase):**
     *   `users`: Zarządzana przez Supabase Auth.
-    *   `transactions`: Zawiera m.in. `id`, `user_id`, `category_id`, `amount` (integer), `description`, `date`, `ai_category_corrected` (boolean).
-    *   `categories`: Zawiera `id` (unikalny identyfikator tekstowy) oraz `name` (nazwa widoczna dla użytkownika). Kategorie są globalne dla wszystkich użytkowników.
-*   **Integracja z AI:**
-    *   Do AI przekazywany jest tylko `opis` transakcji.
-    *   Prompt systemowy zawiera instrukcje dla AI oraz listę dostępnych kategorii w formacie JSON `[{"id": "...", "name": "..."}, ...]`.
+    *   `user_profiles`: Rozszerzenie tabeli `users` o dodatkowe dane (np. `nickname`, `preferences`).
+    *   `transactions`: Zawiera m.in. `id`, `user_id`, `type` ('income'/'expense'), `category_id` (nullable dla przychodów), `amount` (integer), `description`, `date`, `is_ai_categorized` (boolean, domyślnie `false`).
+    *   `categories`: Tabela globalna zawierająca `id` (BIGSERIAL), `key` (unikalny klucz tekstowy dla AI, np. 'food') oraz `translations` (JSONB z tłumaczeniami, np. `{"pl": "Jedzenie"}`).
+*   **Integracja z AI (dla wydatków):**
+    *   Do AI przekazywany jest `opis` transakcji.
+    *   Prompt systemowy zawiera instrukcje dla AI oraz listę dostępnych kategorii w formacie `[{"key": "food"}, {"key": "transport"}, ...]`.
+    *   AI zwraca `key` wybranej kategorii. Aplikacja na tej podstawie przypisuje odpowiednie `category_id` do transakcji.
 
 #### **4. Kryteria Sukcesu i Sposób Pomiaru**
 
 *   **Skuteczność AI:** Cel: 80% wydatków jest poprawnie skategoryzowanych przez AI.
-    *   **Pomiar:** Obliczany na podstawie flagi `ai_category_corrected`. Każda ręczna zmiana kategorii przez użytkownika ustawia tę flagę na `true`. Wskaźnik = `(liczba transakcji z flagą false / łączna liczba transakcji) * 100%`.
+    *   **Pomiar:** Obliczany na podstawie flagi `is_ai_categorized`. Ręczna zmiana kategorii przez użytkownika będzie wymagała aktualizacji tej flagi w logice aplikacji. Wskaźnik = `(liczba transakcji z is_ai_categorized = true i niepoprawionych / łączna liczba transakcji) * 100%`.
 *   **Użyteczność Aplikacji:** Cel: 50% użytkowników uważa aplikację za użyteczną i pomocną.
     *   **Pomiar:** Na podstawie odpowiedzi na pytanie w skali 1-5. Użytkownicy, którzy ocenili aplikację na 4 lub 5, są uznawani za zadowolonych.
