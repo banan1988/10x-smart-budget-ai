@@ -30,7 +30,8 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 ### Tabela: transactions
 - **id**: BIGSERIAL PRIMARY KEY
 - **user_id**: UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
-- **category_id**: BIGSERIAL REFERENCES categories(id) ON DELETE RESTRICT
+- **category_id**: BIGSERIAL REFERENCES categories(id) ON DELETE RESTRICT (NULLable for income)
+- **type**: VARCHAR NOT NULL CHECK (type IN ('income', 'expense'))
 - **amount**: INTEGER NOT NULL CHECK(amount > 0)
 - **description**: TEXT NOT NULL
 - **date**: DATE NOT NULL
@@ -42,7 +43,7 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 
 - **auth.users (1) -> user_profiles (1)**: Relacja jeden-do-jednego z kaskadowym usuwaniem (ON DELETE CASCADE). Każdy użytkownik może mieć jeden profil, który jest automatycznie usuwany po usunięciu konta użytkownika. Klucz podstawowy user_profiles.id jest jednocześnie kluczem obcym do auth.users(id).
 - **auth.users (1) -> transactions (many)**: Relacja jeden-do-wielu z kaskadowym usuwaniem (ON DELETE CASCADE) dla zgodności z RODO. Każdy użytkownik może mieć wiele transakcji, a usunięcie użytkownika usuwa wszystkie jego transakcje.
-- **transactions (many) -> categories (1)**: Relacja wiele-do-jednego. Każda transakcja należy do jednej kategorii, ale kategorie są globalne i współdzielone przez wszystkich użytkowników. Foreign key z ON DELETE RESTRICT zapobiega usunięciu kategorii, jeśli jest używana w transakcjach.
+- **transactions (many) -> categories (1)**: Relacja wiele-do-jednego. Każda transakcja typu 'expense' należy do jednej kategorii. Dla transakcji typu 'income', `category_id` jest `NULL`. Foreign key z ON DELETE RESTRICT zapobiega usunięciu kategorii, jeśli jest używana w transakcjach.
 
 ## 3. Indeksy
 
