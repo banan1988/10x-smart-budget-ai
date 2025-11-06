@@ -6,6 +6,8 @@
 --   - implements strict rls for data isolation
 --   - optimized indexes for dashboard queries
 --   - amount stored as integer (grosze/cents) for financial precision
+--   - transactions support both income and expense types
+--   - category_id is nullable for income transactions, required for expenses via application logic
 
 -- =============================================================================
 -- create user_profiles table (extends auth.users)
@@ -164,11 +166,12 @@ using (true);
 -- =============================================================================
 
 -- transactions are user-specific financial records
--- each transaction belongs to one user and one category
+-- each transaction belongs to one user and optionally one category (for expenses only)
 create table if not exists public.transactions (
   id bigserial primary key,
   user_id uuid not null references auth.users(id) on delete cascade,
   category_id bigint references public.categories(id) on delete restrict,
+  type varchar not null default 'expense' check (type in ('income', 'expense')),
   amount integer not null check (amount > 0),
   description text not null,
   date date not null,
@@ -179,7 +182,8 @@ create table if not exists public.transactions (
 
 comment on table public.transactions is 'user financial transactions with ai-powered categorization';
 comment on column public.transactions.user_id is 'reference to auth.users (not user_profiles to avoid circular dependency), cascade delete for gdpr compliance';
-comment on column public.transactions.category_id is 'reference to categories, restrict delete to prevent orphaned transactions';
+comment on column public.transactions.category_id is 'reference to categories, nullable for income transactions, required for expense transactions via application logic';
+comment on column public.transactions.type is 'transaction type: income or expense, used to determine if category is required';
 comment on column public.transactions.amount is 'transaction amount in grosze/cents (integer) for financial precision';
 comment on column public.transactions.description is 'user-provided or ai-generated transaction description';
 comment on column public.transactions.date is 'transaction date for monthly dashboard aggregations';
