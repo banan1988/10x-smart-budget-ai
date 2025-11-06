@@ -64,6 +64,7 @@ export type Database = {
           description: string
           id: number
           is_ai_categorized: boolean
+          type: string
           updated_at: string
           user_id: string
         }
@@ -75,6 +76,7 @@ export type Database = {
           description: string
           id?: number
           is_ai_categorized?: boolean
+          type?: string
           updated_at?: string
           user_id: string
         }
@@ -86,6 +88,7 @@ export type Database = {
           description?: string
           id?: number
           is_ai_categorized?: boolean
+          type?: string
           updated_at?: string
           user_id?: string
         }
