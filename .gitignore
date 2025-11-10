@@ -27,4 +27,4 @@ pnpm-debug.log*
 *.iml
 
 # AI instructions
-/.10x-lessons/instructions.md
+/.10x-lessons/instructions*.md
