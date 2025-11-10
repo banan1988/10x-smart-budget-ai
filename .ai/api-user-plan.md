@@ -1,75 +1,89 @@
-# Plan Implementacji Punktu Końcowego: User Management
+# API Endpoint Implementation Plan: User Management
 
-## 1. Cel
-Celem jest stworzenie dwóch kluczowych punktów końcowych API do zarządzania danymi użytkownika:
-- `GET /api/user/profile`: Umożliwia pobranie danych profilowych zalogowanego użytkownika, takich jak pseudonim i preferencje (motyw, język).
-- `DELETE /api/user`: Zapewnia mechanizm do trwałego usunięcia konta użytkownika i wszystkich powiązanych z nim danych (profil, transakcje). Jest to backendowa implementacja dla funkcji "Usuń konto", która będzie dostępna dla użytkownika w interfejsie aplikacji.
+## 1. Przegląd punktu końcowego
+Ten plan obejmuje dwa punkty końcowe do zarządzania danymi użytkownika:
+- `GET /api/user/profile`: Służy do pobierania danych profilowych zalogowanego użytkownika, takich jak pseudonim i preferencje.
+- `DELETE /api/user`: Zapewnia mechanizm do trwałego usunięcia konta użytkownika i wszystkich powiązanych z nim danych.
 
-## 2. Wymagania Funkcjonalne
+## 2. Szczegóły żądania
 
 ### GET /api/user/profile
 - **Metoda HTTP**: `GET`
-- **URL**: `/api/user/profile`
-- **Odpowiedź (200 OK)**: Zwraca obiekt JSON z danymi profilu użytkownika.
-  ```json
-  {
-    "nickname": "BudżetowyMistrz",
-    "preferences": {
-      "theme": "dark",
-      "language": "pl"
-    }
-  }
-  ```
-- **Odpowiedzi błędów**:
-    - `401 Unauthorized`: Jeśli użytkownik nie jest uwierzytelniony.
-    - `404 Not Found`: Jeśli profil użytkownika nie istnieje w bazie danych.
+- **Struktura URL**: `/api/user/profile`
+- **Parametry**:
+    - Wymagane: Brak
+    - Opcjonalne: Brak
+- **Request Body**: Brak
 
 ### DELETE /api/user
 - **Metoda HTTP**: `DELETE`
-- **URL**: `/api/user`
-- **Odpowiedź (204 No Content)**: Zwracana po pomyślnym usunięciu konta.
-- **Odpowiedzi błędów**:
-    - `401 Unauthorized`: Jeśli użytkownik nie jest uwierzytelniony.
-    - `500 Internal Server Error`: Jeśli wystąpi krytyczny błąd podczas usuwania danych.
+- **Struktura URL**: `/api/user`
+- **Parametry**:
+    - Wymagane: Brak
+    - Opcjonalne: Brak
+- **Request Body**: Brak
 
-## 3. Struktura Danych (DTO)
-- **`UserProfileDto`** (z `src/types.ts`): Będzie używany jako typ odpowiedzi dla `GET /api/user/profile`.
+## 3. Wykorzystywane typy
+- **`UserProfileDto`** (z `src/types.ts`): Używany jako typ odpowiedzi dla `GET /api/user/profile`.
   ```typescript
   export type UserProfileDto = Pick<Tables<'user_profiles'>, 'nickname' | 'preferences'>;
   ```
-  *Uwaga: Typ `preferences` w bazie danych to `JSONB`, co pozwala na elastyczne dodawanie nowych pól, takich jak `language`, bez zmiany schematu.*
 
-## 4. Logika Biznesowa
-Logika biznesowa zostanie wyodrębniona do dedykowanego serwisu `UserService` (`src/lib/services/user.service.ts`), który będzie odpowiedzialny za interakcje z bazą danych.
+## 4. Szczegóły odpowiedzi
 
-- **`getUserProfile(userId, supabase)`**: Metoda pobierze profil użytkownika na podstawie `userId`. W przypadku braku profilu zwróci `null`.
-- **`deleteUser(userId)`**: Metoda usunie użytkownika z systemu. Ze względu na wymagane uprawnienia administracyjne, utworzy tymczasowego klienta Supabase z kluczem `service_role`. Usunięcie użytkownika z `auth.users` wywoła kaskadowe usunięcie powiązanych danych (`user_profiles`, `transactions`) dzięki relacjom `ON DELETE CASCADE` w bazie danych.
+### GET /api/user/profile
+- **Odpowiedź sukcesu (200 OK)**: Zwraca obiekt JSON z danymi profilu.
+  ```json
+  {
+    "nickname": "Użytkownik123",
+    "preferences": { "theme": "dark", "language": "pl" }
+  }
+  ```
+- **Odpowiedzi błędów**:
+    - `401 Unauthorized`: Użytkownik nie jest uwierzytelniony.
+    - `404 Not Found`: Profil użytkownika nie istnieje.
 
-## 5. Implementacja Punktu Końcowego (API Route)
-Zostaną utworzone dwa pliki w katalogu `src/pages/api/user/`:
+### DELETE /api/user
+- **Odpowiedź sukcesu (204 No Content)**: Zwracana po pomyślnym usunięciu konta.
+- **Odpowiedzi błędów**:
+    - `401 Unauthorized`: Użytkownik nie jest uwierzytelniony.
+    - `500 Internal Server Error`: Wystąpił błąd podczas usuwania danych.
 
-- **`profile.ts` (dla `GET /api/user/profile`)**:
-  1. Handler `GET` odbierze `context` z middleware.
-  2. Sprawdzi, czy użytkownik jest zalogowany (`context.locals.user`). Jeśli nie, zwróci `401`.
-  3. Wywoła `userService.getUserProfile`, przekazując ID użytkownika i klienta `supabase` z `context.locals`.
-  4. Jeśli serwis zwróci profil, handler odpowie `200 OK` z danymi. W przeciwnym razie `404 Not Found`.
+## 5. Przepływ danych
 
-- **`index.ts` (dla `DELETE /api/user`)**:
-  1. Handler `DELETE` odbierze `context`.
-  2. Sprawdzi, czy użytkownik jest zalogowany. Jeśli nie, zwróci `401`.
-  3. Wywoła `userService.deleteUser`, przekazując ID użytkownika.
-  4. Jeśli operacja się powiedzie, zwróci `204 No Content`. W przypadku błędu w serwisie, zwróci `500 Internal Server Error`.
+### GET /api/user/profile
+1.  Klient wysyła żądanie `GET` na `/api/user/profile`.
+2.  Middleware weryfikuje sesję użytkownika.
+3.  Handler wywołuje `userService.getUserProfile`, przekazując ID użytkownika.
+4.  Serwis pobiera dane z tabeli `user_profiles`.
+5.  Handler zwraca dane profilu jako JSON lub błąd 404.
 
-## 6. Bezpieczeństwo
-- **Uwierzytelnianie**: Dostęp do obu endpointów będzie chroniony. Middleware Astro zweryfikuje token JWT (Supabase) w nagłówku `Authorization`.
-- **Autoryzacja**: Logika w handlerach będzie operować wyłącznie na ID użytkownika pobranym z zaufanego obiektu `context.locals.user`, co zapobiega próbom dostępu do danych innych użytkowników.
-- **Klucze administracyjne**: Klucz `SUPABASE_SERVICE_ROLE_KEY` będzie używany wyłącznie po stronie serwera w metodzie `deleteUser` i przechowywany bezpiecznie jako zmienna środowiskowa. Nie będzie on nigdy eksponowany po stronie klienta.
+### DELETE /api/user
+1.  Klient wysyła żądanie `DELETE` na `/api/user`.
+2.  Middleware weryfikuje sesję użytkownika.
+3.  Handler wywołuje `userService.deleteUser`, przekazując ID użytkownika.
+4.  Serwis, używając klienta z uprawnieniami `service_role`, usuwa użytkownika z `auth.users`.
+5.  Baza danych kaskadowo usuwa powiązane dane (`user_profiles`, `transactions`).
+6.  Handler zwraca status `204 No Content` lub błąd 500.
 
-## 7. Plan Działania
-1.  **Utworzenie serwisu**: Stworzyć plik `src/lib/services/user.service.ts` i zaimplementować w nim klasę `UserService` z metodami `getUserProfile` i `deleteUser`.
-2.  **Testy jednostkowe serwisu**: Stworzyć plik `src/lib/services/user.service.test.ts` i napisać testy dla obu metod, mockując klienta Supabase.
-3.  **Implementacja endpointu GET**: Stworzyć plik `src/pages/api/user/profile.ts` i zaimplementować handler `GET` zgodnie z planem.
-4.  **Implementacja endpointu DELETE**: Stworzyć plik `src/pages/api/user/index.ts` i zaimplementować handler `DELETE` zgodnie z planem.
-5.  **Testy integracyjne**: Dodać testy integracyjne dla obu endpointów, aby zweryfikować cały przepływ, włączając w to middleware i interakcję z bazą danych (z użyciem mocków).
-6.  **Weryfikacja manualna**: Uruchomić aplikację i przetestować działanie obu endpointów za pomocą narzędzia API (np. cURL, Postman), sprawdzając kody odpowiedzi i zmiany w bazie danych.
+## 6. Względy bezpieczeństwa
+- **Uwierzytelnianie**: Dostęp do obu endpointów jest chroniony przez middleware weryfikujące token JWT.
+- **Autoryzacja**: Operacje są wykonywane wyłącznie w kontekście zalogowanego użytkownika (na podstawie `context.locals.user.id`), co zapobiega nieautoryzowanym działaniom na kontach innych użytkowników.
+- **Klucze administracyjne**: Klucz `SUPABASE_SERVICE_ROLE_KEY` jest używany bezpiecznie po stronie serwera i nigdy nie jest eksponowany na zewnątrz.
 
+## 7. Obsługa błędów
+- **Brak uwierzytelnienia**: Middleware zwraca `401 Unauthorized`.
+- **Brak profilu**: `GET /api/user/profile` zwróci `404 Not Found`.
+- **Błędy serwera**: Wszelkie błędy operacji na bazie danych zostaną przechwycone, zalogowane, a do klienta zostanie wysłana odpowiedź `500 Internal Server Error`.
+
+## 8. Rozważania dotyczące wydajności
+- **Operacja usuwania**: Usuwanie użytkownika jest operacją destrukcyjną i może być czasochłonne, jeśli użytkownik ma dużą liczbę transakcji. Proces ten jest jednak wykonywany asynchronicznie i rzadko, więc nie powinien wpływać na ogólną wydajność aplikacji.
+- **Pobieranie profilu**: Zapytanie o profil użytkownika jest szybkie i zindeksowane. Nie przewiduje się problemów z wydajnością.
+
+## 9. Etapy wdrożenia
+1.  **Implementacja serwisu**: Stworzyć `src/lib/services/user.service.ts` z metodami `getUserProfile` i `deleteUser`.
+2.  **Testy jednostkowe serwisu**: Napisać testy dla `UserService`, mockując klienta Supabase.
+3.  **Implementacja endpointu GET**: Stworzyć `src/pages/api/user/profile.ts`.
+4.  **Implementacja endpointu DELETE**: Stworzyć `src/pages/api/user/index.ts`.
+5.  **Testy integracyjne**: Dodać testy dla obu endpointów, weryfikując przepływ i interakcje.
+6.  **Weryfikacja manualna**: Przetestować działanie obu endpointów za pomocą narzędzi API.
