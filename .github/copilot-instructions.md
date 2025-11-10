@@ -1,6 +1,7 @@
-# AI Rules for {{project-name}}
+# AI Rules for SmartBudgetAI
 
-{{project-description}}
+SmartBudgetAI to prosta aplikacja webowa do zarządzania osobistymi finansami, która automatycznie kategoryzuje wydatki przy użyciu sztucznej inteligencji.
+Jej celem jest ułatwienie użytkownikom śledzenia przychodów i wydatków bez konieczności ręcznego przypisywania kategorii.
 
 ## Tech Stack
 
@@ -24,8 +25,17 @@ When introducing changes to the project, always follow the directory structure b
 - `./src/components` - Client-side components written in Astro (static) and React (dynamic)
 - `./src/components/ui` - Client-side components from Shadcn/ui
 - `./src/lib` - Services and helpers
+- `./src/test` - Test utilities, mocks, and setup
+- `./src/test/mocks` - Mock implementations for testing (Supabase, Astro context, etc.)
 - `./src/assets` - static internal assets
 - `./public` - public assets
+
+Testing conventions:
+- Use Vitest (official testing framework for Vite/Astro)
+- Place test files next to the code they test with `.test.ts` or `.spec.ts` extension
+- Unit tests for services: `src/lib/services/*.test.ts`
+- Integration tests for API endpoints: `src/pages/api/*.test.ts`
+- Shared mocks and utilities: `src/test/mocks/`
 
 When modifying the directory structure, always update this section.
 
@@ -81,7 +91,7 @@ When modifying the directory structure, always update this section.
 - Leverage View Transitions API for smooth page transitions (use ClientRouter)
 - Use content collections with type safety for blog posts, documentation, etc.
 - Leverage Server Endpoints for API routes
-- Use POST, GET  - uppercase format for endpoint handlers
+- Use POST, GET - uppercase format for endpoint handlers
 - Use `export const prerender = false` for API routes
 - Use zod for input validation in API routes
 - Extract logic into services in `src/lib/services`
