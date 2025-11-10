@@ -39,10 +39,18 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 - **created_at**: TIMESTAMPTZ NOT NULL DEFAULT NOW()
 - **updated_at**: TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
+### Tabela: feedback
+- **id**: BIGSERIAL PRIMARY KEY
+- **user_id**: UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
+- **rating**: INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5)
+- **comment**: TEXT CHECK (length(comment) <= 1000)
+- **created_at**: TIMESTAMPTZ NOT NULL DEFAULT NOW()
+
 ## 2. Relacje Między Tabelami
 
 - **auth.users (1) -> user_profiles (1)**: Relacja jeden-do-jednego z kaskadowym usuwaniem (ON DELETE CASCADE). Każdy użytkownik może mieć jeden profil, który jest automatycznie usuwany po usunięciu konta użytkownika. Klucz podstawowy user_profiles.id jest jednocześnie kluczem obcym do auth.users(id).
 - **auth.users (1) -> transactions (many)**: Relacja jeden-do-wielu z kaskadowym usuwaniem (ON DELETE CASCADE) dla zgodności z RODO. Każdy użytkownik może mieć wiele transakcji, a usunięcie użytkownika usuwa wszystkie jego transakcje.
+- **auth.users (1) -> feedback (many)**: Relacja jeden-do-wielu z kaskadowym usuwaniem (ON DELETE CASCADE). Usunięcie użytkownika usuwa wszystkie jego opinie, co jest zgodne z RODO ("prawo do bycia zapomnianym").
 - **transactions (many) -> categories (1)**: Relacja wiele-do-jednego. Każda transakcja typu 'expense' należy do jednej kategorii. Dla transakcji typu 'income', `category_id` jest `NULL`. Foreign key z ON DELETE RESTRICT zapobiega usunięciu kategorii, jeśli jest używana w transakcjach.
 
 ## 3. Indeksy
@@ -52,12 +60,16 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 - **transactions**: Indeks złożony na (user_id, date) dla optymalizacji zapytań dashboard po miesiącach.
 - **transactions**: Indeks na category_id dla wydajności zapytań związanych z kategoriami.
 - **categories**: Indeks na key dla optymalizacji pobierania listy kategorii przez AI.
+- **feedback**: Indeks na user_id dla potencjalnych przyszłych zapytań o opinie danego użytkownika.
 - PostgreSQL automatycznie tworzy indeksy na kluczach obcych (user_id, category_id).
 
 ## 4. Zasady PostgreSQL (RLS - Row Level Security)
 
 - **user_profiles**: RLS włączone z polityką id = auth.uid() dla wszystkich operacji (SELECT, INSERT, UPDATE, DELETE). Użytkownik ma dostęp tylko do własnego profilu.
 - **transactions**: RLS włączone z polityką user_id = auth.uid() dla wszystkich operacji (SELECT, INSERT, UPDATE, DELETE). Zapewnia izolację danych użytkowników - każdy użytkownik widzi tylko swoje transakcje.
+- **feedback**: 
+  - **INSERT**: RLS włączone z polityką `user_id = auth.uid()`. Użytkownicy mogą dodawać opinie.
+  - **SELECT**: Dostęp do odczytu powinien być ograniczony do ról administracyjnych (np. `service_role`) w celu ochrony prywatności. Zwykli użytkownicy nie powinni mieć dostępu do odczytu opinii innych.
 - **auth.users**: Dostęp zarządzany przez Supabase Auth - użytkownik ma dostęp tylko do własnych danych autentykacyjnych.
 - **categories**: Dostęp tylko z autoryzacją API (nie publiczny), nawet dla AI wymagany klucz API.
 
@@ -73,7 +85,7 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
   - Tabela `transactions` ma automatyczny trigger do aktualizacji `updated_at` przy zmianach.
   - Opcjonalnie: trigger tworzący pusty profil w `user_profiles` automatycznie przy rejestracji nowego użytkownika w `auth.users` (można zaimplementować jako PostgreSQL trigger lub w logice aplikacji).
 - **Walidacja**: Długość pól (np. description, nickname) walidowana w aplikacji, nie w DB, dla lepszej elastyczności.
-- **Zgodność z PRD**: Schemat obsługuje wszystkie wymagane funkcjonalności MVP, w tym CRUD transakcji, kategoryzację AI, dashboard i zbieranie opinii (przechowywane w preferences JSONB w tabeli user_profiles).
+- **Zgodność z PRD**: Schemat obsługuje wszystkie wymagane funkcjonalności MVP, w tym CRUD transakcji, kategoryzację AI, dashboard i zbieranie opinii (przechowywane w dedykowanej tabeli `feedback`).
 - **Stack Technologiczny**: Zoptymalizowany dla Supabase/PostgreSQL z integracją Supabase Auth.
 - **Wielojęzyczność Kategorii**: 
   - Pole `key` przechowuje unikalny identyfikator kategorii w języku angielskim (np. 'food', 'transport'), który jest używany przez AI do kategoryzacji.

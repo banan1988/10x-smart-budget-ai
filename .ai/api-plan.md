@@ -237,7 +237,7 @@ All endpoints are protected and require user authentication unless otherwise spe
 - **Validation (using Zod)**:
     - `rating`: Must be an integer between 1 and 5.
     - `comment`: Must be a string with a maximum length of 1000 characters (can be empty).
-- **Response (202 Accepted)**:
+- **Response (201 Created)**:
   ```json
   {
     "message": "Dziękujemy za Twoją opinię."
@@ -246,6 +246,46 @@ All endpoints are protected and require user authentication unless otherwise spe
 - **Error Responses**:
     - `400 Bad Request`: If the rating is invalid (e.g., not between 1 and 5).
     - `401 Unauthorized`: If the user is not authenticated.
+
+#### `GET /api/feedbacks/stats`
+
+- **Description**: Retrieves aggregated feedback statistics, such as average rating and total count. This endpoint is public or available to all authenticated users as it does not expose personal data.
+- **Response (200 OK)**:
+  ```json
+  {
+    "averageRating": 4.75,
+    "totalFeedbacks": 1234
+  }
+  ```
+
+#### `GET /api/admin/feedbacks`
+
+- **Description**: Retrieves a list of all user feedback. **This is a protected admin endpoint and requires special permissions (e.g., `service_role` or a custom `admin` role).** It must not be exposed to regular users.
+- **Query Parameters**:
+    - `page` (integer, optional): For pagination.
+    - `limit` (integer, optional): For pagination.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": 1,
+      "rating": 5,
+      "comment": "Ta aplikacja jest fantastyczna!",
+      "createdAt": "2025-11-10T10:00:00Z",
+      "userId": "user-uuid-1"
+    },
+    {
+      "id": 2,
+      "rating": 4,
+      "comment": "Działa dobrze, ale brakuje mi opcji X.",
+      "createdAt": "2025-11-09T12:30:00Z",
+      "userId": "user-uuid-2"
+    }
+  ]
+  ```
+- **Error Responses**:
+    - `401 Unauthorized`: If the user is not authenticated.
+    - `403 Forbidden`: If the authenticated user is not an admin.
 
 ## 3. Authentication and Authorization
 
@@ -262,4 +302,4 @@ All endpoints are protected and require user authentication unless otherwise spe
     - **AI Categorization**: The `POST /api/transactions` endpoint contains the logic to call the AI service. This logic is only triggered if the transaction `type` is 'expense'. It constructs a prompt with the transaction description and the list of available category keys, sends it to the AI, and processes the response. If the AI fails or returns an invalid category key, a default category ("Inne") is assigned.
     - **Dashboard Aggregation**: The `GET /api/dashboard` endpoint contains the logic to query the database for transactions within a given month, calculate total income, total expenses, and the balance. It also groups expenses by category, calculates totals for the spending chart, and makes a separate call to the AI service to generate the natural language summary.
     - **User Data Deletion**: The `DELETE /api/user` endpoint will call a specific Supabase function (`supabase.auth.admin.deleteUser(userId)`) that handles the deletion of a user and triggers the `ON DELETE CASCADE` constraints in the database to remove all related data (`user_profiles`, `transactions`).
-    - **Feedback Storage**: The `POST /api/feedback` endpoint will store the user's rating and comment in the `preferences` JSONB column of the `user_profiles` table.
+    - **Feedback Storage**: The `POST /api/feedback` endpoint will validate the input and insert a new record into the `public.feedback` table with the `user_id` of the authenticated user.

@@ -1,6 +1,6 @@
 -- migration: initial schema for smartbudgetai mvp
--- purpose: create core tables (user_profiles, categories, transactions) with proper relations, indexes, and rls policies
--- tables affected: user_profiles, categories, transactions
+-- purpose: create core tables (user_profiles, categories, transactions, feedback) with proper relations, indexes, and rls policies
+-- tables affected: user_profiles, categories, transactions, feedback
 -- notes:
 --   - creates user_profiles table extending auth.users with custom fields (nickname, preferences)
 --   - implements strict rls for data isolation
@@ -8,6 +8,7 @@
 --   - amount stored as integer (grosze/cents) for financial precision
 --   - transactions support both income and expense types
 --   - category_id is nullable for income transactions, required for expenses via application logic
+--   - adds feedback table for storing user ratings and comments
 
 -- =============================================================================
 -- create user_profiles table (extends auth.users)
@@ -239,6 +240,41 @@ on public.transactions
 for delete
 to authenticated
 using (auth.uid() = user_id);
+
+-- =============================================================================
+-- create feedback table
+-- =============================================================================
+
+create table if not exists public.feedback (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  rating integer not null check (rating >= 1 and rating <= 5),
+  comment text check (length(comment) <= 1000),
+  created_at timestamptz not null default now()
+);
+
+comment on table public.feedback is 'stores user feedback about the application';
+comment on column public.feedback.user_id is 'reference to the user who submitted the feedback';
+comment on column public.feedback.rating is 'user rating from 1 to 5';
+comment on column public.feedback.comment is 'optional user comment, max 1000 characters';
+
+-- create index on user_id for efficient feedback queries by user
+create index if not exists idx_feedback_user_id
+on public.feedback (user_id);
+
+-- enable row level security
+alter table public.feedback enable row level security;
+
+-- rls policy: users can insert their own feedback
+-- rationale: allows users to submit feedback
+create policy "users can insert their own feedback"
+on public.feedback
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+-- note: by default, select, update, and delete are denied, which is the desired behavior.
+-- users should not be able to see, modify, or delete feedback once submitted.
 
 -- =============================================================================
 -- create triggers for updated_at timestamp

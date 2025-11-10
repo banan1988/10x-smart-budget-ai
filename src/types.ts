@@ -77,8 +77,17 @@ export interface DashboardDto {
  * - `rating`: Integer between 1 and 5. Required.
  * - `comment`: Max 1000 characters. Optional.
  */
-export interface FeedbackRequest {
-  rating: number;
-  comment: string;
+export type FeedbackRequest = Pick<TablesInsert<'feedback'>, 'rating' | 'comment'>;
+
+/**
+ * Response DTO for feedback statistics.
+ */
+export interface FeedbackStatsDto {
+  averageRating: number;
+  totalFeedbacks: number;
 }
 
+/**
+ * Response DTO for a single feedback entry, intended for admin use.
+ */
+export type FeedbackDto = Tables<'feedback'>;
