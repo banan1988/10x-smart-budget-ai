@@ -207,12 +207,12 @@ All endpoints are protected and require user authentication unless otherwise spe
     "balance": -200000,
     "spendingChart": {
       "categories": [
-        { "name": "Jedzenie", "total": 120000 },
-        { "name": "Transport", "total": 80000 },
-        { "name": "Rozrywka", "total": 65000 },
-        { "name": "Rachunki", "total": 50000 },
-        { "name": "Ubrania", "total": 45000 },
-        { "name": "Inne", "total": 30000 }
+        { "id": 101, "name": "Jedzenie", "total": 120000 },
+        { "id": 102, "name": "Transport", "total": 80000 },
+        { "id": 103, "name": "Rozrywka", "total": 65000 },
+        { "id": 104, "name": "Rachunki", "total": 50000 },
+        { "id": 105, "name": "Ubrania", "total": 45000 },
+        { "id": 106, "name": "Inne", "total": 30000 }
       ]
     },
     "aiSummary": "W tym miesiącu Twoje największe wydatki dotyczyły jedzenia i transportu. Udało Ci się utrzymać wydatki na rozrywkę na umiarkowanym poziomie."

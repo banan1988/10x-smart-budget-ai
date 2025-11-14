@@ -65,7 +65,7 @@ export interface DashboardDto {
   expenses: number;
   balance: number;
   spendingChart: {
-    categories: { name: string; total: number }[];
+    categories: { id: number; name: string; total: number }[];
   };
   aiSummary: string;
 }
