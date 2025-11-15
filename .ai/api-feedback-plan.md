@@ -1,16 +1,16 @@
 # API Endpoint Implementation Plan: Feedback API
 
 ## 1. Przegląd punktu końcowego
-Ten plan obejmuje implementację trzech punktów końcowych związanych z opiniami użytkowników: przesyłanie nowej opinii, pobieranie zagregowanych statystyk oraz pobieranie listy wszystkich opinii dla panelu administracyjnego.
+Ten plan obejmuje implementację trzech operacji związanych z opiniami użytkowników: przesyłanie nowej opinii, pobieranie zagregowanych statystyk oraz pobieranie listy wszystkich opinii dla panelu administracyjnego.
 
-- `POST /api/feedback`: Umożliwia zalogowanym użytkownikom przesłanie oceny i komentarza.
-- `GET /api/feedbacks/stats`: Zwraca publiczne statystyki, takie jak średnia ocena i całkowita liczba opinii.
-- `GET /api/admin/feedbacks`: Zwraca paginowaną listę wszystkich opinii. Dostęp jest ograniczony tylko dla użytkowników z rolą administratora.
+- `POST /api/feedbacks`: Umożliwia zalogowanym użytkownikom przesłanie oceny i komentarza.
+- `GET /api/feedbacks`: Zwraca paginowaną listę wszystkich opinii. Dostęp jest ograniczony tylko dla użytkowników z rolą administratora.
+- `GET /api/feedbacks/stats`: Zwraca **publiczne** statystyki, takie jak średnia ocena i całkowita liczba opinii. Endpoint jest zawsze dostępny bez autoryzacji i służy do prezentacji na stronie głównej.
 
 ## 2. Szczegóły żądania
-### `POST /api/feedback`
+### `POST /api/feedbacks`
 - **Metoda HTTP**: `POST`
-- **Struktura URL**: `/api/feedback`
+- **Struktura URL**: `/api/feedbacks`
 - **Request Body**:
   ```json
   {
@@ -26,20 +26,22 @@ Ten plan obejmuje implementację trzech punktów końcowych związanych z opinia
 - **Metoda HTTP**: `GET`
 - **Struktura URL**: `/api/feedbacks/stats`
 - **Parametry**: Brak.
+- **Uwierzytelnianie**: Nie wymagane (publiczny endpoint).
 
-### `GET /api/admin/feedbacks`
+### `GET /api/feedbacks`
 - **Metoda HTTP**: `GET`
-- **Struktura URL**: `/api/admin/feedbacks`
+- **Struktura URL**: `/api/feedbacks`
+- **Uwierzytelnianie**: Wymagane (tylko administratorzy).
 - **Parametry**:
     - **Opcjonalne (Query)**:
         - `page`: `integer` (numer strony, domyślnie 1)
-        - `limit`: `integer` (liczba wyników na stronę, domyślnie 10)
+        - `limit`: `integer` (liczba wyników na stronę, domyślnie 10, maksymalnie 100)
 
 ## 3. Wykorzystywane typy
 Wszystkie wymagane typy DTO (`FeedbackRequest`, `FeedbackStatsDto`, `FeedbackDto`) są już zdefiniowane w `src/types.ts` i zostaną ponownie wykorzystane.
 
 ## 4. Szczegóły odpowiedzi
-### `POST /api/feedback`
+### `POST /api/feedbacks`
 - **201 Created**:
   ```json
   {
@@ -56,7 +58,7 @@ Wszystkie wymagane typy DTO (`FeedbackRequest`, `FeedbackStatsDto`, `FeedbackDto
   }
   ```
 
-### `GET /api/admin/feedbacks`
+### `GET /api/feedbacks`
 - **200 OK**:
   ```json
   {
@@ -74,6 +76,13 @@ Wszystkie wymagane typy DTO (`FeedbackRequest`, `FeedbackStatsDto`, `FeedbackDto
     "total": 1
   }
   ```
+- **403 Forbidden** (jeśli użytkownik nie jest administratorem):
+  ```json
+  {
+    "error": "Forbidden",
+    "message": "You do not have permission to access this resource"
+  }
+  ```
 
 ## 5. Przepływ danych
 1.  **Middleware**: Middleware Astro (`src/middleware/index.ts`) przechwytuje wszystkie żądania do `/api/*`. Weryfikuje token JWT i dołącza sesję użytkownika do `context.locals`.
@@ -89,16 +98,18 @@ Wszystkie wymagane typy DTO (`FeedbackRequest`, `FeedbackStatsDto`, `FeedbackDto
 5.  **Odpowiedź**: Handler API formatuje dane zwrócone przez serwis i wysyła odpowiedź HTTP z odpowiednim kodem statusu.
 
 ## 6. Względy bezpieczeństwa
-- **Uwierzytelnianie**: Wszystkie punkty końcowe (z wyjątkiem potencjalnie publicznego `GET /api/feedbacks/stats`) będą chronione przez middleware, który weryfikuje token JWT Supabase.
+- **Uwierzytelnianie**: 
+    - `GET /api/feedbacks/stats` jest **publiczny** i nie wymaga uwierzytelniania - służy do prezentacji na stronie głównej
+    - `POST /api/feedbacks` i `GET /api/feedbacks` wymagają uwierzytelnienia przez middleware weryfikujący token JWT Supabase
 - **Autoryzacja**:
-    - `POST /api/feedback`: `user_id` jest pobierany z `context.locals.user.id`, aby zapewnić, że użytkownicy mogą przesyłać opinie tylko w swoim imieniu.
-    - `GET /api/admin/feedbacks`: Ten punkt końcowy musi implementować dodatkowe sprawdzenie autoryzacji, aby upewnić się, że żądanie pochodzi od użytkownika z rolą `admin`. W przypadku braku uprawnień, API zwróci `403 Forbidden`.
+    - `POST /api/feedbacks`: `user_id` jest pobierany z `context.locals.user.id`, aby zapewnić, że użytkownicy mogą przesyłać opinie tylko w swoim imieniu.
+    - `GET /api/feedbacks`: Ten punkt końcowy implementuje sprawdzenie roli administratora. W przypadku braku uprawnień, API zwróci `403 Forbidden`.
 - **Walidacja danych**: Rygorystyczna walidacja za pomocą Zod na poziomie API zapobiega atakom typu injection i zapewnia integralność danych.
 - **Polityki RLS**: Chociaż serwis będzie zarządzał logiką, polityki Row Level Security w Supabase powinny być skonfigurowane jako dodatkowa warstwa obrony, aby zapewnić, że operacje na danych są zgodne z uprawnieniami.
 
 ## 7. Rozważania dotyczące wydajności
-- **`GET /api/feedbacks/stats`**: Obliczenia statystyk (średnia, liczba) mogą być kosztowne przy dużej ilości danych. Należy zaimplementować je za pomocą zoptymalizowanego zapytania SQL, najlepiej jako funkcja RPC w Supabase, aby zminimalizować transfer danych i obciążenie serwera aplikacji.
-- **`GET /api/admin/feedbacks`**: Paginacja jest kluczowa, aby uniknąć pobierania dużej liczby rekordów naraz. Należy również zastosować odpowiednie indeksy na kolumnach `created_at` w tabeli `feedback`, aby przyspieszyć sortowanie.
+- **`GET /api/feedbacks/stats`**: Obliczenia statystyk (średnia, liczba) mogą być kosztowne przy dużej ilości danych. Należy zaimplementować je za pomocą zoptymalizowanego zapytania SQL, najlepiej jako funkcja RPC w Supabase, aby zminimalizować transfer danych i obciążenie serwera aplikacji. Endpoint jest publiczny, więc należy rozważyć cache'owanie wyników.
+- **`GET /api/feedbacks`**: Paginacja jest kluczowa, aby uniknąć pobierania dużej liczby rekordów naraz. Należy również zastosować odpowiednie indeksy na kolumnach `created_at` w tabeli `feedback`, aby przyspieszyć sortowanie.
 
 ## 8. Etapy wdrożenia
 1.  **Aktualizacja schematu bazy danych**: Upewnić się, że tabela `feedback` w `supabase/migrations` jest zgodna ze specyfikacją.
@@ -106,15 +117,15 @@ Wszystkie wymagane typy DTO (`FeedbackRequest`, `FeedbackStatsDto`, `FeedbackDto
     - `createFeedback(userId, data)`
     - `getFeedbackStats()`
     - `getAllFeedback({ page, limit })`
-3.  **Implementacja `POST /api/feedback`**:
-    - Utworzyć plik `src/pages/api/feedback.ts`.
+3.  **Implementacja `POST /api/feedbacks`**:
+    - Utworzyć plik `src/pages/api/feedbacks/index.ts`.
     - Zaimplementować handler `POST` z walidacją Zod i wywołaniem `feedbackService.createFeedback`.
 4.  **Implementacja `GET /api/feedbacks/stats`**:
     - Utworzyć plik `src/pages/api/feedbacks/stats.ts`.
-    - Zaimplementować handler `GET` wywołujący `feedbackService.getFeedbackStats`.
-5.  **Implementacja `GET /api/admin/feedbacks`**:
-    - Utworzyć plik `src/pages/api/admin/feedbacks.ts`.
-    - Zaimplementować handler `GET` z walidacją parametrów paginacji.
+    - Zaimplementować **publiczny** handler `GET` wywołujący `feedbackService.getFeedbackStats`.
+5.  **Implementacja `GET /api/feedbacks`**:
+    - Dodać do pliku `src/pages/api/feedbacks/index.ts` handler `GET`.
+    - Zaimplementować walidację parametrów paginacji.
     - Dodać logikę sprawdzania roli administratora.
     - Wywołać `feedbackService.getAllFeedback`.
 6.  **Testy jednostkowe**: Napisać testy jednostkowe dla `FeedbackService` w pliku `src/lib/services/feedback.service.test.ts`, mockując klienta Supabase.
