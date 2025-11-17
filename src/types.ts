@@ -1,4 +1,5 @@
 import type { Tables, TablesInsert, TablesUpdate } from './db/database.types';
+import { z } from 'zod';
 
 /**
  * Response DTO for a category.
@@ -50,6 +51,116 @@ export type UpdateTransactionRequest = Partial<
     categoryId: number | null;
   }
 >;
+
+/**
+ * Zod schema for validating GET /api/transactions query parameters
+ */
+export const GetTransactionsQuerySchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format').refine((val) => {
+    const [year, month] = val.split('-').map(Number);
+    return month >= 1 && month <= 12;
+  }, {
+    message: 'Month must be between 01 and 12',
+  }),
+  // Filtering
+  categoryId: z.string().optional().transform((val) => {
+    if (!val) return undefined;
+    return val.split(',').map(Number).filter(n => !isNaN(n));
+  }),
+  type: z.enum(['income', 'expense']).optional(),
+  search: z.string().max(255).optional(),
+  // Pagination
+  page: z.string().optional().default('1').transform((val) => {
+    const num = parseInt(val, 10);
+    return isNaN(num) ? 1 : Math.max(num, 1);
+  }),
+  limit: z.string().optional().default('20').transform((val) => {
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return 20;
+    return Math.min(Math.max(num, 1), 100); // Between 1 and 100
+  }),
+});
+
+export type GetTransactionsQuery = z.infer<typeof GetTransactionsQuerySchema>;
+
+/**
+ * Zod schema for validating POST /api/transactions request body
+ */
+export const CreateTransactionCommandSchema = z.object({
+  type: z.enum(['income', 'expense']),
+  amount: z.number().int().positive('Amount must be a positive integer'),
+  description: z.string().min(1, 'Description is required').max(255, 'Description must not exceed 255 characters'),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+});
+
+export type CreateTransactionCommand = z.infer<typeof CreateTransactionCommandSchema>;
+
+/**
+ * Zod schema for validating PUT /api/transactions/[id] request body
+ */
+export const UpdateTransactionCommandSchema = z.object({
+  type: z.enum(['income', 'expense']).optional(),
+  amount: z.number().int().positive('Amount must be a positive integer').optional(),
+  description: z.string().min(1, 'Description is required').max(255, 'Description must not exceed 255 characters').optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional(),
+  categoryId: z.number().int().nullable().optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: 'At least one field must be provided for update',
+});
+
+export type UpdateTransactionCommand = z.infer<typeof UpdateTransactionCommandSchema>;
+
+/**
+ * Zod schema for bulk creating transactions
+ */
+export const BulkCreateTransactionsCommandSchema = z.object({
+  transactions: z.array(CreateTransactionCommandSchema).min(1).max(100),
+});
+
+export type BulkCreateTransactionsCommand = z.infer<typeof BulkCreateTransactionsCommandSchema>;
+
+/**
+ * Zod schema for bulk deleting transactions
+ */
+export const BulkDeleteTransactionsCommandSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1).max(100),
+});
+
+export type BulkDeleteTransactionsCommand = z.infer<typeof BulkDeleteTransactionsCommandSchema>;
+
+/**
+ * Paginated response wrapper
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
+ * Response DTO for transaction statistics
+ */
+export interface TransactionStatsDto {
+  month: string;
+  totalIncome: number;
+  totalExpenses: number;
+  balance: number;
+  transactionCount: number;
+  categoryBreakdown: {
+    categoryId: number | null;
+    categoryName: string;
+    total: number;
+    count: number;
+    percentage: number;
+  }[];
+  aiCategorizedCount: number;
+  manualCategorizedCount: number;
+}
+
 
 /**
  * Response DTO for the user's profile data.

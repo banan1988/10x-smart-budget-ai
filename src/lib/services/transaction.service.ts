@@ -1,0 +1,634 @@
+import type { SupabaseClient } from '../../db/supabase.client';
+import type {
+  TransactionDto,
+  CreateTransactionCommand,
+  UpdateTransactionCommand,
+  GetTransactionsQuery,
+  PaginatedResponse,
+  TransactionStatsDto,
+  BulkCreateTransactionsCommand
+} from '../../types';
+import { CategoryService } from './category.service';
+
+/**
+ * Service for managing financial transactions.
+ * Handles CRUD operations for income and expense transactions with AI categorization.
+ */
+export class TransactionService {
+  /**
+   * Retrieves all transactions for a specific user and month with filtering and pagination.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param query - Query parameters (month, filters, pagination)
+   * @returns Promise resolving to paginated TransactionDto array
+   * @throws Error if database query fails
+   */
+  static async getTransactions(
+    supabase: SupabaseClient,
+    userId: string,
+    query: GetTransactionsQuery
+  ): Promise<PaginatedResponse<TransactionDto>> {
+    // Calculate date range for the month
+    const startDate = `${query.month}-01`;
+    const endDate = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1, 0)
+      .toISOString()
+      .split('T')[0];
+
+    // Build base query
+    let queryBuilder = supabase
+      .from('transactions')
+      .select(`
+        id,
+        type,
+        amount,
+        description,
+        date,
+        is_ai_categorized,
+        category_id,
+        categories (
+          id,
+          key,
+          translations
+        )
+      `, { count: 'exact' })
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate);
+
+    // Apply filters
+    if (query.categoryId && query.categoryId.length > 0) {
+      queryBuilder = queryBuilder.in('category_id', query.categoryId);
+    }
+
+    if (query.type) {
+      queryBuilder = queryBuilder.eq('type', query.type);
+    }
+
+    if (query.search) {
+      queryBuilder = queryBuilder.ilike('description', `%${query.search}%`);
+    }
+
+    // Apply sorting
+    queryBuilder = queryBuilder.order('date', { ascending: false });
+
+    // Apply pagination
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    queryBuilder = queryBuilder.range(from, to);
+
+    // Execute query
+    const { data, error, count } = await queryBuilder;
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to fetch transactions: ${error.message}`);
+    }
+
+    // Handle empty result
+    if (!data) {
+      return {
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+        },
+      };
+    }
+
+    // Transform database records to TransactionDto format
+    const transactions: TransactionDto[] = data.map((transaction) => {
+      let category = null;
+
+      // If transaction has a category, transform it to CategoryDto
+      if (transaction.categories && transaction.category_id) {
+        const categoryData = Array.isArray(transaction.categories)
+          ? transaction.categories[0]
+          : transaction.categories;
+
+        if (categoryData) {
+          const translations = categoryData.translations as Record<string, string>;
+          const name = translations?.pl || categoryData.key;
+
+          category = {
+            id: categoryData.id,
+            key: categoryData.key,
+            name,
+          };
+        }
+      }
+
+      return {
+        id: transaction.id,
+        type: transaction.type as 'income' | 'expense',
+        amount: transaction.amount,
+        description: transaction.description,
+        date: transaction.date,
+        is_ai_categorized: transaction.is_ai_categorized,
+        category,
+      };
+    });
+
+    return {
+      data: transactions,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
+    };
+  }
+
+  /**
+   * Creates a new transaction for the user.
+   * For expense transactions, automatically categorizes using AI.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param command - The transaction creation data
+   * @returns Promise resolving to the created TransactionDto
+   * @throws Error if database operation or AI categorization fails
+   */
+  static async createTransaction(
+    supabase: SupabaseClient,
+    userId: string,
+    command: CreateTransactionCommand
+  ): Promise<TransactionDto> {
+    let categoryId: number | null = null;
+    let isAiCategorized = false;
+
+    // For expenses, use AI to categorize
+    if (command.type === 'expense') {
+      try {
+        // TODO: Implement AI categorization service call
+        // For now, this is a placeholder
+        // categoryId = await AICategorizer.categorize(command.description);
+        // isAiCategorized = true;
+      } catch (error) {
+        // Log AI categorization error but don't fail the transaction creation
+        console.error('AI categorization failed:', error);
+      }
+    }
+
+    // Insert the transaction
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        type: command.type,
+        amount: command.amount,
+        description: command.description,
+        date: command.date,
+        category_id: categoryId,
+        is_ai_categorized: isAiCategorized,
+      })
+      .select(`
+        id,
+        type,
+        amount,
+        description,
+        date,
+        is_ai_categorized,
+        category_id,
+        categories (
+          id,
+          key,
+          translations
+        )
+      `)
+      .single();
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to create transaction: ${error.message}`);
+    }
+
+    // Handle missing data
+    if (!data) {
+      throw new Error('Failed to create transaction: No data returned');
+    }
+
+    // Transform to TransactionDto
+    let category = null;
+    if (data.categories && data.category_id) {
+      const categoryData = Array.isArray(data.categories)
+        ? data.categories[0]
+        : data.categories;
+
+      if (categoryData) {
+        const translations = categoryData.translations as Record<string, string>;
+        const name = translations?.pl || categoryData.key;
+
+        category = {
+          id: categoryData.id,
+          key: categoryData.key,
+          name,
+        };
+      }
+    }
+
+    return {
+      id: data.id,
+      type: data.type as 'income' | 'expense',
+      amount: data.amount,
+      description: data.description,
+      date: data.date,
+      is_ai_categorized: data.is_ai_categorized,
+      category,
+    };
+  }
+
+  /**
+   * Updates an existing transaction for the user.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param transactionId - The ID of the transaction to update
+   * @param command - The transaction update data
+   * @returns Promise resolving to the updated TransactionDto
+   * @throws Error if transaction doesn't exist, doesn't belong to user, or database operation fails
+   */
+  static async updateTransaction(
+    supabase: SupabaseClient,
+    userId: string,
+    transactionId: number,
+    command: UpdateTransactionCommand
+  ): Promise<TransactionDto> {
+    // First verify the transaction exists and belongs to the user
+    const { data: existing, error: checkError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('id', transactionId)
+      .eq('user_id', userId)
+      .single();
+
+    // Handle not found or authorization errors
+    if (checkError || !existing) {
+      throw new Error('Transaction not found or access denied');
+    }
+
+    // Build update object
+    const updateData: Record<string, any> = {};
+    if (command.type !== undefined) updateData.type = command.type;
+    if (command.amount !== undefined) updateData.amount = command.amount;
+    if (command.description !== undefined) updateData.description = command.description;
+    if (command.date !== undefined) updateData.date = command.date;
+    if (command.categoryId !== undefined) {
+      updateData.category_id = command.categoryId;
+      // If manually categorized, mark as not AI categorized
+      if (command.categoryId !== null) {
+        updateData.is_ai_categorized = false;
+      }
+    }
+
+    // Update the transaction
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updateData)
+      .eq('id', transactionId)
+      .eq('user_id', userId)
+      .select(`
+        id,
+        type,
+        amount,
+        description,
+        date,
+        is_ai_categorized,
+        category_id,
+        categories (
+          id,
+          key,
+          translations
+        )
+      `)
+      .single();
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to update transaction: ${error.message}`);
+    }
+
+    // Handle missing data
+    if (!data) {
+      throw new Error('Failed to update transaction: No data returned');
+    }
+
+    // Transform to TransactionDto
+    let category = null;
+    if (data.categories && data.category_id) {
+      const categoryData = Array.isArray(data.categories)
+        ? data.categories[0]
+        : data.categories;
+
+      if (categoryData) {
+        const translations = categoryData.translations as Record<string, string>;
+        const name = translations?.pl || categoryData.key;
+
+        category = {
+          id: categoryData.id,
+          key: categoryData.key,
+          name,
+        };
+      }
+    }
+
+    return {
+      id: data.id,
+      type: data.type as 'income' | 'expense',
+      amount: data.amount,
+      description: data.description,
+      date: data.date,
+      is_ai_categorized: data.is_ai_categorized,
+      category,
+    };
+  }
+
+  /**
+   * Deletes a transaction for the user.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param transactionId - The ID of the transaction to delete
+   * @returns Promise resolving when deletion is complete
+   * @throws Error if transaction doesn't exist, doesn't belong to user, or database operation fails
+   */
+  static async deleteTransaction(
+    supabase: SupabaseClient,
+    userId: string,
+    transactionId: number
+  ): Promise<void> {
+    // First verify the transaction exists and belongs to the user
+    const { data: existing, error: checkError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('id', transactionId)
+      .eq('user_id', userId)
+      .single();
+
+    // Handle not found or authorization errors
+    if (checkError || !existing) {
+      throw new Error('Transaction not found or access denied');
+    }
+
+    // Delete the transaction
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', transactionId)
+      .eq('user_id', userId);
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to delete transaction: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get statistics for transactions in a specific month.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param month - The month in YYYY-MM format
+   * @returns Promise resolving to TransactionStatsDto
+   * @throws Error if database query fails
+   */
+  static async getStats(
+    supabase: SupabaseClient,
+    userId: string,
+    month: string
+  ): Promise<TransactionStatsDto> {
+    // Calculate date range for the month
+    const startDate = `${month}-01`;
+    const endDate = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1, 0)
+      .toISOString()
+      .split('T')[0];
+
+    // Query all transactions for the month
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        id,
+        type,
+        amount,
+        is_ai_categorized,
+        category_id,
+        categories (
+          id,
+          key,
+          translations
+        )
+      `)
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate);
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to fetch transaction stats: ${error.message}`);
+    }
+
+    // Handle empty result
+    if (!data || data.length === 0) {
+      return {
+        month,
+        totalIncome: 0,
+        totalExpenses: 0,
+        balance: 0,
+        transactionCount: 0,
+        categoryBreakdown: [],
+        aiCategorizedCount: 0,
+        manualCategorizedCount: 0,
+      };
+    }
+
+    // Calculate totals
+    const totalIncome = data
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalExpenses = data
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Calculate AI stats
+    const aiCategorizedCount = data.filter(t => t.is_ai_categorized).length;
+    const manualCategorizedCount = data.filter(t => !t.is_ai_categorized && t.category_id !== null).length;
+
+    // Calculate category breakdown (only for expenses)
+    const categoryMap = new Map<number | null, {
+      name: string;
+      total: number;
+      count: number;
+    }>();
+
+    data.filter(t => t.type === 'expense').forEach(transaction => {
+      const categoryId = transaction.category_id;
+      let categoryName = 'Bez kategorii';
+
+      if (transaction.categories && categoryId) {
+        const categoryData = Array.isArray(transaction.categories)
+          ? transaction.categories[0]
+          : transaction.categories;
+
+        if (categoryData) {
+          const translations = categoryData.translations as Record<string, string>;
+          categoryName = translations?.pl || categoryData.key;
+        }
+      }
+
+      const existing = categoryMap.get(categoryId);
+      if (existing) {
+        existing.total += transaction.amount;
+        existing.count += 1;
+      } else {
+        categoryMap.set(categoryId, {
+          name: categoryName,
+          total: transaction.amount,
+          count: 1,
+        });
+      }
+    });
+
+    // Convert to array and calculate percentages
+    const categoryBreakdown = Array.from(categoryMap.entries()).map(([categoryId, data]) => ({
+      categoryId,
+      categoryName: data.name,
+      total: data.total,
+      count: data.count,
+      percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
+    })).sort((a, b) => b.total - a.total);
+
+    return {
+      month,
+      totalIncome,
+      totalExpenses,
+      balance: totalIncome - totalExpenses,
+      transactionCount: data.length,
+      categoryBreakdown,
+      aiCategorizedCount,
+      manualCategorizedCount,
+    };
+  }
+
+  /**
+   * Bulk create transactions.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param command - Bulk create command with array of transactions
+   * @returns Promise resolving to array of created TransactionDto
+   * @throws Error if database operation fails
+   */
+  static async bulkCreateTransactions(
+    supabase: SupabaseClient,
+    userId: string,
+    command: BulkCreateTransactionsCommand
+  ): Promise<TransactionDto[]> {
+    // Prepare insert data
+    const insertData = command.transactions.map(transaction => ({
+      user_id: userId,
+      type: transaction.type,
+      amount: transaction.amount,
+      description: transaction.description,
+      date: transaction.date,
+      category_id: null,
+      is_ai_categorized: false,
+    }));
+
+    // Insert transactions
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert(insertData)
+      .select(`
+        id,
+        type,
+        amount,
+        description,
+        date,
+        is_ai_categorized,
+        category_id,
+        categories (
+          id,
+          key,
+          translations
+        )
+      `);
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to bulk create transactions: ${error.message}`);
+    }
+
+    // Handle missing data
+    if (!data) {
+      throw new Error('Failed to bulk create transactions: No data returned');
+    }
+
+    // Transform to TransactionDto
+    return data.map((transaction) => {
+      let category = null;
+      if (transaction.categories && transaction.category_id) {
+        const categoryData = Array.isArray(transaction.categories)
+          ? transaction.categories[0]
+          : transaction.categories;
+
+        if (categoryData) {
+          const translations = categoryData.translations as Record<string, string>;
+          const name = translations?.pl || categoryData.key;
+
+          category = {
+            id: categoryData.id,
+            key: categoryData.key,
+            name,
+          };
+        }
+      }
+
+      return {
+        id: transaction.id,
+        type: transaction.type as 'income' | 'expense',
+        amount: transaction.amount,
+        description: transaction.description,
+        date: transaction.date,
+        is_ai_categorized: transaction.is_ai_categorized,
+        category,
+      };
+    });
+  }
+
+  /**
+   * Bulk delete transactions.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the authenticated user
+   * @param ids - Array of transaction IDs to delete
+   * @returns Promise resolving to number of deleted transactions
+   * @throws Error if database operation fails
+   */
+  static async bulkDeleteTransactions(
+    supabase: SupabaseClient,
+    userId: string,
+    ids: number[]
+  ): Promise<number> {
+    // Delete transactions
+    const { error, count } = await supabase
+      .from('transactions')
+      .delete({ count: 'exact' })
+      .in('id', ids)
+      .eq('user_id', userId);
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to bulk delete transactions: ${error.message}`);
+    }
+
+    return count || 0;
+  }
+}
+
