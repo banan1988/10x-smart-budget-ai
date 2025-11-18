@@ -18,38 +18,42 @@ All endpoints are protected and require user authentication unless otherwise spe
 
 #### `GET /api/transactions`
 
-- **Description**: Retrieves a list of transactions for the authenticated user for a given month.
+- **Description**: Retrieves a paginated list of transactions for the authenticated user, with filtering options.
 - **Query Parameters**:
     - `month` (string, required): The month to fetch transactions for, in `YYYY-MM` format.
+    - `page` (integer, optional): The page number for pagination (default: 1).
+    - `limit` (integer, optional): The number of items per page (default: 20).
+    - `type` (string, optional): Filter by transaction type ('income' or 'expense').
+    - `categoryId` (integer[], optional): Filter by one or more category IDs.
+    - `search` (string, optional): Search term to filter by description.
 - **Response (200 OK)**:
   ```json
-  [
-    {
-      "id": 1,
-      "type": "expense",
-      "amount": 5000,
-      "description": "Zakupy spożywcze",
-      "date": "2025-10-15",
-      "category": {
-        "id": 101,
-        "key": "food",
-        "name": "Jedzenie"
-      },
-      "is_ai_categorized": true
-    },
-    {
-      "id": 2,
-      "type": "income",
-      "amount": 100000,
-      "description": "Wynagrodzenie",
-      "date": "2025-10-01",
-      "category": null,
-      "is_ai_categorized": false
+  {
+    "data": [
+      {
+        "id": 1,
+        "type": "expense",
+        "amount": 5000,
+        "description": "Zakupy spożywcze",
+        "date": "2025-10-15",
+        "category": {
+          "id": 101,
+          "key": "food",
+          "name": "Jedzenie"
+        },
+        "is_ai_categorized": true
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 1,
+      "totalPages": 1
     }
-  ]
+  }
   ```
 - **Error Responses**:
-    - `400 Bad Request`: If the `month` parameter is missing or invalid.
+    - `400 Bad Request`: If query parameters are invalid.
     - `401 Unauthorized`: If the user is not authenticated.
 
 #### `POST /api/transactions`
@@ -143,6 +147,104 @@ All endpoints are protected and require user authentication unless otherwise spe
     - `401 Unauthorized`: If the user is not authenticated.
     - `404 Not Found`: If the transaction does not exist or the user does not have permission to delete it.
 
+#### `GET /api/transactions/stats`
+
+- **Description**: Retrieves financial statistics for a given month, with an optional AI-generated summary.
+- **Query Parameters**:
+    - `month` (string, required): The month to fetch stats for, in `YYYY-MM` format.
+    - `includeAiSummary` (boolean, optional): If true, includes a natural language summary of the financial situation (default: false).
+- **Response (200 OK)**:
+  ```json
+  {
+    "month": "2025-10",
+    "totalIncome": 100000,
+    "totalExpenses": 25000,
+    "balance": 75000,
+    "transactionCount": 15,
+    "categoryBreakdown": [
+      {
+        "categoryId": 101,
+        "categoryName": "Jedzenie",
+        "total": 15000,
+        "count": 8,
+        "percentage": 60
+      },
+      {
+        "categoryId": 102,
+        "categoryName": "Transport",
+        "total": 10000,
+        "count": 7,
+        "percentage": 40
+      }
+    ],
+    "aiCategorizedCount": 10,
+    "manualCategorizedCount": 5,
+    "aiSummary": "W październiku Twoje saldo jest pozytywne. Najwięcej wydano na jedzenie."
+  }
+  ```
+- **Error Responses**:
+    - `400 Bad Request`: If the `month` parameter is missing or invalid.
+    - `401 Unauthorized`: If the user is not authenticated.
+
+#### `POST /api/transactions/bulk`
+
+- **Description**: Creates multiple transactions in a single request (e.g., for bank statement imports).
+- **Request Body**:
+  ```json
+  {
+    "transactions": [
+      {
+        "type": "expense",
+        "amount": 1200,
+        "description": "Kawa na mieście",
+        "date": "2025-10-20"
+      },
+      {
+        "type": "income",
+        "amount": 50000,
+        "description": "Projekt poboczny",
+        "date": "2025-10-21"
+      }
+    ]
+  }
+  ```
+- **Validation (using Zod)**:
+    - `transactions`: An array of 1 to 100 transaction objects.
+- **Response (201 Created)**:
+  ```json
+  {
+    "created": 2,
+    "transactions": [
+      { "id": 3, "..."},
+      { "id": 4, "..."}
+    ]
+  }
+  ```
+- **Error Responses**:
+    - `400 Bad Request`: For invalid input data.
+    - `401 Unauthorized`: If the user is not authenticated.
+
+#### `DELETE /api/transactions/bulk`
+
+- **Description**: Deletes multiple transactions by their IDs.
+- **Request Body**:
+  ```json
+  {
+    "ids": [1, 2, 5]
+  }
+  ```
+- **Validation (using Zod)**:
+    - `ids`: An array of 1 to 100 transaction IDs.
+- **Response (200 OK)**:
+  ```json
+  {
+    "deleted": 3
+  }
+  ```
+- **Error Responses**:
+    - `400 Bad Request`: For invalid input data.
+    - `401 Unauthorized`: If the user is not authenticated.
+
 ### 2.2. Categories
 
 #### `GET /api/categories`
@@ -192,37 +294,7 @@ All endpoints are protected and require user authentication unless otherwise spe
     - `401 Unauthorized`: If the user is not authenticated.
     - `500 Internal Server Error`: If data deletion fails.
 
-### 2.4. Dashboard
-
-#### `GET /api/dashboard`
-
-- **Description**: Retrieves aggregated data for the dashboard view for a specific month, including top spending categories and an AI-generated summary.
-- **Query Parameters**:
-    - `month` (string, required): The month to fetch data for, in `YYYY-MM` format.
-- **Response (200 OK)**:
-  ```json
-  {
-    "income": 150000,
-    "expenses": 350000,
-    "balance": -200000,
-    "spendingChart": {
-      "categories": [
-        { "id": 101, "name": "Jedzenie", "total": 120000 },
-        { "id": 102, "name": "Transport", "total": 80000 },
-        { "id": 103, "name": "Rozrywka", "total": 65000 },
-        { "id": 104, "name": "Rachunki", "total": 50000 },
-        { "id": 105, "name": "Ubrania", "total": 45000 },
-        { "id": 106, "name": "Inne", "total": 30000 }
-      ]
-    },
-    "aiSummary": "W tym miesiącu Twoje największe wydatki dotyczyły jedzenia i transportu. Udało Ci się utrzymać wydatki na rozrywkę na umiarkowanym poziomie."
-  }
-  ```
-- **Error Responses**:
-    - `400 Bad Request`: If the `month` parameter is missing or invalid.
-    - `401 Unauthorized`: If the user is not authenticated.
-
-### 2.5. Feedback
+### 2.4. Feedback
 
 #### `POST /api/feedback`
 
@@ -300,6 +372,6 @@ All endpoints are protected and require user authentication unless otherwise spe
     - `transactions.amount`: Must be a positive integer (`CHECK(amount > 0)`). This is enforced at the database level and validated by Zod in the API.
 - **Business Logic Implementation**:
     - **AI Categorization**: The `POST /api/transactions` endpoint contains the logic to call the AI service. This logic is only triggered if the transaction `type` is 'expense'. It constructs a prompt with the transaction description and the list of available category keys, sends it to the AI, and processes the response. If the AI fails or returns an invalid category key, a default category ("Inne") is assigned.
-    - **Dashboard Aggregation**: The `GET /api/dashboard` endpoint contains the logic to query the database for transactions within a given month, calculate total income, total expenses, and the balance. It also groups expenses by category, calculates totals for the spending chart, and makes a separate call to the AI service to generate the natural language summary.
+    - **Transactions Stats**: The `GET /api/transactions/stats` endpoint contains the logic to query the database for transactions within a given month, calculate total income, total expenses, and the balance. It also groups expenses by category, calculates totals for the spending chart, and makes a separate call to the AI service to generate the natural language summary.
     - **User Data Deletion**: The `DELETE /api/user` endpoint will call a specific Supabase function (`supabase.auth.admin.deleteUser(userId)`) that handles the deletion of a user and triggers the `ON DELETE CASCADE` constraints in the database to remove all related data (`user_profiles`, `transactions`).
     - **Feedback Storage**: The `POST /api/feedback` endpoint will validate the input and insert a new record into the `public.feedback` table with the `user_id` of the authenticated user.
