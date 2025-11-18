@@ -39,8 +39,9 @@ Jasne, oto finalna wersja założeń do dokumentu wymagań projektowych (PRD) dl
 *   **Podsumowanie Finansowe:** Wyświetlanie kluczowych wartości: `Przychody`, `Wydatki` oraz `Bilans` (Przychody - Wydatki).
 *   **Domyślny Widok:** Pierwszy ekran po zalogowaniu, prezentujący dane dla bieżącego miesiąca.
 *   **Wykres Wydatków:** Prosty wykres słupkowy pokazujący 5 kategorii z najwyższymi sumami wydatków oraz jeden słupek "Inne" agregujący pozostałe.
-*   **Podsumowanie Finansowe:** Wyświetlanie kluczowych wartości (`Przychody`, `Wydatki`, `Bilans`) oraz krótkiego, tekstowego podsumowania wydatków wygenerowanego przez AI.
+*   **Podsumowanie AI:** Krótkie, tekstowe podsumowanie wydatków wygenerowane przez AI, opisujące główne trendy finansowe użytkownika.
 *   **Stan Pusty (Empty State):** Jeśli w danym miesiącu nie ma transakcji, wyświetlany jest komunikat zachęcający do dodania pierwszej z nich.
+*   **Źródło Danych:** Dashboard pobiera wszystkie dane (przychody, wydatki, bilans, rozbicie po kategoriach, podsumowanie AI) z jednego endpointu `/api/transactions/stats?month=YYYY-MM&includeAiSummary=true`.
 
 **2.5. Zbieranie Opinii**
 *   **Mechanizm:** Prosty pop-up z pytaniem "Jak oceniasz przydatność aplikacji w skali od 1 do 5?" oraz opcjonalnym polem na komentarz.

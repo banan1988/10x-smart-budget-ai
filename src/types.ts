@@ -142,7 +142,7 @@ export interface PaginatedResponse<T> {
 }
 
 /**
- * Response DTO for transaction statistics
+ * Response DTO for transaction statistics with optional AI-generated summary
  */
 export interface TransactionStatsDto {
   month: string;
@@ -159,7 +159,23 @@ export interface TransactionStatsDto {
   }[];
   aiCategorizedCount: number;
   manualCategorizedCount: number;
+  aiSummary?: string; // Optional AI-generated summary
 }
+
+/**
+ * Zod schema for validating GET /api/transactions/stats query parameters
+ */
+export const GetTransactionStatsQuerySchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format').refine((val) => {
+    const [year, month] = val.split('-').map(Number);
+    return month >= 1 && month <= 12;
+  }, {
+    message: 'Month must be between 01 and 12',
+  }),
+  includeAiSummary: z.string().optional().transform((val) => val === 'true'),
+});
+
+export type GetTransactionStatsQuery = z.infer<typeof GetTransactionStatsQuerySchema>;
 
 
 /**
@@ -167,19 +183,6 @@ export interface TransactionStatsDto {
  */
 export type UserProfileDto = Pick<Tables<'user_profiles'>, 'nickname' | 'preferences'>;
 
-/**
- * Response DTO for the main dashboard view.
- * This is a virtual DTO, composed of aggregated data from multiple sources.
- */
-export interface DashboardDto {
-  income: number;
-  expenses: number;
-  balance: number;
-  spendingChart: {
-    categories: { id: number; name: string; total: number }[];
-  };
-  aiSummary: string;
-}
 
 /**
  * Request body for submitting user feedback.

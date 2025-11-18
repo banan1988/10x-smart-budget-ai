@@ -391,17 +391,21 @@ export class TransactionService {
 
   /**
    * Get statistics for transactions in a specific month.
+
+   * Optionally includes AI-generated summary.
    *
    * @param supabase - The Supabase client instance
    * @param userId - The ID of the authenticated user
    * @param month - The month in YYYY-MM format
+   * @param includeAiSummary - Whether to generate AI summary (default: false)
    * @returns Promise resolving to TransactionStatsDto
    * @throws Error if database query fails
    */
   static async getStats(
     supabase: SupabaseClient,
     userId: string,
-    month: string
+    month: string,
+    includeAiSummary: boolean = false
   ): Promise<TransactionStatsDto> {
     // Calculate date range for the month
     const startDate = `${month}-01`;
@@ -504,7 +508,7 @@ export class TransactionService {
       percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
     })).sort((a, b) => b.total - a.total);
 
-    return {
+    const stats: TransactionStatsDto = {
       month,
       totalIncome,
       totalExpenses,
@@ -514,6 +518,25 @@ export class TransactionService {
       aiCategorizedCount,
       manualCategorizedCount,
     };
+
+    // Generate AI summary if requested
+    if (includeAiSummary) {
+      // TODO: Implement AI service integration
+      // For now, return a mock summary
+      const formatAmount = (amount: number) => `${(amount / 100).toFixed(2)} zł`;
+      const balanceInfo = stats.balance >= 0
+        ? `Twoje saldo jest pozytywne: ${formatAmount(stats.balance)}.`
+        : `Uwaga! Wydatki przekroczyły przychody o ${formatAmount(Math.abs(stats.balance))}.`;
+
+      const topCategory = categoryBreakdown[0];
+      const categoryInfo = topCategory
+        ? `Najwięcej wydałeś/aś na: ${topCategory.categoryName} (${topCategory.percentage.toFixed(1)}%).`
+        : '';
+
+      stats.aiSummary = `W ${month} odnotowano ${stats.transactionCount} transakcji. ${balanceInfo} ${categoryInfo}`;
+    }
+
+    return stats;
   }
 
   /**

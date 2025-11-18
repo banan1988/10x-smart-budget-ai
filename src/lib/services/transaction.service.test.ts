@@ -584,5 +584,131 @@ describe('TransactionService', () => {
       ).rejects.toThrow('Failed to delete transaction: Delete failed');
     });
   });
+
+  describe('getStats', () => {
+    const month = '2025-11';
+
+    it('should return stats without AI summary by default', async () => {
+      // Arrange
+      const mockData = [
+        createMockTransactionData({ type: 'income', amount: 500000, date: '2025-11-01' }),
+        createMockTransactionData({ type: 'expense', amount: 200000, date: '2025-11-10' }),
+        createMockTransactionData({ type: 'expense', amount: 100000, date: '2025-11-15', is_ai_categorized: true }),
+      ];
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gte: vi.fn(() => ({
+                lte: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+              })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.getStats(mockSupabase, userId, month);
+
+      // Assert
+      expect(result).toMatchObject({
+        month,
+        totalIncome: 500000,
+        totalExpenses: 300000,
+        balance: 200000,
+        transactionCount: 3,
+        aiCategorizedCount: 1,
+        manualCategorizedCount: 2,
+      });
+      expect(result.aiSummary).toBeUndefined();
+    });
+
+    it('should return stats with AI summary when includeAiSummary is true', async () => {
+      // Arrange
+      const mockData = [
+        createMockTransactionData({ type: 'income', amount: 500000, date: '2025-11-01' }),
+        createMockTransactionData({ type: 'expense', amount: 200000, date: '2025-11-10' }),
+      ];
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gte: vi.fn(() => ({
+                lte: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+              })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.getStats(mockSupabase, userId, month, true);
+
+      // Assert
+      expect(result.aiSummary).toBeDefined();
+      expect(result.aiSummary).toContain('W 2025-11 odnotowano 2 transakcji');
+      expect(result.aiSummary).toContain('pozytywne');
+    });
+
+    it('should generate appropriate AI summary for negative balance', async () => {
+      // Arrange
+      const mockData = [
+        createMockTransactionData({ type: 'income', amount: 100000, date: '2025-11-01' }),
+        createMockTransactionData({ type: 'expense', amount: 300000, date: '2025-11-10' }),
+      ];
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gte: vi.fn(() => ({
+                lte: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+              })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.getStats(mockSupabase, userId, month, true);
+
+      // Assert
+      expect(result.aiSummary).toBeDefined();
+      expect(result.aiSummary).toContain('Uwaga!');
+      expect(result.aiSummary).toContain('przekroczyły');
+    });
+
+    it('should return empty stats when no transactions exist', async () => {
+      // Arrange
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gte: vi.fn(() => ({
+                lte: vi.fn(() => Promise.resolve({ data: [], error: null })),
+              })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.getStats(mockSupabase, userId, month);
+
+      // Assert
+      expect(result).toMatchObject({
+        month,
+        totalIncome: 0,
+        totalExpenses: 0,
+        balance: 0,
+        transactionCount: 0,
+        categoryBreakdown: [],
+        aiCategorizedCount: 0,
+        manualCategorizedCount: 0,
+      });
+    });
+  });
 });
 

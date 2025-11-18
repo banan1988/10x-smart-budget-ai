@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { TransactionService } from '../../../lib/services/transaction.service';
-import { GetTransactionsQuerySchema } from '../../../types';
+import { GetTransactionStatsQuerySchema } from '../../../types';
 import { DEFAULT_USER_ID } from '../../../db/constants';
 
 // Disable prerendering to ensure SSR for this API route
@@ -10,10 +10,12 @@ export const prerender = false;
  * GET /api/transactions/stats
  *
  * Returns statistics for transactions in a specific month.
+ * Optionally includes AI-generated summary.
  * Requires authentication via middleware.
  *
- * @query month - The month in YYYY-MM format
- * @returns 200 OK with TransactionStatsDto
+ * @query month - The month in YYYY-MM format (required)
+ * @query includeAiSummary - Whether to generate AI summary: 'true' or 'false' (optional, default: false)
+ * @returns 200 OK with TransactionStatsDto (with optional aiSummary field)
  * @returns 400 Bad Request if validation fails
  * @returns 401 Unauthorized if user is not authenticated
  * @returns 500 Internal Server Error if operation fails
@@ -27,16 +29,18 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const userId = DEFAULT_USER_ID;
 
     // Extract and validate query parameters
-    const month = url.searchParams.get('month');
+    const queryParams = {
+      month: url.searchParams.get('month') || undefined,
+      includeAiSummary: url.searchParams.get('includeAiSummary') || undefined,
+    };
 
-    // Validate month parameter
-    const monthValidation = GetTransactionsQuerySchema.pick({ month: true }).safeParse({ month });
+    const validationResult = GetTransactionStatsQuerySchema.safeParse(queryParams);
 
-    if (!monthValidation.success) {
+    if (!validationResult.success) {
       return new Response(
         JSON.stringify({
           error: 'Validation failed',
-          details: monthValidation.error.issues,
+          details: validationResult.error.issues,
         }),
         {
           status: 400,
@@ -51,7 +55,8 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const stats = await TransactionService.getStats(
       supabase,
       userId,
-      monthValidation.data.month
+      validationResult.data.month,
+      validationResult.data.includeAiSummary
     );
 
     // Return successful response with statistics
