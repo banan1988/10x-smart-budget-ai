@@ -6,5 +6,5 @@
  * Temporary hardcoded user ID for development purposes.
  * This should be replaced with proper authentication in production.
  */
-export const DEFAULT_USER_ID = '3005cb66-fb36-4d74-be85-24c1eaa96e5f';
+export const DEFAULT_USER_ID = '55fcc5ff-242b-4c0a-bd13-b9727e3a4561';
 
