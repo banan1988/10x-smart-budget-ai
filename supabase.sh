@@ -5,8 +5,12 @@
 # NAME                DESCRIPTION                               DOCKER ENDPOINT                          ERROR
 # default             Current DOCKER_HOST based configuration   unix:///var/run/docker.sock
 # rancher-desktop *   Rancher Desktop moby context              unix:///Users/your-username/.rd/docker.sock
-# 2. If the current context is rancher-desktop, switch to default - docker context use default
-# 3. Run this script to restart supabase
+# 2. If the current context is rancher-desktop, switch to default
+# docker context use default
+# 3. Create a symlink for docker.sock (you might need sudo)
+# sudo ln -s $HOME/.rd/docker.sock /var/run/docker.sock
+# 4. Run this script to restart supabase
+# bash supabase.sh restart
 
 restart() {
   supabase stop supabase_vector_10x-smart-budget-ai
@@ -22,6 +26,10 @@ stop() {
   supabase stop
 }
 
+reset() {
+  supabase db reset --local
+}
+
 case $1 in
   restart)
     restart
@@ -32,8 +40,11 @@ case $1 in
   stop)
     stop
     ;;
+  reset)
+    reset
+    ;;
   *)
-    echo "Usage: $0 {start|stop|restart}"
+    echo "Usage: $0 {start|stop|restart|reset}"
     exit 1
     ;;
 esac
