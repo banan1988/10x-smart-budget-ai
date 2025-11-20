@@ -91,6 +91,7 @@ export const CreateTransactionCommandSchema = z.object({
   amount: z.number().int().positive('Amount must be a positive integer'),
   description: z.string().min(1, 'Description is required').max(255, 'Description must not exceed 255 characters'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+  categoryId: z.number().int().nullable().optional(),
 });
 
 export type CreateTransactionCommand = z.infer<typeof CreateTransactionCommandSchema>;
@@ -205,3 +206,31 @@ export interface FeedbackStatsDto {
  * Response DTO for a single feedback entry, intended for admin use.
  */
 export type FeedbackDto = Tables<'feedback'>;
+
+/**
+ * ViewModel for displaying a transaction in the UI
+ */
+export interface TransactionVM {
+  id: number;
+  type: 'income' | 'expense';
+  amount: string; // Formatted amount with currency, e.g., "50,00 zł"
+  description: string;
+  date: string; // Formatted date, e.g., "15 października 2025"
+  rawDate: string; // Original date in YYYY-MM-DD format for editing
+  categoryName: string;
+  categoryKey: string;
+  isAiCategorized: boolean;
+}
+
+/**
+ * Filter state for transactions view
+ */
+export interface TransactionFilters {
+  month: string; // YYYY-MM
+  page?: number;
+  limit?: number;
+  type?: 'income' | 'expense';
+  categoryId?: number[];
+  search?: string;
+}
+

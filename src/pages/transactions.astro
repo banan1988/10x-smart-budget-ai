@@ -1,0 +1,11 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { TransactionsView } from '@/components/TransactionsView';
+
+// This page requires authentication (handled by middleware)
+---
+
+<Layout title="Transakcje - SmartBudgetAI">
+  <TransactionsView client:load />
+</Layout>
+

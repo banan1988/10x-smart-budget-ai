@@ -147,11 +147,11 @@ export class TransactionService {
 
   /**
    * Creates a new transaction for the user.
-   * For expense transactions, automatically categorizes using AI.
+   * For expense transactions without manual category, automatically categorizes using AI.
    *
    * @param supabase - The Supabase client instance
    * @param userId - The ID of the authenticated user
-   * @param command - The transaction creation data
+   * @param command - The transaction creation data (includes optional categoryId)
    * @returns Promise resolving to the created TransactionDto
    * @throws Error if database operation or AI categorization fails
    */
@@ -160,16 +160,17 @@ export class TransactionService {
     userId: string,
     command: CreateTransactionCommand
   ): Promise<TransactionDto> {
-    let categoryId: number | null = null;
+    let categoryId: number | null = command.categoryId ?? null;
     let isAiCategorized = false;
 
-    // For expenses, use AI to categorize
-    if (command.type === 'expense') {
+    // For expenses without manual category, use AI to categorize
+    if (command.type === 'expense' && !categoryId) {
       try {
         // TODO: Implement AI categorization service call
         // For now, this is a placeholder
         // categoryId = await AICategorizer.categorize(command.description);
         // isAiCategorized = true;
+        console.log('AI categorization not yet implemented - transaction will have no category');
       } catch (error) {
         // Log AI categorization error but don't fail the transaction creation
         console.error('AI categorization failed:', error);
