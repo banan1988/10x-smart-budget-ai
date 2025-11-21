@@ -1,0 +1,24 @@
+---
+import { Button } from "@/components/ui/button";
+---
+<section class="relative py-20 sm:py-32 overflow-hidden" aria-labelledby="hero-heading">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 id="hero-heading" class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">
+        Zarządzaj swoimi finansami <span class="text-primary">inteligentnie</span>
+      </h1>
+      <p class="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+        SmartBudgetAI automatycznie kategoryzuje Twoje wydatki przy użyciu sztucznej inteligencji. 
+        Oszczędzaj czas i zyskaj pełną kontrolę nad swoim budżetem.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center" role="group" aria-label="Akcje użytkownika">
+        <Button size="lg" asChild>
+          <a href="/register">Zarejestruj się za darmo</a>
+        </Button>
+        <Button size="lg" variant="outline" asChild>
+          <a href="/login">Zaloguj się</a>
+        </Button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,25 @@
+---
+import { Button } from "@/components/ui/button";
+---
+
+<header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="banner">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex h-16 items-center justify-between">
+      <div class="flex items-center gap-2">
+        <a href="/" class="flex items-center space-x-2" aria-label="SmartBudgetAI - Strona główna">
+          <span class="text-2xl font-bold text-primary" aria-hidden="true">💰</span>
+          <span class="text-xl font-bold">SmartBudgetAI</span>
+        </a>
+      </div>
+      <nav class="flex items-center gap-4" role="navigation" aria-label="Nawigacja główna">
+        <Button variant="ghost" asChild>
+          <a href="/login">Zaloguj się</a>
+        </Button>
+        <Button asChild>
+          <a href="/register">Zarejestruj się</a>
+        </Button>
+      </nav>
+    </div>
+  </div>
+</header>
+

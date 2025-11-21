@@ -1,8 +1,20 @@
 ---
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
+import HeroSection from "../components/landing/HeroSection.astro";
+import FeatureGrid from "../components/landing/FeatureGrid.astro";
+import ChartPreview from "../components/landing/ChartPreview.astro";
+import HowItWorksSection from "../components/landing/HowItWorksSection.astro";
+import FAQSection from "../components/landing/FAQSection.astro";
+import FinalCTASection from "../components/landing/FinalCTASection.astro";
 ---
 
-<Layout>
-  <Welcome />
+<Layout showHeader={true} showFooter={true}>
+  <main>
+    <HeroSection />
+    <FeatureGrid />
+    <ChartPreview />
+    <HowItWorksSection />
+    <FAQSection />
+    <FinalCTASection />
+  </main>
 </Layout>

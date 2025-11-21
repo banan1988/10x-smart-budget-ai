@@ -1,0 +1,31 @@
+---
+// Końcowa sekcja CTA
+import { Button } from "../ui/button";
+---
+
+<section class="py-20 sm:py-32 bg-gradient-to-br from-primary/20 to-primary/5">
+  <div class="container mx-auto px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6">
+        Gotowy na lepsze zarządzanie finansami?
+      </h2>
+      <p class="text-lg sm:text-xl text-muted-foreground mb-10">
+        Dołącz do tysięcy użytkowników, którzy już przejęli kontrolę nad swoim budżetem dzięki SmartBudgetAI.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center" role="group" aria-label="Akcje użytkownika">
+        <Button size="lg" asChild>
+          <a href="/register">Zacznij za darmo</a>
+        </Button>
+        <Button size="lg" variant="outline" asChild>
+          <a href="/login">Mam już konto</a>
+        </Button>
+      </div>
+
+      <p class="text-sm text-muted-foreground mt-8">
+        Nie wymagamy karty kredytowej • Darmowy plan na zawsze
+      </p>
+    </div>
+  </div>
+</section>
+

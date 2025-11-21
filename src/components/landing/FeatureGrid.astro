@@ -1,0 +1,49 @@
+---
+// Prezentacja kluczowych funkcji aplikacji
+const features = [
+  {
+    icon: "🤖",
+    title: "Automatyczna kategoryzacja",
+    description: "Sztuczna inteligencja automatycznie kategoryzuje Twoje wydatki, oszczędzając Twój czas."
+  },
+  {
+    icon: "📊",
+    title: "Przejrzyste wykresy",
+    description: "Wizualizuj swoje finanse za pomocą intuicyjnych wykresów i raportów."
+  },
+  {
+    icon: "🎯",
+    title: "Kontrola budżetu",
+    description: "Ustaw limity i śledź swoje cele finansowe w czasie rzeczywistym."
+  },
+  {
+    icon: "🔒",
+    title: "Bezpieczeństwo danych",
+    description: "Twoje dane są szyfrowane i bezpiecznie przechowywane w chmurze."
+  }
+];
+---
+
+<section id="funkcje" class="py-20 sm:py-32 bg-muted/30">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+        Wszystko czego potrzebujesz do zarządzania finansami
+      </h2>
+      <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+        Poznaj funkcje, które ułatwią Ci kontrolę nad Twoim budżetem
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {features.map((feature) => (
+        <div class="bg-background p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-border">
+          <div class="text-5xl mb-4" aria-hidden="true">{feature.icon}</div>
+          <h3 class="text-xl font-semibold text-foreground mb-3">{feature.title}</h3>
+          <p class="text-muted-foreground">{feature.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
