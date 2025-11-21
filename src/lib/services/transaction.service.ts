@@ -421,6 +421,7 @@ export class TransactionService {
         id,
         type,
         amount,
+        date,
         is_ai_categorized,
         category_id,
         categories (
@@ -447,6 +448,7 @@ export class TransactionService {
         balance: 0,
         transactionCount: 0,
         categoryBreakdown: [],
+        dailyBreakdown: [],
         aiCategorizedCount: 0,
         manualCategorizedCount: 0,
       };
@@ -509,6 +511,34 @@ export class TransactionService {
       percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
     })).sort((a, b) => b.total - a.total);
 
+    // Calculate daily breakdown
+    const dailyMap = new Map<string, { income: number; expenses: number }>();
+
+    // Initialize all days in the month with 0 values
+    const daysInMonth = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${month}-${String(day).padStart(2, '0')}`;
+      dailyMap.set(dateStr, { income: 0, expenses: 0 });
+    }
+
+    // Aggregate transactions by date
+    data.forEach(transaction => {
+      const existing = dailyMap.get(transaction.date);
+      if (existing) {
+        if (transaction.type === 'income') {
+          existing.income += transaction.amount;
+        } else {
+          existing.expenses += transaction.amount;
+        }
+      }
+    });
+
+    const dailyBreakdown = Array.from(dailyMap.entries()).map(([date, totals]) => ({
+      date,
+      income: totals.income,
+      expenses: totals.expenses,
+    })).sort((a, b) => a.date.localeCompare(b.date));
+
     const stats: TransactionStatsDto = {
       month,
       totalIncome,
@@ -516,6 +546,7 @@ export class TransactionService {
       balance: totalIncome - totalExpenses,
       transactionCount: data.length,
       categoryBreakdown,
+      dailyBreakdown,
       aiCategorizedCount,
       manualCategorizedCount,
     };

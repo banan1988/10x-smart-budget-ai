@@ -158,6 +158,11 @@ export interface TransactionStatsDto {
     count: number;
     percentage: number;
   }[];
+  dailyBreakdown: {
+    date: string;
+    income: number;
+    expenses: number;
+  }[];
   aiCategorizedCount: number;
   manualCategorizedCount: number;
   aiSummary?: string; // Optional AI-generated summary
@@ -232,5 +237,43 @@ export interface TransactionFilters {
   type?: 'income' | 'expense';
   categoryId?: number[];
   search?: string;
+}
+
+/**
+ * ViewModel for a single metric card on the dashboard
+ */
+export interface MetricCardVM {
+  title: string; // e.g., "Przychody"
+  value: string; // Formatted amount, e.g., "10 000,00 zł"
+  variant?: 'income' | 'expense' | 'balance-positive' | 'balance-negative'; // Color variant
+}
+
+/**
+ * ViewModel for a single category breakdown on the chart
+ */
+export interface CategoryBreakdownVM {
+  name: string; // Category name, e.g., "Jedzenie"
+  total: number; // Total amount for this category
+  percentage?: number; // Optional percentage
+}
+
+/**
+ * ViewModel for daily income/expense breakdown
+ */
+export interface DailyBreakdownVM {
+  date: string; // Date in YYYY-MM-DD format
+  day: string; // Day of month, e.g., "1", "2", etc.
+  income: number; // Total income for this day
+  expenses: number; // Total expenses for this day
+}
+
+/**
+ * ViewModel for the entire dashboard
+ */
+export interface DashboardVM {
+  metrics: MetricCardVM[];
+  categoryBreakdown: CategoryBreakdownVM[];
+  dailyBreakdown: DailyBreakdownVM[];
+  aiSummary?: string;
 }
 
