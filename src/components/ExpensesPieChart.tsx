@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { CategoryBreakdownVM } from '@/types';
 
@@ -7,17 +7,17 @@ interface ExpensesPieChartProps {
 }
 
 /**
- * Vibrant color palette for pie chart categories
- * Uses specific HSL values for better visibility and distinction
+ * Chart colors optimized for both light and dark modes
+ * Using vibrant colors that work well in both themes
  */
-const CATEGORY_COLORS = [
+const CHART_COLORS = [
   '#3b82f6', // Blue
-  '#ef4444', // Red
-  '#10b981', // Green
+  '#06b6d4', // Cyan
   '#f59e0b', // Amber
   '#8b5cf6', // Violet
+  '#ef4444', // Red
+  '#10b981', // Emerald
   '#ec4899', // Pink
-  '#06b6d4', // Cyan
   '#f97316', // Orange
   '#6366f1', // Indigo
   '#14b8a6', // Teal
@@ -29,11 +29,11 @@ const CATEGORY_COLORS = [
  * Get color for a specific category index
  */
 function getCategoryColor(index: number): string {
-  return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+  return CHART_COLORS[index % CHART_COLORS.length];
 }
 
 /**
- * Custom tooltip for the pie chart
+ * Custom tooltip for the donut chart
  */
 function CustomTooltip({ active, payload }: any) {
   if (!active || !payload || payload.length === 0) {
@@ -49,16 +49,16 @@ function CustomTooltip({ active, payload }: any) {
   }).format(value);
 
   return (
-    <div className="rounded-lg border bg-background p-3 shadow-md">
-      <p className="text-sm font-medium">{data.name}</p>
-      <p className="text-sm text-muted-foreground">{formattedValue}</p>
+    <div className="rounded-lg border bg-background p-3 shadow-lg">
+      <p className="text-sm font-semibold text-foreground">{data.name}</p>
+      <p className="text-sm font-medium text-foreground">{formattedValue}</p>
       <p className="text-xs text-muted-foreground">{percentage.toFixed(1)}%</p>
     </div>
   );
 }
 
 /**
- * Custom label for pie chart segments
+ * Custom label for donut chart segments
  */
 function renderCustomLabel(entry: any) {
   const percentage = entry.percentage || 0;
@@ -70,7 +70,8 @@ function renderCustomLabel(entry: any) {
 }
 
 /**
- * Pie chart component displaying expense breakdown by category
+ * Donut chart component displaying expense breakdown by category
+ * Optimized for both light and dark modes
  */
 export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
   if (!data || data.length === 0) {
@@ -78,9 +79,10 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
   }
 
   return (
-    <Card className="shadow-md">
+    <Card>
       <CardHeader>
-        <CardTitle>Rozkład wydatków według kategorii</CardTitle>
+        <CardTitle>Rozkład wydatków</CardTitle>
+        <CardDescription>Wydatki według kategorii</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -91,11 +93,12 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
               cy="50%"
               labelLine={false}
               label={renderCustomLabel}
-              outerRadius={100}
+              outerRadius={110}
+              innerRadius={70}
               fill="hsl(var(--primary))"
               dataKey="total"
               nameKey="name"
-              stroke="#ffffff"
+              stroke="hsl(var(--background))"
               strokeWidth={2}
             >
               {data.map((entry, index) => (

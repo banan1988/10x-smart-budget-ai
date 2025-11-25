@@ -1,15 +1,56 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import { DashboardView } from '@/components/DashboardView';
+import { AppHeader } from '@/components/AppHeader';
+import { AppFooter } from '@/components/AppFooter';
+import { AppSidebar } from '@/components/AppSidebar';
+import { MobileNav } from '@/components/MobileNav';
 
 // This page requires authentication - middleware will handle redirect
 ---
 
-<Layout title="Pulpit nawigacyjny - SmartBudgetAI">
-  <main class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-    <div class="container mx-auto px-4 py-8">
-      <DashboardView client:load />
+<Layout title="Pulpit - SmartBudgetAI">
+  <div class="flex min-h-screen">
+    <!-- Sidebar - hidden on mobile, visible on desktop -->
+    <div class="hidden lg:block">
+      <AppSidebar currentPage="dashboard" client:load />
     </div>
-  </main>
+
+    <!-- Main content area -->
+    <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
+      <AppHeader currentPage="dashboard" client:load />
+      <main class="flex-1 bg-background pb-16 lg:pb-0">
+        <div class="container mx-auto px-4 py-8">
+          <DashboardView client:load />
+        </div>
+      </main>
+      <AppFooter client:load />
+    </div>
+
+    <!-- Mobile bottom navigation -->
+    <MobileNav currentPage="dashboard" client:load />
+  </div>
+
+  <script>
+    // Adjust main content padding based on sidebar state
+    function updateMainContentPadding() {
+      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
+      const mainContent = document.getElementById('main-content');
+      if (mainContent && window.innerWidth >= 1024) {
+        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+      }
+    }
+
+    // Initial update
+    updateMainContentPadding();
+
+    // Listen for sidebar toggle
+    window.addEventListener('toggle-sidebar', () => {
+      setTimeout(updateMainContentPadding, 50);
+    });
+
+    // Listen for resize
+    window.addEventListener('resize', updateMainContentPadding);
+  </script>
 </Layout>
 

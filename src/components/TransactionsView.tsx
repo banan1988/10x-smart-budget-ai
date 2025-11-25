@@ -6,6 +6,7 @@ import { TransactionsFilters } from './TransactionsFilters';
 import { TransactionsTable } from './TransactionsTable';
 import { TransactionsList } from './TransactionsList';
 import { AddTransactionDialog } from './AddTransactionDialog';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import type { TransactionVM } from '@/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -96,20 +97,32 @@ export function TransactionsView() {
 
   if (error) {
     return (
-      <div className="container mx-auto py-8">
-        <Alert variant="destructive">
-          <AlertDescription>
-            Wystąpił błąd podczas pobierania transakcji: {error.message}
-          </AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive">
+        <AlertDescription>
+          Wystąpił błąd podczas pobierania transakcji: {error.message}
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: 'SmartBudgetAI', href: '/dashboard' },
+          { label: 'Transakcje' },
+        ]}
+        showSidebarToggle={true}
+      />
+
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Transakcje</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Transakcje</h1>
+          <p className="text-muted-foreground">
+            Zarządzaj swoimi przychodami i wydatkami
+          </p>
+        </div>
         <Button onClick={handleAdd}>
           Dodaj transakcję
         </Button>

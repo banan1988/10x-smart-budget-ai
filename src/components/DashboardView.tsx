@@ -7,6 +7,7 @@ import { AiSummary } from '@/components/AiSummary';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import { AddTransactionDialog } from '@/components/AddTransactionDialog';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -73,10 +74,19 @@ export function DashboardView() {
   // Success state - display dashboard
   return (
     <div className="space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: 'SmartBudgetAI', href: '/dashboard' },
+          { label: 'Pulpit' },
+        ]}
+        showSidebarToggle={true}
+      />
+
       {/* Header with Add button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pulpit nawigacyjny</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Pulpit</h1>
           <p className="text-muted-foreground">
             Przegląd finansów za {new Date(currentMonth + '-01').toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}
           </p>

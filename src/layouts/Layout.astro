@@ -28,6 +28,14 @@ import Footer from "../components/landing/Footer.astro";
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <title>{title}</title>
+    <script is:inline>
+      // Initialize theme before page renders to prevent FOUC
+      (function() {
+        const theme = localStorage.getItem('theme') ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+      })();
+    </script>
   </head>
   <body>
     {showHeader && <Header />}

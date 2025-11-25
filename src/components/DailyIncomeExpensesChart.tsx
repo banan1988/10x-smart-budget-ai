@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import type { DailyBreakdownVM } from '@/types';
 
@@ -23,15 +23,15 @@ function CustomTooltip({ active, payload }: any) {
   }).format(value);
 
   return (
-    <div className="rounded-lg border bg-background p-3 shadow-md">
-      <p className="text-sm font-medium mb-2">Dzień {payload[0].payload.day}</p>
+    <div className="rounded-lg border bg-card text-card-foreground p-3 shadow-lg">
+      <p className="text-sm font-semibold mb-2">Dzień {payload[0].payload.day}</p>
       {incomeData && incomeData.value > 0 && (
-        <p className="text-sm text-green-600">
+        <p className="text-sm font-medium text-green-600 dark:text-green-400">
           Przychody: {formatCurrency(incomeData.value)}
         </p>
       )}
       {expensesData && expensesData.value > 0 && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm font-medium text-red-600 dark:text-red-400">
           Wydatki: {formatCurrency(expensesData.value)}
         </p>
       )}
@@ -41,6 +41,7 @@ function CustomTooltip({ active, payload }: any) {
 
 /**
  * Bar chart component displaying daily income and expenses breakdown
+ * Optimized for both light and dark modes
  */
 export function DailyIncomeExpensesChart({ data }: DailyIncomeExpensesChartProps) {
   if (!data || data.length === 0) {
@@ -55,9 +56,10 @@ export function DailyIncomeExpensesChart({ data }: DailyIncomeExpensesChartProps
   }
 
   return (
-    <Card className="shadow-md">
+    <Card>
       <CardHeader>
-        <CardTitle>Przychody i wydatki dzień po dniu</CardTitle>
+        <CardTitle>Przychody i wydatki</CardTitle>
+        <CardDescription>Dzienny rozkład transakcji</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -68,30 +70,35 @@ export function DailyIncomeExpensesChart({ data }: DailyIncomeExpensesChartProps
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              label={{ value: 'Dzień miesiąca', position: 'insideBottom', offset: -10 }}
+              tick={{ fill: '#888888' }}
             />
             <YAxis
               stroke="#888888"
               fontSize={12}
               tickLine={false}
               axisLine={false}
+              tick={{ fill: '#888888' }}
               tickFormatter={(value) => `${value} zł`}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.1)' }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: 'rgba(128, 128, 128, 0.1)' }}
+              contentStyle={{ backgroundColor: 'transparent', border: 'none' }}
+            />
             <Legend
               wrapperStyle={{ paddingTop: '20px' }}
               formatter={(value) => value === 'income' ? 'Przychody' : 'Wydatki'}
             />
             <Bar
               dataKey="income"
-              fill="hsl(142.1 76.2% 36.3%)"
+              fill="#10b981"
               radius={[8, 8, 0, 0]}
               maxBarSize={40}
               name="income"
             />
             <Bar
               dataKey="expenses"
-              fill="hsl(0 84.2% 60.2%)"
+              fill="#ef4444"
               radius={[8, 8, 0, 0]}
               maxBarSize={40}
               name="expenses"
