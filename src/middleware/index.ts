@@ -13,6 +13,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/dashboard');
   }
 
+  // Redirect authenticated users from login page to dashboard
+  if (session && context.url.pathname === '/login') {
+    return context.redirect('/dashboard');
+  }
+
   return next();
 });
 
