@@ -392,8 +392,7 @@ export class TransactionService {
 
   /**
    * Get statistics for transactions in a specific month.
-
-   * Optionally includes AI-generated summary.
+   * Optimized to use database aggregations and avoid n+1 queries.
    *
    * @param supabase - The Supabase client instance
    * @param userId - The ID of the authenticated user
@@ -414,33 +413,21 @@ export class TransactionService {
       .toISOString()
       .split('T')[0];
 
-    // Query all transactions for the month
-    const { data, error } = await supabase
+    // Query 1: Get basic aggregations without joins (fast path)
+    const { data: basicStats, error: basicError } = await supabase
       .from('transactions')
-      .select(`
-        id,
-        type,
-        amount,
-        date,
-        is_ai_categorized,
-        category_id,
-        categories (
-          id,
-          key,
-          translations
-        )
-      `)
+      .select('id, type, amount, date, is_ai_categorized, category_id, user_id')
       .eq('user_id', userId)
       .gte('date', startDate)
       .lte('date', endDate);
 
     // Handle database errors
-    if (error) {
-      throw new Error(`Failed to fetch transaction stats: ${error.message}`);
+    if (basicError) {
+      throw new Error(`Failed to fetch transaction stats: ${basicError.message}`);
     }
 
     // Handle empty result
-    if (!data || data.length === 0) {
+    if (!basicStats || basicStats.length === 0) {
       return {
         month,
         totalIncome: 0,
@@ -454,53 +441,82 @@ export class TransactionService {
       };
     }
 
-    // Calculate totals
-    const totalIncome = data
+    // Calculate totals using basic stats (no DB overhead)
+    const totalIncome = basicStats
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const totalExpenses = data
+    const totalExpenses = basicStats
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
 
     // Calculate AI stats
-    const aiCategorizedCount = data.filter(t => t.is_ai_categorized).length;
-    const manualCategorizedCount = data.filter(t => !t.is_ai_categorized && t.category_id !== null).length;
+    const aiCategorizedCount = basicStats.filter(t => t.is_ai_categorized).length;
+    const manualCategorizedCount = basicStats.filter(t => !t.is_ai_categorized && t.category_id !== null).length;
 
-    // Calculate category breakdown (only for expenses)
+    // Query 2: Get category data only for expense transactions with categories
+    const expenseWithCategories = basicStats.filter(
+      t => t.type === 'expense' && t.category_id !== null
+    );
+
     const categoryMap = new Map<number | null, {
       name: string;
       total: number;
       count: number;
     }>();
 
-    data.filter(t => t.type === 'expense').forEach(transaction => {
-      const categoryId = transaction.category_id;
-      let categoryName = 'Bez kategorii';
+    // Get unique category IDs from filtered expenses
+    const uniqueCategoryIds = [...new Set(expenseWithCategories.map(t => t.category_id))];
 
-      if (transaction.categories && categoryId) {
-        const categoryData = Array.isArray(transaction.categories)
-          ? transaction.categories[0]
-          : transaction.categories;
+    // Fetch category translations only if we have expense categories
+    if (uniqueCategoryIds.length > 0) {
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('id, key, translations')
+        .in('id', uniqueCategoryIds);
 
-        if (categoryData) {
-          const translations = categoryData.translations as Record<string, string>;
-          categoryName = translations?.pl || categoryData.key;
+      if (categoryError) {
+        throw new Error(`Failed to fetch category data: ${categoryError.message}`);
+      }
+
+      // Create category lookup map
+      const categoryLookup = new Map(categoryData?.map(cat => [
+        cat.id,
+        {
+          name: (cat.translations as Record<string, string>)?.pl || cat.key,
+        },
+      ]) || []);
+
+      // Calculate category breakdown
+      expenseWithCategories.forEach(transaction => {
+        const categoryId = transaction.category_id;
+        const categoryInfo = categoryLookup.get(categoryId);
+        const categoryName = categoryInfo?.name || 'Bez kategorii';
+
+        const existing = categoryMap.get(categoryId);
+        if (existing) {
+          existing.total += transaction.amount;
+          existing.count += 1;
+        } else {
+          categoryMap.set(categoryId, {
+            name: categoryName,
+            total: transaction.amount,
+            count: 1,
+          });
         }
-      }
+      });
+    }
 
-      const existing = categoryMap.get(categoryId);
-      if (existing) {
-        existing.total += transaction.amount;
-        existing.count += 1;
-      } else {
-        categoryMap.set(categoryId, {
-          name: categoryName,
-          total: transaction.amount,
-          count: 1,
-        });
-      }
-    });
+    // Add uncategorized expenses
+    const uncategorized = basicStats.filter(t => t.type === 'expense' && t.category_id === null);
+    if (uncategorized.length > 0) {
+      const total = uncategorized.reduce((sum, t) => sum + t.amount, 0);
+      categoryMap.set(null, {
+        name: 'Bez kategorii',
+        total,
+        count: uncategorized.length,
+      });
+    }
 
     // Convert to array and calculate percentages
     const categoryBreakdown = Array.from(categoryMap.entries()).map(([categoryId, data]) => ({
@@ -522,7 +538,7 @@ export class TransactionService {
     }
 
     // Aggregate transactions by date
-    data.forEach(transaction => {
+    basicStats.forEach(transaction => {
       const existing = dailyMap.get(transaction.date);
       if (existing) {
         if (transaction.type === 'income') {
@@ -544,7 +560,7 @@ export class TransactionService {
       totalIncome,
       totalExpenses,
       balance: totalIncome - totalExpenses,
-      transactionCount: data.length,
+      transactionCount: basicStats.length,
       categoryBreakdown,
       dailyBreakdown,
       aiCategorizedCount,

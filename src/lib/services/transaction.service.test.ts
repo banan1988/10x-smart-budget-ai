@@ -590,22 +590,37 @@ describe('TransactionService', () => {
 
     it('should return stats without AI summary by default', async () => {
       // Arrange
-      const mockData = [
-        createMockTransactionData({ type: 'income', amount: 500000, date: '2025-11-01' }),
-        createMockTransactionData({ type: 'expense', amount: 200000, date: '2025-11-10' }),
-        createMockTransactionData({ type: 'expense', amount: 100000, date: '2025-11-15', is_ai_categorized: true }),
+      const mockTransactions = [
+        { id: 1, type: 'income', amount: 500000, date: '2025-11-01', is_ai_categorized: false, category_id: null, user_id: userId },
+        { id: 2, type: 'expense', amount: 200000, date: '2025-11-10', is_ai_categorized: false, category_id: 1, user_id: userId },
+        { id: 3, type: 'expense', amount: 100000, date: '2025-11-15', is_ai_categorized: true, category_id: 1, user_id: userId },
+      ];
+
+      const mockCategories = [
+        { id: 1, key: 'groceries', translations: { pl: 'Zakupy spożywcze', en: 'Groceries' } },
       ];
 
       const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+        from: vi.fn((table) => {
+          if (table === 'transactions') {
+            return {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  gte: vi.fn(() => ({
+                    lte: vi.fn(() => Promise.resolve({ data: mockTransactions, error: null })),
+                  })),
+                })),
               })),
-            })),
-          })),
-        })),
+            };
+          } else if (table === 'categories') {
+            return {
+              select: vi.fn(() => ({
+                in: vi.fn(() => Promise.resolve({ data: mockCategories, error: null })),
+              })),
+            };
+          }
+          return {};
+        }),
       } as any);
 
       // Act
@@ -619,28 +634,43 @@ describe('TransactionService', () => {
         balance: 200000,
         transactionCount: 3,
         aiCategorizedCount: 1,
-        manualCategorizedCount: 2,
+        manualCategorizedCount: 1,
       });
       expect(result.aiSummary).toBeUndefined();
     });
 
     it('should return stats with AI summary when includeAiSummary is true', async () => {
       // Arrange
-      const mockData = [
-        createMockTransactionData({ type: 'income', amount: 500000, date: '2025-11-01' }),
-        createMockTransactionData({ type: 'expense', amount: 200000, date: '2025-11-10' }),
+      const mockTransactions = [
+        { id: 1, type: 'income', amount: 500000, date: '2025-11-01', is_ai_categorized: false, category_id: null, user_id: userId },
+        { id: 2, type: 'expense', amount: 200000, date: '2025-11-10', is_ai_categorized: false, category_id: 1, user_id: userId },
+      ];
+
+      const mockCategories = [
+        { id: 1, key: 'groceries', translations: { pl: 'Zakupy spożywcze', en: 'Groceries' } },
       ];
 
       const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+        from: vi.fn((table) => {
+          if (table === 'transactions') {
+            return {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  gte: vi.fn(() => ({
+                    lte: vi.fn(() => Promise.resolve({ data: mockTransactions, error: null })),
+                  })),
+                })),
               })),
-            })),
-          })),
-        })),
+            };
+          } else if (table === 'categories') {
+            return {
+              select: vi.fn(() => ({
+                in: vi.fn(() => Promise.resolve({ data: mockCategories, error: null })),
+              })),
+            };
+          }
+          return {};
+        }),
       } as any);
 
       // Act
@@ -654,21 +684,36 @@ describe('TransactionService', () => {
 
     it('should generate appropriate AI summary for negative balance', async () => {
       // Arrange
-      const mockData = [
-        createMockTransactionData({ type: 'income', amount: 100000, date: '2025-11-01' }),
-        createMockTransactionData({ type: 'expense', amount: 300000, date: '2025-11-10' }),
+      const mockTransactions = [
+        { id: 1, type: 'income', amount: 100000, date: '2025-11-01', is_ai_categorized: false, category_id: null, user_id: userId },
+        { id: 2, type: 'expense', amount: 300000, date: '2025-11-10', is_ai_categorized: false, category_id: 1, user_id: userId },
+      ];
+
+      const mockCategories = [
+        { id: 1, key: 'groceries', translations: { pl: 'Zakupy spożywcze', en: 'Groceries' } },
       ];
 
       const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+        from: vi.fn((table) => {
+          if (table === 'transactions') {
+            return {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  gte: vi.fn(() => ({
+                    lte: vi.fn(() => Promise.resolve({ data: mockTransactions, error: null })),
+                  })),
+                })),
               })),
-            })),
-          })),
-        })),
+            };
+          } else if (table === 'categories') {
+            return {
+              select: vi.fn(() => ({
+                in: vi.fn(() => Promise.resolve({ data: mockCategories, error: null })),
+              })),
+            };
+          }
+          return {};
+        }),
       } as any);
 
       // Act
@@ -683,15 +728,20 @@ describe('TransactionService', () => {
     it('should return empty stats when no transactions exist', async () => {
       // Arrange
       const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => Promise.resolve({ data: [], error: null })),
+        from: vi.fn((table) => {
+          if (table === 'transactions') {
+            return {
+              select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                  gte: vi.fn(() => ({
+                    lte: vi.fn(() => Promise.resolve({ data: [], error: null })),
+                  })),
+                })),
               })),
-            })),
-          })),
-        })),
+            };
+          }
+          return {};
+        }),
       } as any);
 
       // Act
