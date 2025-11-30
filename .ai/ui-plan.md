@@ -88,17 +88,30 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
     - **Dostępność:** Tabela powinna mieć odpowiednie nagłówki (`<th>`) i zakresy (`scope`).
     - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
 
-### Strona Ustawień
-- **Ścieżka widoku:** `/settings`
-- **Główny cel:** Zarządzanie kontem użytkownika.
-- **Kluczowe informacje do wyświetlenia:** Informacje o profilu użytkownika, opcja usunięcia konta.
+### Strona Profilu
+- **Ścieżka widoku:** `/profile`
+- **Główny cel:** Wyświetlanie informacji o profilu użytkownika.
+- **Kluczowe informacje do wyświetlenia:** Dane profilu użytkownika (email, nazwa profilu, data rejestracji, itp.).
 - **Kluczowe komponenty widoku:**
+    - `Card` (Shadcn/ui) do wyświetlania informacji profilowych.
+    - Link do ustawień: "Edytuj ustawienia" prowadzący na `/profile/settings`.
+- **UX, dostępność i względy bezpieczeństwa:**
+    - **UX:** Czytelny layout z jasną strukturą informacji.
+    - **Dostępność:** Semantyczne tagi do opisu sekcji profilu.
+    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
+
+### Strona Ustawień Profilu
+- **Ścieżka widoku:** `/profile/settings`
+- **Główny cel:** Zarządzanie ustawieniami konta użytkownika.
+- **Kluczowe informacje do wyświetlenia:** Opcje edycji profilu, opcja usunięcia konta.
+- **Kluczowe komponenty widoku:**
+    - Pola edycji danych profilu (nazwa, itp.) z przyciskami zapisu.
     - `Button` (Shadcn/ui) z wariantem `destructive` do akcji "Usuń konto".
     - `AlertDialog` (Shadcn/ui) do ostatecznego potwierdzenia usunięcia konta.
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Wyraźne ostrzeżenie o nieodwracalności usunięcia konta.
-    - **Dostępność:** Przycisk usuwania musi być jasno opisany.
-    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
+    - **UX:** Wyraźne ostrzeżenie o nieodwracalności usunięcia konta. Sekcje ustawień pogrupowane logicznie.
+    - **Dostępność:** Przycisk usuwania musi być jasno opisany. Powiązane etykiety dla pól edycji.
+    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware. Walidacja zmian danych po stronie serwera.
 
 ## 3. Mapa podróży użytkownika
 
@@ -120,8 +133,9 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
     - Na liście transakcji może edytować lub usunąć istniejącą pozycję za pomocą menu kontekstowego.
 
 4.  **Usuwanie konta:**
-    - Użytkownik przechodzi do strony `/settings`.
-    - Klika przycisk "Usuń konto".
+    - Użytkownik przechodzi do strony `/profile`.
+    - Klika link "Edytuj ustawienia", który przenosi go na `/profile/settings`.
+    - Na stronie `/profile/settings` klika przycisk "Usuń konto".
     - W oknie dialogowym potwierdza swoją decyzję.
     - Jego konto i wszystkie dane są usuwane, a on zostaje wylogowany i przekierowany na stronę główną (`/`).
 
@@ -133,7 +147,7 @@ Aplikacja będzie miała prosty, ale spójny układ oparty o komponent `Layout.a
     - **Nagłówek (Header):** Zawiera logo aplikacji, główne linki nawigacyjne oraz menu użytkownika.
     - **Nawigacja główna (zalogowany):** Linki do "Pulpitu" (`/dashboard`) i "Transakcji" (`/transactions`).
     - **Nawigacja marketingowa (Landing Page):** Anchory do sekcji: Funkcje, Jak to działa, FAQ (np. `/#features`, `/#how-it-works`, `/#faq`).
-    - **Menu użytkownika:** Po zalogowaniu w prawym górnym rogu znajduje się ikona użytkownika z `DropdownMenu`, które zawiera link do "Ustawień" (`/settings`) oraz opcję "Wyloguj".
+    - **Menu użytkownika:** Po zalogowaniu w prawym górnym rogu znajduje się ikona użytkownika z `DropdownMenu`, które zawiera link do "Profilu" (`/profile`), linkiem do "Ustawień" (`/profile/settings`) oraz opcją "Wyloguj".
     - **Główna treść (Main):** Centralna część strony, w której renderowane są poszczególne widoki.
     - **Stopka (Footer):** Zawiera informacje: rok, nazwa aplikacji, skrócone linki (Polityka prywatności, Regulamin – przyszłe rozszerzenia).
 

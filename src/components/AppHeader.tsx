@@ -82,7 +82,7 @@ export function AppHeader({ currentPage }: AppHeaderProps) {
                   <a href="/profile">Profil</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <a href="/settings">Ustawienia</a>
+                  <a href="/profile/settings">Ustawienia</a>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -123,7 +123,7 @@ export function AppHeader({ currentPage }: AppHeaderProps) {
                   <a href="/profile">Profil</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <a href="/settings">Ustawienia</a>
+                  <a href="/profile/settings">Ustawienia</a>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

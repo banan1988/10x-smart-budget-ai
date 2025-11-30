@@ -125,7 +125,7 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
         {/* Bottom section - Settings */}
         <div className="space-y-2 border-t p-2">
           <a
-            href="/settings"
+            href="/profile/settings"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             title="Ustawienia"
           >
