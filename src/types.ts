@@ -277,3 +277,73 @@ export interface DashboardVM {
   aiSummary?: string;
 }
 
+/**
+ * ViewModel for the profile page (/profile)
+ * Contains user profile information including email from session and profile data
+ */
+export interface ProfilePageVM {
+  email: string;
+  nickname: string | null;
+  registeredAt: string; // ISO format: "2025-01-15T10:30:00.000Z"
+  preferences: Record<string, any> | null;
+}
+
+/**
+ * ViewModel for the profile settings page (/profile/settings)
+ * Same as ProfilePageVM but used in settings context
+ */
+export interface ProfileSettingsPageVM extends ProfilePageVM {}
+
+/**
+ * ViewModel for the ProfileCard component
+ * Contains minimal data needed to display profile information card
+ */
+export interface ProfileCardData {
+  email: string;
+  nickname: string | null;
+  registeredAt: string; // ISO format date
+}
+
+/**
+ * Form data for editing user profile
+ */
+export interface EditProfileFormData {
+  nickname: string;
+}
+
+/**
+ * Request body for updating user profile
+ */
+export type UpdateProfileRequest = Pick<TablesUpdate<'user_profiles'>, 'nickname'>;
+
+/**
+ * Response DTO for successful profile update
+ */
+export interface UpdateProfileResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    nickname: string | null;
+  };
+}
+
+/**
+ * Validation error DTO
+ */
+export interface ValidationError {
+  field: string; // e.g., "nickname"
+  message: string; // e.g., "Nickname is too long. Maximum 50 characters."
+}
+
+/**
+ * Zod schema for validating PUT /api/user/profile request body
+ */
+export const UpdateProfileCommandSchema = z.object({
+  nickname: z.string()
+    .max(50, 'Nickname must not exceed 50 characters')
+    .regex(/^[a-zA-Z0-9\s\-_]*$/, 'Nickname can only contain letters, numbers, spaces, hyphens, and underscores')
+    .optional()
+    .or(z.literal(null)),
+});
+
+export type UpdateProfileCommand = z.infer<typeof UpdateProfileCommandSchema>;
