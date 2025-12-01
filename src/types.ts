@@ -244,6 +244,54 @@ export interface FeedbackStatsDto {
 export type FeedbackDto = Tables<'feedback'>;
 
 /**
+ * Filter state for feedbacks view (admin)
+ */
+export interface FeedbackFilters {
+  startDate?: string; // YYYY-MM-DD format
+  endDate?: string; // YYYY-MM-DD format
+  rating?: number; // 1-5 or undefined for all
+  page?: number; // 1-based
+  limit?: number; // Results per page
+}
+
+/**
+ * ViewModel for displaying a feedback row in the admin table
+ */
+export interface FeedbackRowVM {
+  id: number;
+  userId: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string; // Formatted date, e.g., "15 października 2025"
+  rawCreatedAt: string; // Original ISO timestamp for filtering
+}
+
+/**
+ * ViewModel for feedback statistics in admin panel
+ */
+export interface AdminFeedbackStatsVM {
+  totalFeedbacks: number;
+  averageRating: number;
+  trend?: {
+    direction: 'up' | 'down' | 'neutral';
+    percentage?: number;
+  };
+}
+
+/**
+ * Response type for feedback admin endpoint
+ */
+export interface AdminFeedbacksResponse {
+  data: FeedbackDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+/**
  * ViewModel for displaying a transaction in the UI
  */
 export interface TransactionVM {
