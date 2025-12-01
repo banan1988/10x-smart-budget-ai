@@ -189,6 +189,27 @@ export type GetTransactionStatsQuery = z.infer<typeof GetTransactionStatsQuerySc
  */
 export type UserProfileDto = Pick<Tables<'user_profiles'>, 'nickname' | 'preferences'>;
 
+/**
+ * ViewModel for the Profile page.
+ * Combines data from the user's profile and session.
+ */
+export interface ProfilePageVM {
+  email: string;
+  nickname: string | null;
+  registeredAt: string; // ISO format: "2025-01-15T10:30:00.000Z"
+  preferences: Record<string, any> | null;
+}
+
+/**
+ * ViewModel for the ProfileCard component.
+ * Contains data needed to display the profile card.
+ */
+export interface ProfileCardData {
+  email: string;
+  nickname: string | null;
+  registeredAt: string;
+}
+
 
 /**
  * Request body for submitting user feedback.

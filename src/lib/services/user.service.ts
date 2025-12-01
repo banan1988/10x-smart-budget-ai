@@ -22,7 +22,7 @@ export class UserService {
     const { data, error } = await supabase
       .from('user_profiles')
       .select('nickname, preferences')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single();
 
     // Handle database errors

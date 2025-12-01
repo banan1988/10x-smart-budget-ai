@@ -73,7 +73,7 @@ describe('UserService', () => {
       );
     });
 
-    it('should query with correct user_id parameter', async () => {
+    it('should query with correct user id parameter', async () => {
       // Arrange
       const mockUserId = 'user-456';
       const mockProfileData = { nickname: 'Test', preferences: {} };
@@ -94,7 +94,7 @@ describe('UserService', () => {
       await UserService.getUserProfile(mockSupabase, mockUserId);
 
       // Assert
-      expect(eqMock).toHaveBeenCalledWith('user_id', mockUserId);
+      expect(eqMock).toHaveBeenCalledWith('id', mockUserId);
     });
   });
 

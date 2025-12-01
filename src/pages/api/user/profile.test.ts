@@ -215,7 +215,7 @@ describe('GET /api/user/profile', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(eqMock).toHaveBeenCalledWith('user_id', mockUserId);
+    expect(eqMock).toHaveBeenCalledWith('id', mockUserId);
   });
 
   it('should call UserService.getUserProfile with correct parameters', async () => {
@@ -255,7 +255,7 @@ describe('GET /api/user/profile', () => {
     // Assert
     expect(fromMock).toHaveBeenCalledWith('user_profiles');
     expect(selectMock).toHaveBeenCalledWith('nickname, preferences');
-    expect(eqMock).toHaveBeenCalledWith('user_id', customUserId);
+    expect(eqMock).toHaveBeenCalledWith('id', customUserId);
   });
 });
 

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 interface AppHeaderProps {
-  currentPage?: 'dashboard' | 'transactions';
+  currentPage?: 'dashboard' | 'transactions' | 'profile';
 }
 
 /**

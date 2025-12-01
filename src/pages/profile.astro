@@ -1,0 +1,105 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ProfileView from '../components/ProfileView.tsx';
+import { AppHeader } from '../components/AppHeader';
+import { AppFooter } from '../components/AppFooter';
+import { AppSidebar } from '../components/AppSidebar';
+import { MobileNav } from '../components/MobileNav';
+import type { ProfilePageVM, UserProfileDto } from '../types';
+
+// Fetch user session
+const { data: { session } } = await Astro.locals.supabase.auth.getSession();
+
+// TODO: Uncomment when ready to enforce authentication
+// Redirect if not authenticated (defensive check - middleware should handle this)
+// if (!session) {
+//   return Astro.redirect('/login');
+// }
+
+// Fetch user profile from API
+let profile: UserProfileDto | null = null;
+let errorMessage: string | null = null;
+
+try {
+  const response = await fetch(`${Astro.url.origin}/api/user/profile`, {
+    headers: {
+      'Cookie': Astro.request.headers.get('Cookie') || '',
+    },
+  });
+
+  if (response.ok) {
+    profile = await response.json();
+  } else if (response.status === 404) {
+    errorMessage = 'Profil nie znaleziony. Prosimy skontaktować się z supportem.';
+  } else if (response.status === 401) {
+    // Session expired or invalid - redirect to login
+    return Astro.redirect('/login');
+  } else {
+    errorMessage = 'Błąd serwera. Spróbuj ponownie później.';
+  }
+} catch (error) {
+  console.error('Error fetching user profile:', error);
+  errorMessage = 'Błąd serwera. Spróbuj ponownie później.';
+}
+
+// If there was an error, display error page
+if (errorMessage) {
+  return new Response(errorMessage, {
+    status: profile === null && errorMessage.includes('404') ? 404 : 500,
+  });
+}
+
+// Map API response to ProfilePageVM
+const userProfile: ProfilePageVM = {
+  email: session?.user?.email || 'brak@email.com',
+  nickname: profile?.nickname || null,
+  registeredAt: session?.user?.created_at || new Date().toISOString(),
+  preferences: profile?.preferences || null,
+};
+---
+
+<Layout title="Profil - SmartBudgetAI">
+  <div class="flex min-h-screen">
+    <!-- Sidebar - hidden on mobile, visible on desktop -->
+    <div class="hidden lg:block">
+      <AppSidebar currentPage="profile" client:load />
+    </div>
+
+    <!-- Main content area -->
+    <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
+      <AppHeader currentPage="profile" client:load />
+      <main class="flex-1 bg-background pb-16 lg:pb-0">
+        <div class="container mx-auto px-4 py-8">
+          <ProfileView userProfile={userProfile} client:load />
+        </div>
+      </main>
+      <AppFooter client:load />
+    </div>
+
+    <!-- Mobile bottom navigation -->
+    <MobileNav currentPage="profile" client:load />
+  </div>
+
+  <script>
+    // Adjust main content padding based on sidebar state
+    function updateMainContentPadding() {
+      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
+      const mainContent = document.getElementById('main-content');
+      if (mainContent && window.innerWidth >= 1024) {
+        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+      }
+    }
+
+    // Initial update
+    updateMainContentPadding();
+
+    // Listen for sidebar toggle
+    window.addEventListener('toggle-sidebar', () => {
+      setTimeout(updateMainContentPadding, 50);
+    });
+
+    // Update on resize
+    window.addEventListener('resize', updateMainContentPadding);
+  </script>
+</Layout>
+
