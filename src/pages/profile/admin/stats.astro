@@ -1,0 +1,89 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import AiStatsView from '../../../components/AiStatsView';
+import { AppHeader } from '../../../components/AppHeader';
+import { AppFooter } from '../../../components/AppFooter';
+import { AppSidebar } from '../../../components/AppSidebar';
+import { MobileNav } from '../../../components/MobileNav';
+import { Breadcrumbs } from '../../../components/Breadcrumbs';
+
+// TODO: Uncomment when ready to enforce authentication
+// import { redirect } from 'astro';
+//
+// // Check if user is authenticated
+// const { data: { session } } = await Astro.locals.supabase.auth.getSession();
+//
+// if (!session) {
+//   return redirect('/login');
+// }
+//
+// // TODO: Check if user has admin role
+// // If not admin, redirect to profile
+// if (!isAdmin(session.user)) {
+//   return redirect('/profile');
+// }
+
+const pageTitle = 'Statystyki AI Kategoryzacji';
+const pageDescription = 'Panel administratora - Monitorowanie efektywności automatycznej kategoryzacji wydatków';
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <div class="flex min-h-screen">
+    <!-- Sidebar - hidden on mobile, visible on desktop -->
+    <div class="hidden lg:block">
+      <AppSidebar currentPage="admin" client:load />
+    </div>
+
+    <!-- Main content area -->
+    <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
+      <AppHeader currentPage="profile" client:load />
+
+      <main class="flex-1 bg-background pb-16 lg:pb-0">
+        <div class="container mx-auto px-4 py-8">
+          <!-- Breadcrumbs -->
+          <div class="mb-6">
+            <Breadcrumbs
+              items={[
+                { label: 'Profil', href: '/profile' },
+                { label: 'Panel Administratora', href: '#' },
+                { label: 'Statystyki AI', href: '#' }
+              ]}
+              showSidebarToggle={true}
+            />
+          </div>
+
+          <!-- Main view -->
+          <AiStatsView client:load />
+        </div>
+      </main>
+
+      <AppFooter client:load />
+    </div>
+
+    <!-- Mobile bottom navigation -->
+    <MobileNav currentPage="profile" client:load />
+  </div>
+
+  <script>
+    // Adjust main content padding based on sidebar state
+    function updateMainContentPadding() {
+      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
+      const mainContent = document.getElementById('main-content');
+      if (mainContent && window.innerWidth >= 1024) {
+        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+      }
+    }
+
+    // Initial update
+    updateMainContentPadding();
+
+    // Listen for sidebar toggle
+    window.addEventListener('toggle-sidebar', () => {
+      setTimeout(updateMainContentPadding, 50);
+    });
+
+    // Listen for resize
+    window.addEventListener('resize', updateMainContentPadding);
+  </script>
+</Layout>
+

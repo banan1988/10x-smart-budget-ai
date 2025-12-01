@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
-  currentPage?: 'dashboard' | 'transactions';
+  currentPage?: 'dashboard' | 'transactions' | 'profile' | 'admin';
 }
 
 /**
@@ -99,6 +99,29 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
         </svg>
       ),
       active: currentPage === 'profile',
+    },
+    {
+      name: 'Statystyki AI',
+      href: '/profile/admin/stats',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 3v18a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-7V3" />
+          <path d="M16 3H8v4h8V3z" />
+          <rect x="6" y="14" width="3" height="4" />
+          <rect x="13" y="11" width="3" height="7" />
+        </svg>
+      ),
+      active: currentPage === 'admin',
     },
   ];
 
