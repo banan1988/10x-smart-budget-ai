@@ -210,6 +210,16 @@ export interface ProfileCardData {
   registeredAt: string;
 }
 
+/**
+ * ViewModel for the Profile Settings page.
+ * Used to pass data from server (Astro) to React components.
+ */
+export interface ProfileSettingsPageVM {
+  email: string;
+  nickname: string | null;
+  registeredAt: string; // ISO format: "2025-01-15T10:30:00.000Z"
+  preferences: Record<string, any> | null;
+}
 
 /**
  * Request body for submitting user feedback.
@@ -335,7 +345,9 @@ export interface EditProfileFormData {
 /**
  * Request body for updating user profile
  */
-export type UpdateProfileRequest = Pick<TablesUpdate<'user_profiles'>, 'nickname'>;
+export interface UpdateProfileRequest {
+  nickname: string;
+}
 
 /**
  * Response DTO for successful profile update
@@ -344,7 +356,7 @@ export interface UpdateProfileResponse {
   success: boolean;
   message?: string;
   data?: {
-    nickname: string | null;
+    nickname: string;
   };
 }
 
@@ -357,6 +369,13 @@ export interface ValidationError {
 }
 
 /**
+ * Request body for submitting user feedback.
+ *
+ * @validation
+ * - `rating`: Integer between 1 and 5. Required.
+ * - `comment`: Max 1000 characters. Optional.
+ */
+export type FeedbackRequest = Pick<TablesInsert<'feedback'>, 'rating' | 'comment'>;/**
  * Zod schema for validating PUT /api/user/profile request body
  */
 export const UpdateProfileCommandSchema = z.object({

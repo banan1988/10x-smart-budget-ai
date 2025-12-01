@@ -38,6 +38,36 @@ export class UserService {
   }
 
   /**
+   * Updates the profile data for a specific user.
+   *
+   * @param supabase - The Supabase client instance
+   * @param userId - The ID of the user whose profile to update
+   * @param updates - The profile fields to update
+   * @returns Promise resolving to updated UserProfileDto
+   * @throws Error if database update fails
+   */
+  static async updateUserProfile(
+    supabase: SupabaseClient,
+    userId: string,
+    updates: Partial<UserProfileDto>
+  ): Promise<UserProfileDto> {
+    // Update the user_profiles table
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select('nickname, preferences')
+      .single();
+
+    // Handle database errors
+    if (error) {
+      throw new Error(`Failed to update user profile: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
    * Permanently deletes a user account and all associated data.
    * This operation uses the service_role client to delete from auth.users,
    * which triggers cascading deletion of related data.
