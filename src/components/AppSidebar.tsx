@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
-  currentPage?: 'dashboard' | 'transactions' | 'profile' | 'admin';
+  currentPage?: 'dashboard' | 'transactions' | 'profile' | 'admin-stats' | 'admin-feedbacks';
 }
 
 /**
@@ -100,6 +100,9 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
       ),
       active: currentPage === 'profile',
     },
+  ];
+
+  const adminItems = [
     {
       name: 'Statystyki AI',
       href: '/profile/admin/stats',
@@ -121,7 +124,7 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
           <rect x="13" y="11" width="3" height="7" />
         </svg>
       ),
-      active: currentPage === 'admin',
+      active: currentPage === 'admin-stats',
     },
     {
       name: 'Feedbacki',
@@ -144,7 +147,7 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
           <path d="M16 10h.01" />
         </svg>
       ),
-      active: currentPage === 'admin',
+      active: currentPage === 'admin-feedbacks',
     },
   ];
 
@@ -168,25 +171,83 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-2 p-2">
-          {navItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                'hover:bg-accent hover:text-accent-foreground',
-                item.active
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground'
-              )}
-              title={item.name}
-            >
-              <span className="flex-shrink-0">{item.icon}</span>
-              {isExpanded && (
-                <span className="text-sm font-medium">{item.name}</span>
-              )}
-            </a>
-          ))}
+          {/* Main menu section */}
+          {isExpanded && (
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Menu
+            </div>
+          )}
+          <div className={cn('space-y-1', isExpanded && 'ml-2 pl-2')}>
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
+                  'hover:bg-accent hover:text-accent-foreground',
+                  item.active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground'
+                )}
+                title={item.name}
+              >
+                <span className="flex-shrink-0">{item.icon}</span>
+                {isExpanded && (
+                  <span className="text-sm font-medium">{item.name}</span>
+                )}
+              </a>
+            ))}
+          </div>
+
+          {/* Admin section */}
+          {isExpanded && (
+            <div className="pt-2">
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Panel Administratora
+              </div>
+              <div className={cn('space-y-1', isExpanded && 'ml-2 pl-2')}>
+                {adminItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      item.active
+                        ? 'bg-blue-600 text-white'
+                        : 'text-muted-foreground'
+                    )}
+                    title={item.name}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className="text-sm font-medium">{item.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Admin section - collapsed mode */}
+          {!isExpanded && (
+            <div className="space-y-1">
+              {adminItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    item.active
+                      ? 'bg-blue-600 text-white'
+                      : 'text-muted-foreground'
+                  )}
+                  title={item.name}
+                >
+                  <span className="flex-shrink-0">{item.icon}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* Bottom section - Settings */}
