@@ -201,6 +201,79 @@ export interface ProfilePageVM {
 }
 
 /**
+ * Request DTO for feedback submission.
+ *
+ * @validation
+ * - `rating`: Must be an integer between 1 and 5. Required.
+ * - `comment`: Max 1000 characters. Optional.
+ */
+export type FeedbackRequest = {
+  rating: number;
+  comment: string;
+};
+
+/**
+ * Zod schema for validating POST /api/feedbacks request body
+ */
+export const CreateFeedbackCommandSchema = z.object({
+  rating: z.number().int().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
+  comment: z.string().max(1000, 'Comment must not exceed 1000 characters').optional().default(''),
+});
+
+export type CreateFeedbackCommand = z.infer<typeof CreateFeedbackCommandSchema>;
+
+/**
+ * Response DTO for feedback submission.
+ */
+export type FeedbackResponse = {
+  message: string;
+};
+
+/**
+ * Form data for feedback form (internal state)
+ */
+export interface FeedbackFormData {
+  rating: number | null;
+  comment: string;
+}
+
+/**
+ * ViewModel for FeedbackButton component
+ */
+export interface FeedbackButtonVM {
+  isAuthenticated: boolean;
+  userId?: string;
+}
+
+/**
+ * ViewModel for FeedbackDialog component
+ */
+export interface FeedbackDialogVM {
+  isOpen: boolean;
+  title: string;
+  description?: string;
+}
+
+/**
+ * Response DTO for a single feedback entry.
+ */
+export type FeedbackDto = {
+  id: number;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};
+
+/**
+ * Response DTO for feedback statistics (average rating and total count).
+ */
+export type FeedbackStatsDto = {
+  averageRating: number;
+  totalFeedbacks: number;
+};
+
+/**
  * ViewModel for the ProfileCard component.
  * Contains data needed to display the profile card.
  */
