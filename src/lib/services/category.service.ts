@@ -46,5 +46,46 @@ export class CategoryService {
     // Sort by translated name (Polish) instead of key for proper alphabetical order
     return categories.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
   }
+
+  /**
+   * Finds a category by its key.
+   *
+   * @param supabase - The Supabase client instance
+   * @param key - The category key to search for
+   * @returns Promise resolving to CategoryDto or null if not found
+   * @throws Error if database query fails
+   */
+  static async getCategoryByKey(supabase: SupabaseClient, key: string): Promise<CategoryDto | null> {
+    // Query the categories table
+    const { data, error } = await supabase
+      .from('categories')
+      .select('id, key, translations')
+      .eq('key', key)
+      .single();
+
+    // Handle database errors
+    if (error) {
+      // Not found is not an error in this case
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw new Error(`Failed to fetch category: ${error.message}`);
+    }
+
+    // Handle empty result
+    if (!data) {
+      return null;
+    }
+
+    // Extract Polish translation from the translations JSON object
+    const translations = data.translations as Record<string, string>;
+    const name = translations?.pl || data.key;
+
+    return {
+      id: data.id,
+      key: data.key,
+      name,
+    };
+  }
 }
 

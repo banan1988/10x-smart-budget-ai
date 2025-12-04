@@ -1,7 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TransactionService } from './transaction.service';
+import { CategoryService } from './category.service';
 import { createMockSupabaseClient } from '../../test/mocks/supabase.mock';
 import type { CreateTransactionCommand, UpdateTransactionCommand } from '../../types';
+
+// Mock AiCategorizationService to avoid OpenRouter API key requirement in tests
+vi.mock('./ai-categorization.service', () => {
+  return {
+    AiCategorizationService: vi.fn(function() {
+      this.categorizeTransaction = vi.fn().mockResolvedValue({
+        categoryKey: 'other',
+        confidence: 0,
+        reasoning: 'Mocked result',
+      });
+    }),
+  };
+});
+
+// Import after mocking
+import { AiCategorizationService } from './ai-categorization.service';
 
 /**
  * Helper function to create mock transaction data
@@ -29,6 +46,11 @@ function createMockTransactionData(overrides = {}) {
 
 describe('TransactionService', () => {
   const userId = 'test-user-id';
+
+  // Reset mocks before each test
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   describe('getTransactions', () => {
     it('should return transactions for a specific month', async () => {
@@ -336,6 +358,263 @@ describe('TransactionService', () => {
       await expect(
         TransactionService.createTransaction(mockSupabase, userId, command)
       ).rejects.toThrow('Failed to create transaction: No data returned');
+    });
+
+    it('should automatically categorize expense transaction using AI when no categoryId provided', async () => {
+      // Arrange
+      const command: CreateTransactionCommand = {
+        type: 'expense',
+        amount: 150,
+        description: 'Coffee at Starbucks',
+        date: '2025-11-15',
+      };
+
+      // Mock AI categorization result
+      const mockCategorizationResult = {
+        categoryKey: 'restaurants',
+        confidence: 0.95,
+        reasoning: 'Coffee purchase at a cafe establishment',
+      };
+
+      // Mock category from database
+      const mockCategory = {
+        id: 4,
+        key: 'restaurants',
+        name: 'Restauracje',
+      };
+
+      // Mock the transaction data with AI categorization
+      const mockData = createMockTransactionData({
+        ...command,
+        category_id: 4,
+        is_ai_categorized: true,
+        categories: {
+          id: 4,
+          key: 'restaurants',
+          translations: { pl: 'Restauracje', en: 'Restaurants' },
+        },
+      });
+
+      // Configure the mock for this specific test
+      const categorizeTransactionMock = vi.fn().mockResolvedValue(mockCategorizationResult);
+      vi.mocked(AiCategorizationService).mockImplementationOnce(function() {
+        this.categorizeTransaction = categorizeTransactionMock;
+      } as any);
+
+      // Mock category service
+      const getCategoryByKeyMock = vi.fn().mockResolvedValue(mockCategory);
+      vi.spyOn(CategoryService, 'getCategoryByKey').mockImplementation(getCategoryByKeyMock);
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.createTransaction(mockSupabase, userId, command);
+
+      // Assert
+      expect(result.is_ai_categorized).toBe(true);
+      expect(result.category).toEqual({
+        id: 4,
+        key: 'restaurants',
+        name: 'Restauracje',
+      });
+      expect(categorizeTransactionMock).toHaveBeenCalledWith('Coffee at Starbucks');
+      expect(getCategoryByKeyMock).toHaveBeenCalledWith(mockSupabase, 'restaurants');
+    });
+
+    it('should not use AI categorization for income transactions', async () => {
+      // Arrange
+      const command: CreateTransactionCommand = {
+        type: 'income',
+        amount: 5000,
+        description: 'Salary',
+        date: '2025-11-01',
+      };
+
+      const mockData = createMockTransactionData({
+        ...command,
+        category_id: null,
+        is_ai_categorized: false,
+        categories: null,
+      });
+
+      // Track AI service calls
+      const categorizeTransactionMock = vi.fn();
+      vi.mocked(AiCategorizationService).mockImplementationOnce(function() {
+        this.categorizeTransaction = categorizeTransactionMock;
+      } as any);
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.createTransaction(mockSupabase, userId, command);
+
+      // Assert
+      expect(result.is_ai_categorized).toBe(false);
+      expect(result.category).toBeNull();
+      expect(categorizeTransactionMock).not.toHaveBeenCalled();
+    });
+
+    it('should not use AI categorization when manual categoryId is provided', async () => {
+      // Arrange
+      const command: CreateTransactionCommand = {
+        type: 'expense',
+        amount: 150,
+        description: 'Coffee at Starbucks',
+        date: '2025-11-15',
+        categoryId: 4, // Manual category
+      };
+
+      const mockData = createMockTransactionData({
+        ...command,
+        category_id: 4,
+        is_ai_categorized: false,
+        categories: {
+          id: 4,
+          key: 'restaurants',
+          translations: { pl: 'Restauracje', en: 'Restaurants' },
+        },
+      });
+
+      // Track AI service calls
+      const categorizeTransactionMock = vi.fn();
+      vi.mocked(AiCategorizationService).mockImplementationOnce(function() {
+        this.categorizeTransaction = categorizeTransactionMock;
+      } as any);
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.createTransaction(mockSupabase, userId, command);
+
+      // Assert
+      expect(result.is_ai_categorized).toBe(false);
+      expect(result.category).toEqual({
+        id: 4,
+        key: 'restaurants',
+        name: 'Restauracje',
+      });
+      expect(categorizeTransactionMock).not.toHaveBeenCalled();
+    });
+
+    it('should handle AI categorization failure gracefully and create transaction without category', async () => {
+      // Arrange
+      const command: CreateTransactionCommand = {
+        type: 'expense',
+        amount: 150,
+        description: 'Coffee at Starbucks',
+        date: '2025-11-15',
+      };
+
+      const mockData = createMockTransactionData({
+        ...command,
+        category_id: null,
+        is_ai_categorized: false,
+        categories: null,
+      });
+
+      // Mock AI categorization to throw error
+      const categorizeTransactionMock = vi.fn().mockRejectedValue(
+        new Error('AI service unavailable')
+      );
+      vi.mocked(AiCategorizationService).mockImplementationOnce(function() {
+        this.categorizeTransaction = categorizeTransactionMock;
+      } as any);
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.createTransaction(mockSupabase, userId, command);
+
+      // Assert
+      expect(result.is_ai_categorized).toBe(false);
+      expect(result.category).toBeNull();
+    });
+
+    it('should handle case when AI returns category key not found in database', async () => {
+      // Arrange
+      const command: CreateTransactionCommand = {
+        type: 'expense',
+        amount: 150,
+        description: 'Unknown expense',
+        date: '2025-11-15',
+      };
+
+      const mockData = createMockTransactionData({
+        ...command,
+        category_id: null,
+        is_ai_categorized: false,
+        categories: null,
+      });
+
+      // Mock AI categorization result with non-existent category
+      const mockCategorizationResult = {
+        categoryKey: 'non_existent_category',
+        confidence: 0.8,
+        reasoning: 'Some reasoning',
+      };
+
+      const categorizeTransactionMock = vi.fn().mockResolvedValue(mockCategorizationResult);
+      vi.mocked(AiCategorizationService).mockImplementationOnce(function() {
+        this.categorizeTransaction = categorizeTransactionMock;
+      } as any);
+
+      // Mock category service returning null (category not found)
+      vi.spyOn(CategoryService, 'getCategoryByKey').mockResolvedValue(null);
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          insert: vi.fn(() => ({
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.createTransaction(mockSupabase, userId, command);
+
+      // Assert
+      // Transaction should still be created successfully
+      expect(result).toBeDefined();
+      expect(result.type).toBe('expense');
+      expect(result.amount).toBe(150);
+      expect(result.description).toBe('Unknown expense');
+      // Category should not be set since it wasn't found
+      expect(result.is_ai_categorized).toBe(false);
+      expect(result.category).toBeNull();
     });
   });
 

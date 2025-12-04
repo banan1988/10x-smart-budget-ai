@@ -1,5 +1,7 @@
 // filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/ai-categorization.service.ts
 import { OpenRouterService } from './openrouter.service';
+import { CategoryService } from './category.service';
+import type { SupabaseClient } from '../../db/supabase.client';
 
 /**
  * Result of AI categorization including category key, confidence, and reasoning.
@@ -10,32 +12,20 @@ export interface CategorizationResult {
   reasoning: string;
 }
 
-/**
- * Valid category keys for transaction categorization.
- */
-const VALID_CATEGORIES = [
-  'groceries',
-  'transport',
-  'entertainment',
-  'restaurants',
-  'utilities',
-  'health',
-  'shopping',
-  'education',
-  'housing',
-  'other',
-] as const;
 
 /**
- * JSON schema for the expected AI response format.
+ * Creates JSON schema for the expected AI response format.
  * Uses strict schema to enforce exact response structure with enum for categoryKey.
+ *
+ * @param validCategories - Array of valid category keys
+ * @returns JSON schema object
  */
-const CATEGORY_RESPONSE_SCHEMA = {
+const createCategoryResponseSchema = (validCategories: string[]) => ({
   type: 'object',
   properties: {
     categoryKey: {
       type: 'string',
-      enum: VALID_CATEGORIES,
+      enum: validCategories,
       description: 'The suggested category key for the transaction',
     },
     confidence: {
@@ -53,24 +43,23 @@ const CATEGORY_RESPONSE_SCHEMA = {
   },
   required: ['categoryKey', 'confidence', 'reasoning'],
   additionalProperties: false,
-};
+});
 
 /**
- * System prompt that defines the AI's behavior and context for categorization.
+ * Creates system prompt that defines the AI's behavior and context for categorization.
+ *
+ * @param categories - Array of category objects with key and name
+ * @returns System prompt string
  */
-const SYSTEM_PROMPT = `You are an expert in personal finance categorization. Your task is to analyze transaction descriptions and categorize them into appropriate spending categories.
+const createSystemPrompt = (categories: Array<{ key: string; name: string }>) => {
+  const categoryList = categories
+    .map(cat => `- ${cat.key}: ${cat.name}`)
+    .join('\n');
+
+  return `You are an expert in personal finance categorization. Your task is to analyze transaction descriptions and categorize them into appropriate spending categories.
 
 Available categories:
-- groceries: Food shopping, supermarkets, grocery stores
-- transport: Public transport, fuel, car maintenance, parking, ride-sharing
-- entertainment: Movies, concerts, games, streaming services, hobbies
-- restaurants: Dining out, cafes, food delivery, bars
-- utilities: Electricity, water, gas, internet, phone bills
-- health: Medical expenses, pharmacy, gym, wellness
-- shopping: Clothing, electronics, home goods, non-grocery retail
-- education: Books, courses, tuition, learning materials
-- housing: Rent, mortgage, home insurance, property taxes
-- other: Anything that doesn't fit the above categories
+${categoryList}
 
 Analyze the transaction description and provide:
 1. The most appropriate category key (use the exact keys listed above)
@@ -78,6 +67,7 @@ Analyze the transaction description and provide:
 3. A brief reasoning explaining your choice
 
 Be precise and consistent in your categorization.`;
+};
 
 /**
  * Service for AI-powered transaction categorization.
@@ -91,10 +81,10 @@ Be precise and consistent in your categorization.`;
  *
  * @example
  * ```typescript
- * const service = new AiCategorizationService();
+ * const service = new AiCategorizationService(supabase);
  * const result = await service.categorizeTransaction('Coffee at Starbucks');
  * // {
- * //   categoryKey: 'restaurants',
+ * //   categoryKey: 'dining',
  * //   confidence: 0.95,
  * //   reasoning: 'Coffee purchase at a cafe establishment'
  * // }
@@ -102,6 +92,7 @@ Be precise and consistent in your categorization.`;
  */
 export class AiCategorizationService {
   private openRouterService: OpenRouterService;
+  private supabase: SupabaseClient;
 
   /**
    * Minimum confidence threshold for accepting AI categorization.
@@ -112,10 +103,14 @@ export class AiCategorizationService {
   /**
    * Fallback models to try in order if one fails or runs out of credits.
    *
+   * Can be configured via OPENROUTER_FALLBACK_MODELS env variable as comma-separated list.
+   * Example: "google/gemini-2.0-flash-exp:free,meta-llama/llama-3.2-3b-instruct:free"
+   *
    * Priority order:
-   * 1. Custom model from env (if set)
-   * 2. Free models (no cost, good for testing)
-   * 3. Paid models (fallback if free models fail)
+   * 1. Custom model from OPENROUTER_MODEL env (if set)
+   * 2. Models from OPENROUTER_FALLBACK_MODELS env (if set)
+   * 3. Default free models (no cost, good for testing)
+   * 4. Default paid models (fallback if free models fail)
    *
    * Each model will be tried until one succeeds or all fail.
    */
@@ -133,28 +128,72 @@ export class AiCategorizationService {
    */
   private readonly MAX_TOKENS = 150;
 
-  constructor() {
-    this.openRouterService = new OpenRouterService();
+  /**
+   * Cached categories from database to avoid repeated queries.
+   */
+  private categoriesCache: Array<{ key: string; name: string }> | null = null;
 
-    // Build fallback models list with custom model first if provided
+  constructor(supabase: SupabaseClient) {
+    this.openRouterService = new OpenRouterService();
+    this.supabase = supabase;
+
+    // Build fallback models list
     const customModel = import.meta.env.OPENROUTER_MODEL;
-    const freeModels = [
+    const fallbackModelsEnv = import.meta.env.OPENROUTER_FALLBACK_MODELS;
+
+    // Parse fallback models from env (comma-separated)
+    const envModels = fallbackModelsEnv
+      ? fallbackModelsEnv.split(',').map((m: string) => m.trim()).filter(Boolean)
+      : [];
+
+    // Default free models
+    const defaultFreeModels = [
       'google/gemini-2.0-flash-exp:free',
       'meta-llama/llama-3.2-3b-instruct:free',
       'meta-llama/llama-3.2-1b-instruct:free',
     ];
-    const paidModels = [
+
+    // Default paid models
+    const defaultPaidModels = [
       'openai/gpt-4o-mini',
       'anthropic/claude-3-haiku',
     ];
 
+    // Build final list: custom model + env models + default models
+    const allModels: string[] = [];
+
     if (customModel) {
-      // Custom model + free models + paid models
-      this.FALLBACK_MODELS = [customModel, ...freeModels, ...paidModels];
-    } else {
-      // Just free models + paid models
-      this.FALLBACK_MODELS = [...freeModels, ...paidModels];
+      allModels.push(customModel);
     }
+
+    if (envModels.length > 0) {
+      allModels.push(...envModels);
+    } else {
+      // Use defaults only if no env models specified
+      allModels.push(...defaultFreeModels, ...defaultPaidModels);
+    }
+
+    this.FALLBACK_MODELS = allModels;
+  }
+
+  /**
+   * Loads and caches categories from the database.
+   *
+   * @returns Promise resolving to array of categories with key and name
+   * @throws Error if database query fails
+   */
+  private async getCategories(): Promise<Array<{ key: string; name: string }>> {
+    if (this.categoriesCache) {
+      return this.categoriesCache;
+    }
+
+    const categories = await CategoryService.getGlobalCategories(this.supabase);
+    this.categoriesCache = categories.map(cat => ({
+      key: cat.key,
+      name: cat.name,
+    }));
+
+    return this.categoriesCache;
   }
 
   /**
@@ -190,6 +229,20 @@ export class AiCategorizationService {
       };
     }
 
+    // Load categories from database
+    let categories: Array<{ key: string; name: string }>;
+    try {
+      categories = await this.getCategories();
+    } catch (error) {
+      console.error('Failed to load categories from database:', error);
+      // Fallback to 'other' if we can't load categories
+      return {
+        categoryKey: 'other',
+        confidence: 0,
+        reasoning: 'Categories unavailable',
+      };
+    }
+
     // Truncate very long descriptions to avoid excessive token usage
     const truncatedDescription = description.length > 500
       ? description.substring(0, 500) + '...'
@@ -202,7 +255,7 @@ export class AiCategorizationService {
       try {
         console.log(`Attempting categorization with model: ${model}`);
 
-        const result = await this.categorizeWithModel(model, truncatedDescription);
+        const result = await this.categorizeWithModel(model, truncatedDescription, categories);
 
         // Success! Log which model worked and return
         console.log(`✓ Successfully categorized with model: ${model}`);
@@ -244,39 +297,51 @@ export class AiCategorizationService {
    *
    * @param model - The model identifier to use
    * @param description - The transaction description to categorize
+   * @param categories - Array of valid categories from database
    * @returns Promise resolving to CategorizationResult
    * @throws {Error} If the model fails or returns invalid data
    */
-  private async categorizeWithModel(model: string, description: string): Promise<CategorizationResult> {
+  private async categorizeWithModel(
+    model: string,
+    description: string,
+    categories: Array<{ key: string; name: string }>
+  ): Promise<CategorizationResult> {
+    // Extract category keys for validation
+    const validCategoryKeys = categories.map(cat => cat.key);
+
     // Build the user prompt - keep it concise
     const userPrompt = `Categorize this transaction: "${description}"
 
-Available categories: ${VALID_CATEGORIES.join(', ')}
+Available categories: ${validCategoryKeys.join(', ')}
 
 Provide:
 - categoryKey: exact category name from the list
 - confidence: number 0-1 indicating certainty
 - reasoning: brief explanation (max 200 chars)`;
 
+    // Create dynamic schema and system prompt based on actual categories
+    const categorySchema = createCategoryResponseSchema(validCategoryKeys);
+    const systemPrompt = createSystemPrompt(categories);
+
     // Try with json_schema strict mode first
     try {
       const result = await this.openRouterService.getChatCompletion<CategorizationResult>({
         model,
-        systemPrompt: SYSTEM_PROMPT,
+        systemPrompt,
         userPrompt,
         responseFormat: {
           type: 'json_schema',
           json_schema: {
             name: 'transaction_category',
             strict: true,
-            schema: CATEGORY_RESPONSE_SCHEMA,
+            schema: categorySchema,
           },
         },
         temperature: this.TEMPERATURE,
         maxTokens: this.MAX_TOKENS,
       });
 
-      return this.validateAndNormalizeResult(result);
+      return this.validateAndNormalizeResult(result, validCategoryKeys);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '';
 
@@ -288,7 +353,7 @@ Provide:
 
         const result = await this.openRouterService.getChatCompletion<CategorizationResult>({
           model,
-          systemPrompt: SYSTEM_PROMPT,
+          systemPrompt,
           userPrompt,
           responseFormat: {
             type: 'json_object',
@@ -297,7 +362,7 @@ Provide:
           maxTokens: this.MAX_TOKENS,
         });
 
-        return this.validateAndNormalizeResult(result);
+        return this.validateAndNormalizeResult(result, validCategoryKeys);
       }
 
       // For other errors, re-throw
@@ -310,10 +375,11 @@ Provide:
    * Handles both strict json_schema responses and looser json_object responses.
    *
    * @param result - The raw result from the AI model
+   * @param validCategoryKeys - Array of valid category keys from database
    * @returns Validated and normalized CategorizationResult
    * @throws {Error} If the result is invalid
    */
-  private validateAndNormalizeResult(result: any): CategorizationResult {
+  private validateAndNormalizeResult(result: any, validCategoryKeys: string[]): CategorizationResult {
     // Validate basic structure
     if (!result || typeof result !== 'object') {
       throw new Error('Invalid response: not an object');
@@ -355,8 +421,8 @@ Provide:
       };
     }
 
-    // Validate category key is in our enum
-    if (!VALID_CATEGORIES.includes(result.categoryKey as any)) {
+    // Validate category key is in our valid list from database
+    if (!validCategoryKeys.includes(result.categoryKey)) {
       console.warn(`AI returned unexpected category: ${result.categoryKey}`);
       return {
         categoryKey: 'other',

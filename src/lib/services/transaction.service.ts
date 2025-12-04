@@ -9,6 +9,7 @@ import type {
   BulkCreateTransactionsCommand
 } from '../../types';
 import { CategoryService } from './category.service';
+import { AiCategorizationService } from './ai-categorization.service';
 
 /**
  * Service for managing financial transactions.
@@ -166,11 +167,39 @@ export class TransactionService {
     // For expenses without manual category, use AI to categorize
     if (command.type === 'expense' && !categoryId) {
       try {
-        // TODO: Implement AI categorization service call
-        // For now, this is a placeholder
-        // categoryId = await AICategorizer.categorize(command.description);
-        // isAiCategorized = true;
-        console.log('AI categorization not yet implemented - transaction will have no category');
+        // Initialize AI categorization service
+        const aiService = new AiCategorizationService(supabase);
+
+        // Get AI categorization result
+        const categorizationResult = await aiService.categorizeTransaction(command.description);
+
+        // Log categorization result for debugging
+        console.log('AI categorization result:', {
+          categoryKey: categorizationResult.categoryKey,
+          confidence: categorizationResult.confidence,
+          reasoning: categorizationResult.reasoning,
+        });
+
+        // Find category by key returned from AI
+        const category = await CategoryService.getCategoryByKey(supabase, categorizationResult.categoryKey);
+
+        if (category) {
+          categoryId = category.id;
+
+          // Mark as AI categorized only if:
+          // 1. Confidence is above 0 (not a fallback)
+          // 2. Category is not "other" OR is "other" with high confidence (>= 0.5)
+          const isSuccessfulCategorization =
+            categorizationResult.confidence > 0 &&
+            (categorizationResult.categoryKey !== 'other' || categorizationResult.confidence >= 0.5);
+
+          isAiCategorized = isSuccessfulCategorization;
+
+          console.log(`Transaction categorized as "${category.name}" (${category.key}) with confidence ${categorizationResult.confidence}`,
+            isSuccessfulCategorization ? '' : '(fallback - not marked as AI categorized)');
+        } else {
+          console.warn(`AI returned category key "${categorizationResult.categoryKey}" but it was not found in database`);
+        }
       } catch (error) {
         // Log AI categorization error but don't fail the transaction creation
         console.error('AI categorization failed:', error);
