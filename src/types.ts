@@ -2,6 +2,12 @@ import type { Tables, TablesInsert, TablesUpdate } from './db/database.types';
 import { z } from 'zod';
 
 /**
+ * Constants for transactions and categories
+ */
+export const UNCATEGORIZED_CATEGORY_KEY = 'uncategorized';
+export const UNCATEGORIZED_CATEGORY_NAME = 'Do kategoryzacji AI';
+
+/**
  * Response DTO for a category.
  * The `name` is derived from the `translations` JSON object in the database
  * based on the user's locale.

@@ -49,6 +49,11 @@ This project is designed to be **AI Ready**, with a clear separation of concerns
 
 The use of Supabase for the backend and a well-defined API structure in Astro allows for seamless communication between the client and any AI services.
 
+### AI Features
+
+- **Automatic Transaction Categorization**: Transactions are automatically categorized using AI based on their descriptions. See [AI Categorization Documentation](./docs/ai-categorization.md) for more details.
+- **Smart Financial Insights**: AI-generated summaries of spending patterns and trends.
+
 ## Getting Started Locally
 
 To get a local copy up and running, follow these simple steps.

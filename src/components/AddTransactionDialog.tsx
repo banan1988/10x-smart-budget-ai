@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { CategoryDto, TransactionVM } from '@/types';
+import { UNCATEGORIZED_CATEGORY_NAME } from '@/types';
+import { Sparkles } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -320,7 +322,9 @@ export function AddTransactionDialog({
                 <SelectValue placeholder="Wybierz kategorię" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Bez kategorii</SelectItem>
+                <SelectItem value="none">
+                  {UNCATEGORIZED_CATEGORY_NAME} <Sparkles className="h-4 w-4 text-purple-500 ml-2 inline" aria-label="Do kategoryzacji przez AI" />
+                </SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}

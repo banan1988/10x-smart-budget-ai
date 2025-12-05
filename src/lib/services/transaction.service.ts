@@ -8,6 +8,7 @@ import type {
   TransactionStatsDto,
   BulkCreateTransactionsCommand
 } from '../../types';
+import { UNCATEGORIZED_CATEGORY_NAME } from '../../types';
 import { CategoryService } from './category.service';
 import { AiCategorizationService } from './ai-categorization.service';
 
@@ -541,7 +542,7 @@ export class TransactionService {
     if (uncategorized.length > 0) {
       const total = uncategorized.reduce((sum, t) => sum + t.amount, 0);
       categoryMap.set(null, {
-        name: 'Bez kategorii',
+        name: UNCATEGORIZED_CATEGORY_NAME,
         total,
         count: uncategorized.length,
       });

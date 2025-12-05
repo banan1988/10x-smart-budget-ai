@@ -45,8 +45,8 @@ function mapToViewModel(dto: TransactionDto): TransactionVM {
     description: dto.description,
     date: formatDate(dto.date),
     rawDate: dto.date, // Keep original YYYY-MM-DD format for editing
-    categoryName: dto.category?.name || 'Bez kategorii',
-    categoryKey: dto.category?.key || 'uncategorized',
+    categoryName: dto.category?.name || UNCATEGORIZED_CATEGORY_NAME,
+    categoryKey: dto.category?.key || UNCATEGORIZED_CATEGORY_KEY,
     isAiCategorized: dto.is_ai_categorized,
   };
 }
