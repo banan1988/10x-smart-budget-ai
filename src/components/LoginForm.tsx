@@ -74,9 +74,17 @@ export default function LoginForm() {
 
           {/* Password Field */}
           <div className="space-y-2">
-            <Label htmlFor={passwordInputId} className="text-sm font-medium">
-              Hasło
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor={passwordInputId} className="text-sm font-medium">
+                Hasło
+              </Label>
+              <a
+                href="/forgot-password"
+                className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded px-1"
+              >
+                Zapomniałeś hasła?
+              </a>
+            </div>
             <div className="relative">
               <Input
                 id={passwordInputId}
@@ -153,4 +161,3 @@ export default function LoginForm() {
     </Card>
   );
 }
-
