@@ -1,4 +1,4 @@
-import { MoreVertical, Pencil, Trash2, Sparkles } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import type { TransactionVM } from '@/types';
 import {
   Card,
@@ -74,12 +74,17 @@ function TransactionsCardItem({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold truncate">{transaction.description}</h3>
-              {transaction.isAiCategorized && (
+              {transaction.categorizationStatus === 'pending' ? (
+                <Loader2
+                  className="h-4 w-4 text-blue-500 flex-shrink-0 animate-spin"
+                  aria-label="Kategoryzacja w toku..."
+                />
+              ) : transaction.isAiCategorized ? (
                 <Sparkles
                   className="h-4 w-4 text-purple-500 flex-shrink-0"
                   aria-label="Skategoryzowane przez AI"
                 />
-              )}
+              ) : null}
             </div>
             <CardDescription className="text-sm">
               {transaction.date}

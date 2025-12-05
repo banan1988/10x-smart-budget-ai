@@ -17,6 +17,15 @@ vi.mock('./ai-categorization.service', () => {
   };
 });
 
+// Mock BackgroundCategorizationService to avoid async categorization in tests
+vi.mock('./background-categorization.service', () => {
+  return {
+    BackgroundCategorizationService: vi.fn(function() {
+      this.categorizeTransactionInBackground = vi.fn().mockResolvedValue(undefined);
+    }),
+  };
+});
+
 // Import after mocking
 import { AiCategorizationService } from './ai-categorization.service';
 
@@ -31,6 +40,7 @@ function createMockTransactionData(overrides = {}) {
     description: 'Test transaction',
     date: '2025-11-15',
     is_ai_categorized: false,
+    categorization_status: 'completed',
     category_id: 1,
     user_id: 'test-user-id',
     created_at: '2025-11-15T10:00:00Z',
@@ -120,6 +130,7 @@ describe('TransactionService', () => {
       expect(result.data[0]).toHaveProperty('description');
       expect(result.data[0]).toHaveProperty('date');
       expect(result.data[0]).toHaveProperty('is_ai_categorized');
+      expect(result.data[0]).toHaveProperty('categorization_status');
       expect(result.data[0]).toHaveProperty('category');
       expect(result.data[0]).not.toHaveProperty('user_id');
       expect(result.data[0]).not.toHaveProperty('created_at');
@@ -360,7 +371,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow('Failed to create transaction: No data returned');
     });
 
-    it('should automatically categorize expense transaction using AI when no categoryId provided', async () => {
+    it('should queue background categorization for expense transaction without categoryId', async () => {
       // Arrange
       const command: CreateTransactionCommand = {
         type: 'expense',
@@ -369,41 +380,14 @@ describe('TransactionService', () => {
         date: '2025-11-15',
       };
 
-      // Mock AI categorization result
-      const mockCategorizationResult = {
-        categoryKey: 'restaurants',
-        confidence: 0.95,
-        reasoning: 'Coffee purchase at a cafe establishment',
-      };
-
-      // Mock category from database
-      const mockCategory = {
-        id: 4,
-        key: 'restaurants',
-        name: 'Restauracje',
-      };
-
-      // Mock the transaction data with AI categorization
+      // Mock the transaction data with pending categorization status
       const mockData = createMockTransactionData({
         ...command,
-        category_id: 4,
-        is_ai_categorized: true,
-        categories: {
-          id: 4,
-          key: 'restaurants',
-          translations: { pl: 'Restauracje', en: 'Restaurants' },
-        },
+        category_id: null,
+        is_ai_categorized: false,
+        categorization_status: 'pending', // Status is pending for background categorization
+        categories: null,
       });
-
-      // Configure the mock for this specific test
-      const categorizeTransactionMock = vi.fn().mockResolvedValue(mockCategorizationResult);
-      vi.mocked(AiCategorizationService).mockImplementationOnce(function() {
-        this.categorizeTransaction = categorizeTransactionMock;
-      } as any);
-
-      // Mock category service
-      const getCategoryByKeyMock = vi.fn().mockResolvedValue(mockCategory);
-      vi.spyOn(CategoryService, 'getCategoryByKey').mockImplementation(getCategoryByKeyMock);
 
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
@@ -419,14 +403,14 @@ describe('TransactionService', () => {
       const result = await TransactionService.createTransaction(mockSupabase, userId, command);
 
       // Assert
-      expect(result.is_ai_categorized).toBe(true);
-      expect(result.category).toEqual({
-        id: 4,
-        key: 'restaurants',
-        name: 'Restauracje',
-      });
-      expect(categorizeTransactionMock).toHaveBeenCalledWith('Coffee at Starbucks');
-      expect(getCategoryByKeyMock).toHaveBeenCalledWith(mockSupabase, 'restaurants');
+      // Transaction is created immediately with pending status
+      expect(result.type).toBe('expense');
+      expect(result.amount).toBe(150);
+      expect(result.description).toBe('Coffee at Starbucks');
+      expect(result.categorization_status).toBe('pending'); // Background job will update this
+      expect(result.is_ai_categorized).toBe(false);
+      expect(result.category).toBeNull(); // Not yet categorized synchronously
+      // Background categorization will update this asynchronously
     });
 
     it('should not use AI categorization for income transactions', async () => {

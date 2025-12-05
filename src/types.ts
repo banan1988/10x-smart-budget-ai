@@ -19,12 +19,17 @@ export type CategoryDto = Pick<Tables<'categories'>, 'id' | 'key'> & {
 /**
  * Response DTO for a single financial transaction.
  * It omits server-specific fields and includes the resolved category object.
+ *
+ * @property categorization_status - Status of AI categorization:
+ *   - 'pending': Transaction created, waiting for AI categorization in background
+ *   - 'completed': Categorization finished (either successful or fallback)
  */
 export type TransactionDto = Omit<
   Tables<'transactions'>,
   'category_id' | 'user_id' | 'created_at' | 'updated_at'
 > & {
   category: CategoryDto | null;
+  categorization_status: 'pending' | 'completed';
 };
 
 /**
@@ -383,6 +388,7 @@ export interface TransactionVM {
   categoryName: string;
   categoryKey: string;
   isAiCategorized: boolean;
+  categorizationStatus: 'pending' | 'completed'; // pending: waiting for AI categorization, completed: finished
 }
 
 /**

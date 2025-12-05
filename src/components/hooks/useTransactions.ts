@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { TransactionVM, TransactionFilters, PaginatedResponse, TransactionDto } from '@/types';
+import { UNCATEGORIZED_CATEGORY_NAME, UNCATEGORIZED_CATEGORY_KEY } from '@/types';
 
 interface UseTransactionsReturn {
   transactions: TransactionVM[];
@@ -48,6 +49,7 @@ function mapToViewModel(dto: TransactionDto): TransactionVM {
     categoryName: dto.category?.name || UNCATEGORIZED_CATEGORY_NAME,
     categoryKey: dto.category?.key || UNCATEGORIZED_CATEGORY_KEY,
     isAiCategorized: dto.is_ai_categorized,
+    categorizationStatus: dto.categorization_status,
   };
 }
 
@@ -106,6 +108,20 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
+
+  // Auto-refresh when there are pending categorizations
+  useEffect(() => {
+    const hasPending = transactions.some(t => t.categorizationStatus === 'pending');
+
+    if (!hasPending) return;
+
+    // Poll for updates every 2 seconds while there are pending categorizations
+    const interval = setInterval(() => {
+      fetchTransactions();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [transactions, fetchTransactions]);
 
   const setFilters = useCallback((newFilters: TransactionFilters) => {
     setFiltersState(newFilters);

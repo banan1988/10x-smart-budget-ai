@@ -11,6 +11,7 @@ import type {
 import { UNCATEGORIZED_CATEGORY_NAME } from '../../types';
 import { CategoryService } from './category.service';
 import { AiCategorizationService } from './ai-categorization.service';
+import { BackgroundCategorizationService } from './background-categorization.service';
 
 /**
  * Service for managing financial transactions.
@@ -47,6 +48,7 @@ export class TransactionService {
         description,
         date,
         is_ai_categorized,
+        categorization_status,
         category_id,
         categories (
           id,
@@ -132,6 +134,7 @@ export class TransactionService {
         description: transaction.description,
         date: transaction.date,
         is_ai_categorized: transaction.is_ai_categorized,
+        categorization_status: (transaction.categorization_status as 'pending' | 'completed') || 'completed',
         category,
       };
     });
@@ -149,65 +152,41 @@ export class TransactionService {
 
   /**
    * Creates a new transaction for the user.
-   * For expense transactions without manual category, automatically categorizes using AI.
+   * For expense transactions without manual category, queues background AI categorization.
+   *
+   * This method prioritizes fast API response over immediate categorization:
+   * 1. Creates transaction with categorization_status = 'pending'
+   * 2. Queues background categorization task (doesn't await it)
+   * 3. Returns immediately with the created transaction
+   * 4. Background process updates transaction with category once AI completes
+   *
+   * This provides better UX by showing the transaction immediately with a loading indicator,
+   * instead of blocking the API response while waiting for AI categorization.
    *
    * @param supabase - The Supabase client instance
    * @param userId - The ID of the authenticated user
    * @param command - The transaction creation data (includes optional categoryId)
-   * @returns Promise resolving to the created TransactionDto
-   * @throws Error if database operation or AI categorization fails
+   * @returns Promise resolving to the created TransactionDto with categorization_status
+   * @throws Error if database operation fails
    */
   static async createTransaction(
     supabase: SupabaseClient,
     userId: string,
     command: CreateTransactionCommand
   ): Promise<TransactionDto> {
-    let categoryId: number | null = command.categoryId ?? null;
-    let isAiCategorized = false;
-
-    // For expenses without manual category, use AI to categorize
-    if (command.type === 'expense' && !categoryId) {
-      try {
-        // Initialize AI categorization service
-        const aiService = new AiCategorizationService(supabase);
-
-        // Get AI categorization result
-        const categorizationResult = await aiService.categorizeTransaction(command.description);
-
-        // Log categorization result for debugging
-        console.log('AI categorization result:', {
-          categoryKey: categorizationResult.categoryKey,
-          confidence: categorizationResult.confidence,
-          reasoning: categorizationResult.reasoning,
-        });
-
-        // Find category by key returned from AI
-        const category = await CategoryService.getCategoryByKey(supabase, categorizationResult.categoryKey);
-
-        if (category) {
-          categoryId = category.id;
-
-          // Mark as AI categorized only if:
-          // 1. Confidence is above 0 (not a fallback)
-          // 2. Category is not "other" OR is "other" with high confidence (>= 0.5)
-          const isSuccessfulCategorization =
-            categorizationResult.confidence > 0 &&
-            (categorizationResult.categoryKey !== 'other' || categorizationResult.confidence >= 0.5);
-
-          isAiCategorized = isSuccessfulCategorization;
-
-          console.log(`Transaction categorized as "${category.name}" (${category.key}) with confidence ${categorizationResult.confidence}`,
-            isSuccessfulCategorization ? '' : '(fallback - not marked as AI categorized)');
-        } else {
-          console.warn(`AI returned category key "${categorizationResult.categoryKey}" but it was not found in database`);
-        }
-      } catch (error) {
-        // Log AI categorization error but don't fail the transaction creation
-        console.error('AI categorization failed:', error);
-      }
+    // Handle input validation with early return
+    if (!command || !command.description) {
+      throw new Error('Transaction description is required');
     }
 
-    // Insert the transaction
+    const categoryId = command.categoryId ?? null;
+
+    // Determine initial categorization status
+    // Income transactions don't need categorization, or manual category provided
+    const requiresBackground = command.type === 'expense' && !categoryId;
+    const categorizationStatus = requiresBackground ? 'pending' : 'completed';
+
+    // Insert the transaction with proper categorization status
     const { data, error } = await supabase
       .from('transactions')
       .insert({
@@ -217,7 +196,8 @@ export class TransactionService {
         description: command.description,
         date: command.date,
         category_id: categoryId,
-        is_ai_categorized: isAiCategorized,
+        is_ai_categorized: false, // Will be set to true by background job if successful
+        categorization_status: categorizationStatus,
       })
       .select(`
         id,
@@ -226,6 +206,7 @@ export class TransactionService {
         description,
         date,
         is_ai_categorized,
+        categorization_status,
         category_id,
         categories (
           id,
@@ -243,6 +224,16 @@ export class TransactionService {
     // Handle missing data
     if (!data) {
       throw new Error('Failed to create transaction: No data returned');
+    }
+
+    // Queue background categorization if needed (fire-and-forget)
+    if (requiresBackground) {
+      const backgroundService = new BackgroundCategorizationService(supabase);
+      backgroundService.categorizeTransactionInBackground(data.id, command.description, userId)
+        .catch(err => {
+          // Error is already logged by background service
+          console.error(`Failed to queue background categorization for transaction ${data.id}`);
+        });
     }
 
     // Transform to TransactionDto
@@ -271,6 +262,7 @@ export class TransactionService {
       description: data.description,
       date: data.date,
       is_ai_categorized: data.is_ai_categorized,
+      categorization_status: data.categorization_status as 'pending' | 'completed',
       category,
     };
   }
@@ -331,6 +323,7 @@ export class TransactionService {
         description,
         date,
         is_ai_categorized,
+        categorization_status,
         category_id,
         categories (
           id,
@@ -376,6 +369,7 @@ export class TransactionService {
       description: data.description,
       date: data.date,
       is_ai_categorized: data.is_ai_categorized,
+      categorization_status: data.categorization_status as 'pending' | 'completed',
       category,
     };
   }

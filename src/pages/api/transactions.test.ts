@@ -3,6 +3,15 @@ import { GET, POST } from './transactions';
 import { createMockAPIContext } from '../../test/mocks/astro.mock';
 import { createMockSupabaseClient } from '../../test/mocks/supabase.mock';
 
+// Mock BackgroundCategorizationService to prevent background jobs in tests
+vi.mock('../../lib/services/background-categorization.service', () => {
+  return {
+    BackgroundCategorizationService: vi.fn(function() {
+      this.categorizeTransactionInBackground = vi.fn().mockResolvedValue(undefined);
+    }),
+  };
+});
+
 /**
  * Helper function to create mock transaction data
  */
@@ -14,6 +23,7 @@ function createMockTransactionData(overrides = {}) {
     description: 'Test transaction',
     date: '2025-11-15',
     is_ai_categorized: false,
+    categorization_status: 'completed',
     category_id: 1,
     user_id: 'test-user-id',
     created_at: '2025-11-15T10:00:00Z',

@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2, Sparkles } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import type { TransactionVM } from '@/types';
 import {
   Table,
@@ -91,12 +91,17 @@ function TransactionsTableRow({
       <TableCell>
         <div className="flex items-center gap-2">
           <span>{transaction.description}</span>
-          {transaction.isAiCategorized && (
+          {transaction.categorizationStatus === 'pending' ? (
+            <Loader2
+              className="h-4 w-4 text-blue-500 animate-spin"
+              aria-label="Kategoryzacja w toku..."
+            />
+          ) : transaction.isAiCategorized ? (
             <Sparkles
               className="h-4 w-4 text-purple-500"
               aria-label="Skategoryzowane przez AI"
             />
-          )}
+          ) : null}
         </div>
       </TableCell>
       <TableCell>
