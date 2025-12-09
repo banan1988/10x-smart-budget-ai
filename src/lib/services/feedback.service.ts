@@ -12,23 +12,33 @@ export class FeedbackService {
    * @param supabase - The Supabase client instance
    * @param userId - The ID of the user submitting the feedback
    * @param data - The feedback data (rating and optional comment)
-   * @returns Promise resolving when feedback is successfully created
+   * @returns Promise resolving to the created FeedbackDto
    * @throws Error if database insertion fails
    */
   static async createFeedback(
     supabase: SupabaseClient,
     userId: string,
     data: FeedbackRequest
-  ): Promise<void> {
-    const { error } = await supabase.from('feedback').insert({
-      user_id: userId,
-      rating: data.rating,
-      comment: data.comment || null,
-    });
+  ): Promise<FeedbackDto> {
+    const { data: feedback, error } = await supabase
+      .from('feedback')
+      .insert({
+        user_id: userId,
+        rating: data.rating,
+        comment: data.comment || null,
+      })
+      .select()
+      .single();
 
     if (error) {
       throw new Error(`Failed to create feedback: ${error.message}`);
     }
+
+    if (!feedback) {
+      throw new Error('Failed to create feedback: No data returned');
+    }
+
+    return feedback;
   }
 
   /**
