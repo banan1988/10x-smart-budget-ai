@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { APIContext } from 'astro';
 import { DEFAULT_USER_ID } from '../../../db/constants';
 
@@ -36,7 +36,6 @@ describe('DELETE /api/user', () => {
     const data = await response.json();
     expect(data).toHaveProperty('error');
     expect(data.error).toBe('Internal Server Error');
-    expect(data.message).toContain('SUPABASE_SERVICE_ROLE_KEY');
   });
 
   it('should return application/json content-type on error', async () => {

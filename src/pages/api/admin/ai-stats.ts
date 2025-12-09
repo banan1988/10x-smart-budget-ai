@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { AdminStatsService } from '../../../lib/services/admin-stats.service';
-import { DEFAULT_USER_ID } from '../../../db/constants';
+import { checkAuthentication, checkAdminRole, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -95,10 +95,18 @@ function getDefaultDateRange(): { startDate: string; endDate: string } {
  * @returns 403 Forbidden if user doesn't have admin role
  * @returns 500 Internal Server Error if operation fails
  */
-export const GET: APIRoute = async ({ locals, url }) => {
+export const GET: APIRoute = async (context) => {
   try {
-    // Placeholder: Check admin role (will be implemented with actual auth)
-    const supabase = locals.supabase;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
+
+    // Check if user is admin
+    const [isAdmin, adminError] = await checkAdminRole(context);
+    if (!isAdmin) return adminError!;
+
+    const { locals, url } = context;
+    const supabase = locals.supabase!;
 
     // Extract and validate query parameters
     const queryParams = {
@@ -113,18 +121,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const validationResult = AiStatsQuerySchema.safeParse(queryParams);
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.error.issues,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return createValidationErrorResponse(validationResult.error.issues);
     }
 
     const query = validationResult.data;
@@ -145,30 +142,10 @@ export const GET: APIRoute = async ({ locals, url }) => {
       }
     );
 
-    return new Response(
-      JSON.stringify(stats),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createSuccessResponse(stats, 200);
   } catch (error) {
     console.error('Error fetching AI stats:', error);
-
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

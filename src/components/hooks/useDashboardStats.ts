@@ -86,7 +86,15 @@ export function useDashboardStats(month: string): UseDashboardStatsResult {
         includeAiSummary: 'true',
       });
 
-      const response = await fetch(`/api/transactions/stats?${params}`);
+      // Add cache buster param when refetching to ensure fresh data
+      // (useful when manually calling refetch() after transaction changes)
+      const timestamp = new Date().getTime();
+      const urlWithTimestamp = `/api/transactions/stats?${params}&_t=${timestamp}`;
+
+      const response = await fetch(urlWithTimestamp, {
+        credentials: 'include',
+        cache: 'default', // Respect server Cache-Control headers
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch stats: ${response.statusText}`);

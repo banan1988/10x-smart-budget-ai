@@ -1,47 +1,53 @@
 import type { APIRoute } from 'astro';
+import { createSupabaseServerInstance } from '../../../db/supabase.client';
 
 export const prerender = false;
 
 /**
- * POST /api/auth/logout
- * Logs out the current user by clearing the session
+ * Error response helper
  */
-export const POST: APIRoute = async ({ cookies, locals, redirect }) => {
+function errorResponse(message: string, status: number) {
+  return new Response(
+    JSON.stringify({ error: message }),
+    { status }
+  );
+}
+
+/**
+ * Success response helper
+ */
+function successResponse(data: any = {}, status: number = 200) {
+  return new Response(
+    JSON.stringify(data),
+    { status }
+  );
+}
+
+/**
+ * POST /api/auth/logout
+ * Logs out the current user and clears session cookies
+ */
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    const supabase = locals.supabase;
+    // Create Supabase server instance
+    const supabase = createSupabaseServerInstance({
+      headers: request.headers,
+      cookies,
+    });
 
-    if (!supabase) {
-      return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Sign out from Supabase
+    // Sign out from Supabase (clears cookies automatically)
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('Logout error:', error);
-      return new Response(JSON.stringify({ error: 'Failed to logout' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      console.error('[Logout Error]', error);
+      return errorResponse('Nie udało się wylogować', 500);
     }
 
-    // Clear session cookies
-    cookies.delete('sb-access-token', { path: '/' });
-    cookies.delete('sb-refresh-token', { path: '/' });
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    console.error('Logout error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    // Return success
+    return successResponse({ message: 'Wylogowano pomyślnie' });
+  } catch (err) {
+    console.error('[Logout Exception]', err);
+    return errorResponse('Wewnętrzny błąd serwera', 500);
   }
 };
 

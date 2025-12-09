@@ -13,12 +13,18 @@ import { MobileNav } from '@/components/MobileNav';
   <div class="flex min-h-screen">
     <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
-      <AppSidebar currentPage="transactions" client:load />
+      <AppSidebar currentPage="transactions" userRole={Astro.locals.user?.role} client:load />
     </div>
 
     <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
-      <AppHeader currentPage="transactions" client:load />
+      <AppHeader
+        currentPage="transactions"
+        userEmail={Astro.locals.user?.email}
+        userNickname={Astro.locals.user?.nickname}
+        userRole={Astro.locals.user?.role}
+        client:load
+      />
       <main class="flex-1 bg-background pb-16 lg:pb-0">
         <div class="container mx-auto px-4 py-8">
           <TransactionsView client:load />

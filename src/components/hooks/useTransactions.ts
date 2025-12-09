@@ -85,13 +85,25 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
       }
       if (filters.search) params.append('search', filters.search);
 
-      const response = await fetch(`/api/transactions?${params.toString()}`);
+      const response = await fetch(`/api/transactions?${params.toString()}`, {
+        credentials: 'include',
+      });
+
+      console.log('Fetch response:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText,
+      });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response body:', errorText);
         throw new Error(`Failed to fetch transactions: ${response.statusText}`);
       }
 
       const data: PaginatedResponse<TransactionDto> = await response.json();
+
+      console.log('Fetched transactions:', data);
 
       // Map DTOs to ViewModels
       const viewModels = data.data.map(mapToViewModel);
@@ -99,6 +111,7 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
       setTransactions(viewModels);
       setPagination(data.pagination);
     } catch (err) {
+      console.error('useTransactions error:', err);
       setError(err instanceof Error ? err : new Error('Unknown error occurred'));
     } finally {
       setIsLoading(false);

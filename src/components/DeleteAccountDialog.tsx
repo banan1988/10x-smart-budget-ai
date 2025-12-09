@@ -31,6 +31,7 @@ export function DeleteAccountDialog({ isOpen, onOpenChange }: DeleteAccountDialo
     try {
       const response = await fetch('/api/user', {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -51,7 +52,10 @@ export function DeleteAccountDialog({ isOpen, onOpenChange }: DeleteAccountDialo
       toast.success('Konto zostało usunięte');
 
       // Sign out and redirect to home page
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
 
       // Small delay to show the toast
       setTimeout(() => {

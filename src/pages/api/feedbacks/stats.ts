@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { FeedbackService } from '../../../lib/services/feedback.service';
+import { createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -19,33 +20,19 @@ export const GET: APIRoute = async ({ locals }) => {
     // Get Supabase client from middleware context
     const supabase = locals.supabase;
 
+    if (!supabase) {
+      return createErrorResponse('Supabase client not available', 500);
+    }
+
     // Fetch feedback statistics using the service
     const stats = await FeedbackService.getFeedbackStats(supabase);
 
     // Return successful response with statistics
-    return new Response(JSON.stringify(stats), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return createSuccessResponse(stats, 200);
   } catch (error) {
     // Log error for debugging
     console.error('Error fetching feedback stats:', error);
-
-    // Return error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch feedback statistics',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

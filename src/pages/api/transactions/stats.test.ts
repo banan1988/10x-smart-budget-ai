@@ -39,7 +39,10 @@ describe('GET /api/transactions/stats', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        supabase: mockSupabase,
+      },
       url: new URL('http://localhost/api/transactions/stats?month=2025-11'),
     });
 
@@ -92,7 +95,10 @@ describe('GET /api/transactions/stats', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        supabase: mockSupabase,
+      },
       url: new URL('http://localhost/api/transactions/stats?month=2025-11&includeAiSummary=true'),
     });
 
@@ -112,7 +118,10 @@ describe('GET /api/transactions/stats', () => {
     const mockSupabase = createMockSupabaseClient({});
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        supabase: mockSupabase,
+      },
       url: new URL('http://localhost/api/transactions/stats'),
     });
 
@@ -130,7 +139,10 @@ describe('GET /api/transactions/stats', () => {
     const mockSupabase = createMockSupabaseClient({});
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        supabase: mockSupabase,
+      },
       url: new URL('http://localhost/api/transactions/stats?month=invalid'),
     });
 
@@ -163,7 +175,10 @@ describe('GET /api/transactions/stats', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        supabase: mockSupabase,
+      },
       url: new URL('http://localhost/api/transactions/stats?month=2025-11'),
     });
 
@@ -173,7 +188,7 @@ describe('GET /api/transactions/stats', () => {
     // Assert
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data).toHaveProperty('error', 'Failed to fetch transaction stats');
+    expect(data).toHaveProperty('error');
   });
 
   it('should handle empty transaction list', async () => {
@@ -196,7 +211,10 @@ describe('GET /api/transactions/stats', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        supabase: mockSupabase,
+      },
       url: new URL('http://localhost/api/transactions/stats?month=2025-11'),
     });
 

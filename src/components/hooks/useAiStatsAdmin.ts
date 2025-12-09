@@ -89,14 +89,47 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
         endDate: range.endDate,
       });
 
-      const response = await fetch(`/api/admin/ai-stats?${params.toString()}`);
+      const response = await fetch(`/api/admin/ai-stats?${params.toString()}`, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        const contentType = response.headers.get('content-type');
+        let errorMessage = `HTTP error! status: ${response.status}`;
+
+        // Read body once to avoid "body stream already read" error
+        const bodyText = await response.text();
+
+        if (contentType?.includes('application/json')) {
+          try {
+            const data = JSON.parse(bodyText);
+            errorMessage = data.error || data.message || errorMessage;
+          } catch {
+            // If JSON parsing fails, use the text as-is
+            errorMessage = bodyText.substring(0, 200) || errorMessage;
+          }
+        } else {
+          // Log non-JSON response for debugging
+          console.error('Non-JSON response from /api/admin/ai-stats:', bodyText.substring(0, 200));
+        }
+
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json() as AiCategorizationStatsDto;
+      const contentType = response.headers.get('content-type');
+      console.log('[useAiStatsAdmin] Response status:', response.status, 'Content-Type:', contentType);
+
+      // Try to parse JSON
+      let data: AiCategorizationStatsDto;
+      try {
+        const responseText = await response.text();
+        console.log('[useAiStatsAdmin] Response body (first 500 chars):', responseText.substring(0, 500));
+        data = JSON.parse(responseText) as AiCategorizationStatsDto;
+      } catch (parseErr) {
+        console.error('[useAiStatsAdmin] Failed to parse response as JSON:', parseErr);
+        throw new Error('Invalid response format: server did not return valid JSON');
+      }
+
       setStats(data);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error');
@@ -108,11 +141,11 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
   }, []);
 
   /**
-   * Fetch initial stats on mount
+   * Fetch initial stats on mount and when date range changes
    */
   useEffect(() => {
     fetchStats(dateRange);
-  }, []);
+  }, [dateRange]);
 
   /**
    * Handle date range change

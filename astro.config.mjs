@@ -8,6 +8,7 @@ import node from "@astrojs/node";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://localhost:3000", // Required for sitemap generation
   output: "server",
   integrations: [react(), sitemap()],
   server: { port: 3000 },

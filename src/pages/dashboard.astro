@@ -7,18 +7,27 @@ import { AppSidebar } from '@/components/AppSidebar';
 import { MobileNav } from '@/components/MobileNav';
 
 // This page requires authentication - middleware will handle redirect
+
+// Set cache headers - don't cache HTML page on client, but API will handle data caching
+Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
 ---
 
 <Layout title="Pulpit - SmartBudgetAI">
   <div class="flex min-h-screen">
     <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
-      <AppSidebar currentPage="dashboard" client:load />
+      <AppSidebar currentPage="dashboard" userRole={Astro.locals.user?.role} client:load />
     </div>
 
     <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
-      <AppHeader currentPage="dashboard" client:load />
+      <AppHeader
+        currentPage="dashboard"
+        userEmail={Astro.locals.user?.email}
+        userNickname={Astro.locals.user?.nickname}
+        userRole={Astro.locals.user?.role}
+        client:load
+      />
       <main class="flex-1 bg-background pb-16 lg:pb-0">
         <div class="container mx-auto px-4 py-8">
           <DashboardView client:load />

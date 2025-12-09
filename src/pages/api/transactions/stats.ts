@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { TransactionService } from '../../../lib/services/transaction.service';
 import { GetTransactionStatsQuerySchema } from '../../../types';
-import { DEFAULT_USER_ID } from '../../../db/constants';
+import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -20,13 +20,15 @@ export const prerender = false;
  * @returns 401 Unauthorized if user is not authenticated
  * @returns 500 Internal Server Error if operation fails
  */
-export const GET: APIRoute = async ({ locals, url }) => {
+export const GET: APIRoute = async (context) => {
   try {
-    // Get Supabase client from middleware context
-    const supabase = locals.supabase;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    const { locals, url } = context;
+    const supabase = locals.supabase!;
+    const userId = locals.user!.id;
 
     // Extract and validate query parameters
     const queryParams = {
@@ -37,18 +39,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const validationResult = GetTransactionStatsQuerySchema.safeParse(queryParams);
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.error.issues,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return createValidationErrorResponse(validationResult.error.issues);
     }
 
     // Fetch statistics using the service
@@ -60,32 +51,16 @@ export const GET: APIRoute = async ({ locals, url }) => {
     );
 
     // Return successful response with statistics
-    return new Response(
-      JSON.stringify(stats),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // Cache for 60 seconds, allow stale content for up to 10 minutes while revalidating in background
+    const response = createSuccessResponse(stats, 200);
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=600');
+    return response;
   } catch (error) {
     // Log error for debugging
     console.error('Error fetching transaction stats:', error);
 
     // Return error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch transaction stats',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

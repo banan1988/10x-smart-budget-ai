@@ -25,11 +25,50 @@ export const prerender = false;
  */
 export const GET: APIRoute = async ({ locals, url }) => {
   try {
+    console.log('[GET /api/transactions] Request received', {
+      pathname: url.pathname,
+      query: url.search,
+      hasUser: !!locals.user,
+      userId: locals.user?.id,
+    });
+
+    // Check if user is authenticated
+    if (!locals.user) {
+      console.log('[GET /api/transactions] Unauthorized - no user in locals');
+      return new Response(
+        JSON.stringify({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
     // Get Supabase client from middleware context
     const supabase = locals.supabase;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    if (!supabase) {
+      return new Response(
+        JSON.stringify({
+          error: 'Internal Server Error',
+          message: 'Supabase client not available',
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
+    // Use authenticated user's ID
+    const userId = locals.user.id;
 
     // Extract and validate query parameters
     const month = url.searchParams.get('month');
@@ -128,11 +167,42 @@ export const GET: APIRoute = async ({ locals, url }) => {
  */
 export const POST: APIRoute = async ({ locals, request }) => {
   try {
+    // Check if user is authenticated
+    if (!locals.user) {
+      return new Response(
+        JSON.stringify({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
     // Get Supabase client from middleware context
     const supabase = locals.supabase;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    if (!supabase) {
+      return new Response(
+        JSON.stringify({
+          error: 'Internal Server Error',
+          message: 'Supabase client not available',
+        }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
+    // Use authenticated user's ID
+    const userId = locals.user.id;
 
     // Parse and validate request body
     let body;

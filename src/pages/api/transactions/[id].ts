@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { TransactionService } from '../../../lib/services/transaction.service';
 import { UpdateTransactionCommandSchema } from '../../../types';
-import { DEFAULT_USER_ID } from '../../../db/constants';
+import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -20,13 +20,15 @@ export const prerender = false;
  * @returns 404 Not Found if transaction doesn't exist or doesn't belong to user
  * @returns 500 Internal Server Error if operation fails
  */
-export const PUT: APIRoute = async ({ locals, params, request }) => {
+export const PUT: APIRoute = async (context) => {
   try {
-    // Get Supabase client from middleware context
-    const supabase = locals.supabase;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    const { locals, params, request } = context;
+    const supabase = locals.supabase!;
+    const userId = locals.user!.id;
 
     // Extract and validate transaction ID from URL params
     const transactionId = parseInt(params.id || '', 10);
@@ -67,18 +69,7 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
     const validationResult = UpdateTransactionCommandSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.error.issues,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return createValidationErrorResponse(validationResult.error.issues);
     }
 
     // Update transaction using the service
@@ -90,15 +81,12 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
     );
 
     // Return successful response with updated transaction
-    return new Response(
-      JSON.stringify(transaction),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const updateResponse = createSuccessResponse(transaction, 200);
+
+    // Add headers to indicate that related caches should be invalidated
+    updateResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    return updateResponse;
   } catch (error) {
     // Log error for debugging
     console.error('Error updating transaction:', error);
@@ -120,18 +108,7 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
     }
 
     // Return generic error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to update transaction',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 
@@ -148,13 +125,15 @@ export const PUT: APIRoute = async ({ locals, params, request }) => {
  * @returns 404 Not Found if transaction doesn't exist or doesn't belong to user
  * @returns 500 Internal Server Error if operation fails
  */
-export const DELETE: APIRoute = async ({ locals, params }) => {
+export const DELETE: APIRoute = async (context) => {
   try {
-    // Get Supabase client from middleware context
-    const supabase = locals.supabase;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    const { locals, params } = context;
+    const supabase = locals.supabase!;
+    const userId = locals.user!.id;
 
     // Extract and validate transaction ID from URL params
     const transactionId = parseInt(params.id || '', 10);
@@ -181,9 +160,14 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
     );
 
     // Return successful response with no content
-    return new Response(null, {
+    const deleteResponse = new Response(null, {
       status: 204,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
     });
+
+    return deleteResponse;
   } catch (error) {
     // Log error for debugging
     console.error('Error deleting transaction:', error);
@@ -205,18 +189,7 @@ export const DELETE: APIRoute = async ({ locals, params }) => {
     }
 
     // Return generic error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to delete transaction',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

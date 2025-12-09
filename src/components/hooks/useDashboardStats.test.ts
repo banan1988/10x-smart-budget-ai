@@ -107,7 +107,8 @@ describe('useDashboardStats', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/transactions/stats?month=2025-11&includeAiSummary=true')
+        expect.stringContaining('/api/transactions/stats?month=2025-11'),
+        { credentials: 'include' }
       );
     });
   });

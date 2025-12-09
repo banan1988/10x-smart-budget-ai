@@ -7,54 +7,23 @@ import { AppSidebar } from '../components/AppSidebar';
 import { MobileNav } from '../components/MobileNav';
 import type { ProfilePageVM, UserProfileDto } from '../types';
 
-// Fetch user session
-const { data: { session } } = await Astro.locals.supabase.auth.getSession();
+// Use authenticated user from middleware (already verified with getUser())
+const user = Astro.locals.user;
 
-// TODO: Uncomment when ready to enforce authentication
-// Redirect if not authenticated (defensive check - middleware should handle this)
-// if (!session) {
-//   return Astro.redirect('/login');
-// }
-
-// Fetch user profile from API
-let profile: UserProfileDto | null = null;
-let errorMessage: string | null = null;
-
-try {
-  const response = await fetch(`${Astro.url.origin}/api/user/profile`, {
-    headers: {
-      'Cookie': Astro.request.headers.get('Cookie') || '',
-    },
-  });
-
-  if (response.ok) {
-    profile = await response.json();
-  } else if (response.status === 404) {
-    errorMessage = 'Profil nie znaleziony. Prosimy skontaktować się z supportem.';
-  } else if (response.status === 401) {
-    // Session expired or invalid - redirect to login
-    return Astro.redirect('/login');
-  } else {
-    errorMessage = 'Błąd serwera. Spróbuj ponownie później.';
-  }
-} catch (error) {
-  console.error('Error fetching user profile:', error);
-  errorMessage = 'Błąd serwera. Spróbuj ponownie później.';
+// If not authenticated, middleware will redirect to login
+// This is a defensive check
+if (!user) {
+  return Astro.redirect('/login');
 }
 
-// If there was an error, display error page
-if (errorMessage) {
-  return new Response(errorMessage, {
-    status: profile === null && errorMessage.includes('404') ? 404 : 500,
-  });
-}
-
-// Map API response to ProfilePageVM
+// Use user data from middleware instead of making API call
+// Middleware already fetched user profile asynchronously in background
+// This avoids blocking the page render on network request
 const userProfile: ProfilePageVM = {
-  email: session?.user?.email || 'brak@email.com',
-  nickname: profile?.nickname || null,
-  registeredAt: session?.user?.created_at || new Date().toISOString(),
-  preferences: profile?.preferences || null,
+  email: user.email,
+  nickname: user.nickname || null,
+  registeredAt: user.createdAt || new Date().toISOString(),
+  preferences: null, // Preferences are not fetched in middleware yet
 };
 ---
 
@@ -62,12 +31,18 @@ const userProfile: ProfilePageVM = {
   <div class="flex min-h-screen">
     <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
-      <AppSidebar currentPage="profile" client:load />
+      <AppSidebar currentPage="profile" userRole={Astro.locals.user?.role} client:load />
     </div>
 
     <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
-      <AppHeader currentPage="profile" client:load />
+      <AppHeader
+        currentPage="profile"
+        userEmail={Astro.locals.user?.email}
+        userNickname={Astro.locals.user?.nickname}
+        userRole={Astro.locals.user?.role}
+        client:load
+      />
       <main class="flex-1 bg-background pb-16 lg:pb-0">
         <div class="container mx-auto px-4 py-8">
           <ProfileView userProfile={userProfile} client:load />

@@ -47,7 +47,9 @@ export function TransactionsFilters({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories', {
+          credentials: 'include',
+        });
         if (response.ok) {
           const data = await response.json();
           setCategories(data);

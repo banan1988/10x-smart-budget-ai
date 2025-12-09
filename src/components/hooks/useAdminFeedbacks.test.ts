@@ -31,7 +31,9 @@ describe('useAdminFeedbacks hook', () => {
 
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => mockData,
+      text: async () => JSON.stringify(mockData),
     });
 
     const { result } = renderHook(() => useAdminFeedbacks());
@@ -50,7 +52,9 @@ describe('useAdminFeedbacks hook', () => {
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => ({ message: 'Database error' }),
+      text: async () => JSON.stringify({ message: 'Database error' }),
     });
 
     const { result } = renderHook(() => useAdminFeedbacks());
@@ -71,7 +75,9 @@ describe('useAdminFeedbacks hook', () => {
 
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => mockData,
+      text: async () => JSON.stringify(mockData),
     });
 
     const { result } = renderHook(() => useAdminFeedbacks());
@@ -97,7 +103,9 @@ describe('useAdminFeedbacks hook', () => {
 
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => mockData,
+      text: async () => JSON.stringify(mockData),
     });
 
     const { result } = renderHook(() => useAdminFeedbacks());

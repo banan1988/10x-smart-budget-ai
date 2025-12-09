@@ -62,7 +62,7 @@ describe('GET /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       url: new URL('http://localhost:4321/api/transactions?month=2025-11'),
     });
 
@@ -100,7 +100,7 @@ describe('GET /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       url: new URL('http://localhost:4321/api/transactions?month=2025-11'),
     });
 
@@ -124,7 +124,7 @@ describe('GET /api/transactions', () => {
     // Arrange
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       url: new URL('http://localhost:4321/api/transactions'),
     });
 
@@ -143,7 +143,7 @@ describe('GET /api/transactions', () => {
     // Arrange
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       url: new URL('http://localhost:4321/api/transactions?month=2025-13'),
     });
 
@@ -179,7 +179,7 @@ describe('GET /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       url: new URL('http://localhost:4321/api/transactions?month=2025-11'),
     });
 
@@ -213,7 +213,7 @@ describe('GET /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       url: new URL('http://localhost:4321/api/transactions?month=2025-11'),
     });
 
@@ -255,7 +255,7 @@ describe('POST /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -297,7 +297,7 @@ describe('POST /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -320,7 +320,7 @@ describe('POST /api/transactions', () => {
     // Arrange
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: 'invalid json',
@@ -348,7 +348,7 @@ describe('POST /api/transactions', () => {
 
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -379,7 +379,7 @@ describe('POST /api/transactions', () => {
 
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -408,7 +408,7 @@ describe('POST /api/transactions', () => {
 
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -437,7 +437,7 @@ describe('POST /api/transactions', () => {
 
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -477,7 +477,7 @@ describe('POST /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -517,7 +517,7 @@ describe('POST /api/transactions', () => {
     } as any);
 
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: { user: { id: 'test-user-id', email: 'test.com', role: 'user' }, supabase: mockSupabase },
       request: new Request('http://localhost:4321/api/transactions', {
         method: 'POST',
         body: JSON.stringify(requestBody),

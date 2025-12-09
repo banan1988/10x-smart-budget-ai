@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 
 interface AppSidebarProps {
   currentPage?: 'dashboard' | 'transactions' | 'profile' | 'admin-stats' | 'admin-feedbacks';
+  userRole?: 'user' | 'admin'; // Role of the current user
 }
 
 /**
@@ -10,8 +11,10 @@ interface AppSidebarProps {
  * Inspired by Shadcn/ui dashboard example
  * Collapsible between icon-only and full width with labels
  */
-export function AppSidebar({ currentPage }: AppSidebarProps) {
+export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<'user' | 'admin'>(userRole);
+  const isAdmin = currentUserRole === 'admin';
 
   useEffect(() => {
     // Load saved state from localStorage
@@ -32,6 +35,61 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
     window.addEventListener('toggle-sidebar', handleToggle);
     return () => window.removeEventListener('toggle-sidebar', handleToggle);
   }, []);
+
+  // Check user role dynamically after component mounts
+  // This helps when role is loaded asynchronously in middleware
+  // NOTE: For admin paths, middleware already waited for profile, so don't fetch again
+  useEffect(() => {
+    setCurrentUserRole(userRole);
+
+    // Try to fetch user profile to get the actual role if it's still 'user'
+    // Only fetch if we don't have a cached profile yet
+    if (userRole === 'user') {
+      const checkUserRole = async () => {
+        try {
+          // Check if we have cached profile in sessionStorage
+          const cachedProfile = sessionStorage.getItem('user_profile');
+          if (cachedProfile) {
+            try {
+              const profile = JSON.parse(cachedProfile);
+              if (profile.role && profile.role !== userRole) {
+                setCurrentUserRole(profile.role);
+                console.log('[AppSidebar] User role updated from cache:', profile.role);
+              }
+              return; // Don't fetch if we have valid cache
+            } catch (e) {
+              console.error('[AppSidebar] Failed to parse cached profile:', e);
+            }
+          }
+
+          // Fetch from API if not in cache
+          const response = await fetch('/api/user/profile', {
+            credentials: 'include',
+          });
+          if (response.ok) {
+            const profileText = await response.text();
+            try {
+              const profile = JSON.parse(profileText);
+              // Cache the profile in sessionStorage for the session
+              sessionStorage.setItem('user_profile', profileText);
+              if (profile.role && profile.role !== userRole) {
+                setCurrentUserRole(profile.role);
+                console.log('[AppSidebar] User role updated from API:', profile.role);
+              }
+            } catch (parseError) {
+              console.error('[AppSidebar] Failed to parse API response:', parseError);
+            }
+          }
+        } catch (error) {
+          console.error('[AppSidebar] Failed to fetch user role:', error);
+        }
+      };
+
+      // Small delay to avoid race conditions with middleware
+      const timer = setTimeout(checkUserRole, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [userRole]);
 
   const navItems = [
     {
@@ -200,7 +258,7 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
           </div>
 
           {/* Admin section */}
-          {isExpanded && (
+          {isExpanded && isAdmin && (
             <div className="pt-2">
               <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Panel Administratora
@@ -219,7 +277,12 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
                     )}
                     title={item.name}
                   >
-                    <span className="flex-shrink-0">{item.icon}</span>
+                    <span className={cn(
+                      'flex-shrink-0',
+                      !item.active && 'text-blue-500'
+                    )}>
+                      {item.icon}
+                    </span>
                     <span className="text-sm font-medium">{item.name}</span>
                   </a>
                 ))}
@@ -228,24 +291,32 @@ export function AppSidebar({ currentPage }: AppSidebarProps) {
           )}
 
           {/* Admin section - collapsed mode */}
-          {!isExpanded && (
-            <div className="space-y-1">
-              {adminItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                    'hover:bg-accent hover:text-accent-foreground',
-                    item.active
-                      ? 'bg-blue-600 text-white'
-                      : 'text-muted-foreground'
-                  )}
-                  title={item.name}
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                </a>
-              ))}
+          {!isExpanded && isAdmin && (
+            <div>
+              <div className="border-t my-2" />
+              <div className="space-y-1">
+                {adminItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      item.active
+                        ? 'bg-blue-600 text-white'
+                        : 'text-muted-foreground'
+                    )}
+                    title={item.name}
+                  >
+                    <span className={cn(
+                      'flex-shrink-0',
+                      !item.active && 'text-blue-500'
+                    )}>
+                      {item.icon}
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </nav>

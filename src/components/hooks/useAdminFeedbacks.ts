@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { FeedbackDto, FeedbackFilters, AdminFeedbacksResponse } from '../../types';
 
 export interface UseAdminFeedbacksState {
@@ -32,8 +32,11 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
     filters: initialFilters || {},
   });
 
+  // Track previous query params to avoid infinite loops
+  const prevParamsRef = useRef<string>('');
+
   // Build query parameters from filters and current page
-  const buildQueryParams = useCallback((): URLSearchParams => {
+  const buildQueryParams = useCallback((): string => {
     const params = new URLSearchParams();
 
     if (state.filters.startDate) {
@@ -48,25 +51,54 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
     params.append('page', state.page.toString());
     params.append('limit', '20');
 
-    return params;
+    return params.toString();
   }, [state.filters, state.page]);
 
   // Fetch feedbacks from API
-  const fetchFeedbacks = useCallback(async () => {
+  const fetchFeedbacks = useCallback(async (queryString: string) => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const params = buildQueryParams();
-      const response = await fetch(`/api/admin/feedbacks?${params.toString()}`);
+      const response = await fetch(`/api/admin/feedbacks?${queryString}`, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `Failed to fetch feedbacks: ${response.statusText}`
-        );
+        const contentType = response.headers.get('content-type');
+        let errorMessage = `Failed to fetch feedbacks: ${response.statusText}`;
+
+        // Read body once to avoid "body stream already read" error
+        const bodyText = await response.text();
+
+        if (contentType?.includes('application/json')) {
+          try {
+            const errorData = JSON.parse(bodyText);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch {
+            // If JSON parsing fails, use the text as-is
+            errorMessage = bodyText.substring(0, 200) || errorMessage;
+          }
+        } else {
+          // Log non-JSON response for debugging
+          console.error('Non-JSON response from /api/admin/feedbacks:', bodyText.substring(0, 200));
+        }
+
+        throw new Error(errorMessage);
       }
 
-      const data: AdminFeedbacksResponse = await response.json();
+      const contentType = response.headers.get('content-type');
+      console.log('[useAdminFeedbacks] Response status:', response.status, 'Content-Type:', contentType);
+
+      // Try to parse JSON
+      let data: AdminFeedbacksResponse;
+      try {
+        const responseText = await response.text();
+        console.log('[useAdminFeedbacks] Response body (first 500 chars):', responseText.substring(0, 500));
+        data = JSON.parse(responseText);
+      } catch (parseErr) {
+        console.error('[useAdminFeedbacks] Failed to parse response as JSON:', parseErr);
+        throw new Error('Invalid response format: server did not return valid JSON');
+      }
 
       setState((prev) => ({
         ...prev,
@@ -85,12 +117,35 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
         isLoading: false,
       }));
     }
-  }, [buildQueryParams]);
+  }, []);
 
-  // Fetch on mount and when dependencies change
+  // Fetch on mount and when query parameters actually change
   useEffect(() => {
-    fetchFeedbacks();
-  }, [fetchFeedbacks]);
+    // Build query string directly in effect to avoid dependency issues
+    const params = new URLSearchParams();
+
+    if (state.filters.startDate) {
+      params.append('startDate', state.filters.startDate);
+    }
+    if (state.filters.endDate) {
+      params.append('endDate', state.filters.endDate);
+    }
+    if (state.filters.rating) {
+      params.append('rating', state.filters.rating.toString());
+    }
+    params.append('page', state.page.toString());
+    params.append('limit', '20');
+
+    const queryString = params.toString();
+    console.log('[useAdminFeedbacks] Query params changed:', queryString);
+
+    // Only fetch if query params have actually changed
+    if (queryString !== prevParamsRef.current) {
+      prevParamsRef.current = queryString;
+      console.log('[useAdminFeedbacks] Fetching feedbacks with params:', queryString);
+      fetchFeedbacks(queryString);
+    }
+  }, [state.filters.startDate, state.filters.endDate, state.filters.rating, state.page, fetchFeedbacks]);
 
   // Update page number
   const setPage = useCallback((page: number) => {
@@ -112,8 +167,9 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
 
   // Manual refetch
   const refetch = useCallback(() => {
-    fetchFeedbacks();
-  }, [fetchFeedbacks]);
+    const queryString = buildQueryParams();
+    fetchFeedbacks(queryString);
+  }, [buildQueryParams, fetchFeedbacks]);
 
   return {
     ...state,

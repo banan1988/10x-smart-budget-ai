@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../../db/database.types';
 import { UserService } from '../../../lib/services/user.service';
-import { DEFAULT_USER_ID } from '../../../db/constants';
+import { checkAuthentication, createErrorResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -15,12 +15,17 @@ export const prerender = false;
  * (user_profiles, transactions, etc.).
  *
  * @returns 204 No Content on successful deletion
+ * @returns 401 Unauthorized if user is not authenticated
  * @returns 500 Internal Server Error if operation fails
  */
-export const DELETE: APIRoute = async ({ locals }) => {
+export const DELETE: APIRoute = async (context) => {
   try {
-    // TODO: Authentication - for now using hardcoded user ID
-    const userId = locals.user?.id || DEFAULT_USER_ID;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
+
+    const { locals } = context;
+    const userId = locals.user!.id;
 
     // Create admin Supabase client with service_role key
     const supabaseUrl = import.meta.env.SUPABASE_URL;
@@ -49,18 +54,7 @@ export const DELETE: APIRoute = async ({ locals }) => {
     console.error('Error deleting user:', error);
 
     // Return error response
-    return new Response(
-      JSON.stringify({
-        error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

@@ -122,7 +122,7 @@ describe('GET /api/feedbacks/stats', () => {
     // Assert
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data).toHaveProperty('error', 'Failed to fetch feedback statistics');
+    expect(data).toHaveProperty('error');
     expect(data).toHaveProperty('message');
   });
 

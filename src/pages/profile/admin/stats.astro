@@ -7,21 +7,8 @@ import { AppSidebar } from '../../../components/AppSidebar';
 import { MobileNav } from '../../../components/MobileNav';
 import { Breadcrumbs } from '../../../components/Breadcrumbs';
 
-// TODO: Uncomment when ready to enforce authentication
-// import { redirect } from 'astro';
-//
-// // Check if user is authenticated
-// const { data: { session } } = await Astro.locals.supabase.auth.getSession();
-//
-// if (!session) {
-//   return redirect('/login');
-// }
-//
-// // TODO: Check if user has admin role
-// // If not admin, redirect to profile
-// if (!isAdmin(session.user)) {
-//   return redirect('/profile');
-// }
+// Middleware handles authentication and admin role check
+// If not authenticated or not admin, middleware will redirect to /login or /profile
 
 const pageTitle = 'Statystyki AI Kategoryzacji';
 const pageDescription = 'Panel administratora - Monitorowanie efektywności automatycznej kategoryzacji wydatków';
@@ -31,12 +18,18 @@ const pageDescription = 'Panel administratora - Monitorowanie efektywności auto
   <div class="flex min-h-screen">
     <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
-      <AppSidebar currentPage="admin-stats" client:load />
+      <AppSidebar currentPage="admin-stats" userRole={Astro.locals.user?.role} client:load />
     </div>
 
     <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
-      <AppHeader currentPage="profile" client:load />
+      <AppHeader
+        currentPage="dashboard"
+        userEmail={Astro.locals.user?.email}
+        userNickname={Astro.locals.user?.nickname}
+        userRole={Astro.locals.user?.role}
+        client:load
+      />
 
       <main class="flex-1 bg-background pb-16 lg:pb-0">
         <div class="container mx-auto px-4 py-8">

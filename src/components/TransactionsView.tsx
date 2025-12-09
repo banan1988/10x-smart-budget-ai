@@ -69,6 +69,7 @@ export function TransactionsView() {
     try {
       const response = await fetch(`/api/transactions/${transactionToDelete}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {

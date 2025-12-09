@@ -17,12 +17,14 @@ describe('useAiStatsAdmin hook', () => {
   it('should initialize with default date range (last 30 days)', () => {
     const mockResponse = {
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => ({
         period: { startDate: '', endDate: '' },
         overall: { totalTransactions: 0, aiCategorized: 0, manuallyCategorized: 0, aiPercentage: 0 },
         categoryBreakdown: [],
         trendData: [],
       }),
+      text: async () => '{}',
     };
 
     (global.fetch as any).mockResolvedValueOnce(mockResponse);
@@ -62,7 +64,9 @@ describe('useAiStatsAdmin hook', () => {
 
     const mockResponse = {
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => mockStats,
+      text: async () => JSON.stringify(mockStats),
     };
 
     (global.fetch as any).mockResolvedValueOnce(mockResponse);
@@ -79,7 +83,9 @@ describe('useAiStatsAdmin hook', () => {
   it('should handle API errors', async () => {
     const mockResponse = {
       ok: false,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => ({ error: 'Server error' }),
+      text: async () => JSON.stringify({ error: 'Server error' }),
     };
 
     (global.fetch as any).mockResolvedValueOnce(mockResponse);
@@ -159,7 +165,9 @@ describe('useAiStatsAdmin hook', () => {
 
     const mockResponse = {
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: async () => mockStats,
+      text: async () => JSON.stringify(mockStats),
     };
 
     (global.fetch as any).mockResolvedValueOnce(mockResponse);

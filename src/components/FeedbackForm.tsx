@@ -106,6 +106,7 @@ export function FeedbackForm({ onSubmitSuccess, onCancel }: FeedbackFormProps) {
             rating: formData.rating,
             comment: formData.comment.trim(),
           }),
+          credentials: 'include',
         });
 
         if (!response.ok) {

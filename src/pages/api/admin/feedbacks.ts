@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { FeedbackService } from '../../../lib/services/feedback.service';
-import { DEFAULT_USER_ID } from '../../../db/constants';
+import { checkAuthentication, checkAdminRole, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -29,16 +29,6 @@ const AdminFeedbacksQuerySchema = z.object({
 type AdminFeedbacksQuery = z.infer<typeof AdminFeedbacksQuerySchema>;
 
 /**
- * Helper function to check if user is admin
- * TODO: Replace with actual admin role check when authentication is implemented
- */
-const isAdmin = (userId: string): boolean => {
-  // For now, use a hardcoded check
-  // In production, this should check user role from database or JWT metadata
-  return userId === DEFAULT_USER_ID;
-};
-
-/**
  * GET /api/admin/feedbacks
  *
  * Returns paginated list of all feedback entries for admin panel.
@@ -51,32 +41,22 @@ const isAdmin = (userId: string): boolean => {
  * @query limit - Items per page (optional, default: 20, max: 100)
  * @returns 200 OK with paginated feedback data
  * @returns 400 Bad Request if validation fails
+ * @returns 401 Unauthorized if user is not authenticated
  * @returns 403 Forbidden if user doesn't have admin role
  * @returns 500 Internal Server Error if operation fails
  */
-export const GET: APIRoute = async ({ locals, url }) => {
+export const GET: APIRoute = async (context) => {
   try {
-    // Get Supabase client from middleware context
-    const supabase = locals.supabase;
-
-    // For now, use default user ID (will be replaced with auth.uid() after authentication is implemented)
-    const userId = DEFAULT_USER_ID;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
 
     // Check if user is admin
-    if (!isAdmin(userId)) {
-      return new Response(
-        JSON.stringify({
-          error: 'Forbidden',
-          message: 'You do not have permission to access this resource',
-        }),
-        {
-          status: 403,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    }
+    const [isAdmin, adminError] = await checkAdminRole(context);
+    if (!isAdmin) return adminError!;
+
+    const { locals, url } = context;
+    const supabase = locals.supabase!;
 
     // Parse and validate query parameters
     const startDate = url.searchParams.get('startDate');
@@ -94,20 +74,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
     });
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      return createValidationErrorResponse(
+        validationResult.error.issues.map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        }))
       );
     }
 
@@ -160,40 +131,21 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const paginatedFeedbacks = filteredFeedbacks.slice(from, to);
 
     // Return successful response with paginated data
-    return new Response(
-      JSON.stringify({
-        data: paginatedFeedbacks,
-        pagination: {
-          page: validatedPage,
-          limit: validatedLimit,
-          total: totalFiltered,
-          totalPages,
-        },
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createSuccessResponse({
+      data: paginatedFeedbacks,
+      pagination: {
+        page: validatedPage,
+        limit: validatedLimit,
+        total: totalFiltered,
+        totalPages,
+      },
+    }, 200);
   } catch (error) {
     // Log error for debugging
     console.error('Error fetching admin feedbacks:', error);
 
     // Return error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch feedbacks',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

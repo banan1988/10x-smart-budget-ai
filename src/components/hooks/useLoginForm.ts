@@ -147,18 +147,29 @@ export function useLoginForm(): UseLoginFormReturn {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle specific API errors
+        // Handle specific API errors based on response status
         let errorMessage = 'Coś poszło nie tak. Spróbuj jeszcze raz.';
         let fieldError: 'email' | 'password' | 'general' = 'general';
 
-        if (data.code === 'invalid_grant' || data.message?.includes('Invalid login credentials')) {
-          errorMessage = 'Błędny email lub hasło';
+        if (response.status === 401) {
+          // Invalid credentials
+          errorMessage = data.error || 'Email lub hasło są nieprawidłowe';
           fieldError = 'password';
-        } else if (data.message?.includes('Email not confirmed')) {
-          errorMessage = 'Potwierdź swój email przed zalogowaniem';
+        } else if (response.status === 403) {
+          // Email not confirmed
+          errorMessage = data.error || 'Potwierdź swój email przed zalogowaniem';
           fieldError = 'general';
+        } else if (response.status === 404) {
+          // User not found
+          errorMessage = data.error || 'Użytkownik nie istnieje';
+          fieldError = 'password';
         } else if (response.status === 429) {
-          errorMessage = 'Za wiele prób logowania. Spróbuj później.';
+          // Rate limited
+          errorMessage = data.error || 'Za wiele prób logowania. Spróbuj później.';
+          fieldError = 'general';
+        } else if (response.status >= 500) {
+          // Server error
+          errorMessage = 'Błąd serwera. Spróbuj później.';
           fieldError = 'general';
         }
 

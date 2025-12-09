@@ -70,7 +70,9 @@ export function AddTransactionDialog({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('/api/categories', {
+          credentials: 'include',
+        });
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
@@ -175,6 +177,7 @@ export function AddTransactionDialog({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
+        credentials: 'include',
       });
 
       if (!response.ok) {

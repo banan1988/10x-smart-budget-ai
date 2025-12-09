@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { TransactionService } from '../../../lib/services/transaction.service';
 import { BulkCreateTransactionsCommandSchema, BulkDeleteTransactionsCommandSchema } from '../../../types';
-import { DEFAULT_USER_ID } from '../../../db/constants';
+import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -18,13 +18,15 @@ export const prerender = false;
  * @returns 401 Unauthorized if user is not authenticated
  * @returns 500 Internal Server Error if operation fails
  */
-export const POST: APIRoute = async ({ locals, request }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    // Get Supabase client from middleware context
-    const supabase = locals.supabase;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    const { locals, request } = context;
+    const supabase = locals.supabase!;
+    const userId = locals.user!.id;
 
     // Parse and validate request body
     let body;
@@ -48,18 +50,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     const validationResult = BulkCreateTransactionsCommandSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.error.issues,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return createValidationErrorResponse(validationResult.error.issues);
     }
 
     // Bulk create transactions using the service
@@ -70,35 +61,20 @@ export const POST: APIRoute = async ({ locals, request }) => {
     );
 
     // Return successful response with created transactions
-    return new Response(
-      JSON.stringify({
-        created: transactions.length,
-        transactions,
-      }),
-      {
-        status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const successResponse = createSuccessResponse({
+      created: transactions.length,
+      transactions,
+    }, 201);
+
+    // Add headers to indicate that related caches should be invalidated
+    // The client-side hook (useDashboardStats) will refetch due to onSuccess callback
+    successResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    return successResponse;
   } catch (error) {
     // Log error for debugging
     console.error('Error bulk creating transactions:', error);
-
-    // Return error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to bulk create transactions',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 
@@ -114,13 +90,15 @@ export const POST: APIRoute = async ({ locals, request }) => {
  * @returns 401 Unauthorized if user is not authenticated
  * @returns 500 Internal Server Error if operation fails
  */
-export const DELETE: APIRoute = async ({ locals, request }) => {
+export const DELETE: APIRoute = async (context) => {
   try {
-    // Get Supabase client from middleware context
-    const supabase = locals.supabase;
+    // Check if user is authenticated
+    const [isAuth, errorResponse] = checkAuthentication(context);
+    if (!isAuth) return errorResponse!;
 
-    // For now, use default user ID (will be replaced with authenticated user)
-    const userId = DEFAULT_USER_ID;
+    const { locals, request } = context;
+    const supabase = locals.supabase!;
+    const userId = locals.user!.id;
 
     // Parse and validate request body
     let body;
@@ -144,18 +122,7 @@ export const DELETE: APIRoute = async ({ locals, request }) => {
     const validationResult = BulkDeleteTransactionsCommandSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          details: validationResult.error.issues,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      return createValidationErrorResponse(validationResult.error.issues);
     }
 
     // Bulk delete transactions using the service
@@ -166,34 +133,18 @@ export const DELETE: APIRoute = async ({ locals, request }) => {
     );
 
     // Return successful response
-    return new Response(
-      JSON.stringify({
-        deleted: deletedCount,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const deleteResponse = createSuccessResponse({
+      deleted: deletedCount,
+    }, 200);
+
+    // Add headers to indicate that related caches should be invalidated
+    deleteResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    return deleteResponse;
   } catch (error) {
     // Log error for debugging
     console.error('Error bulk deleting transactions:', error);
-
-    // Return error response
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to bulk delete transactions',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return createErrorResponse(error, 500);
   }
 };
 

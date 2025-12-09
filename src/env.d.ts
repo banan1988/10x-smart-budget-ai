@@ -1,11 +1,21 @@
 /// <reference types="astro/client" />
 
-import type { SupabaseClient } from './db/supabase.client.ts';
+/**
+ * User object stored in Astro.locals during authenticated requests
+ */
+interface User {
+  id: string;
+  email: string;
+  role: 'user' | 'admin';
+  nickname?: string;
+  createdAt?: string; // User registration date (ISO 8601 format)
+}
 
 declare global {
   namespace App {
     interface Locals {
-      supabase: SupabaseClient;
+      user?: User;
+      supabase?: any; // SupabaseClient type
     }
   }
 }
