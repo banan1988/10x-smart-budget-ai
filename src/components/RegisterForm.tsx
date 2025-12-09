@@ -8,23 +8,29 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRegisterForm, type PasswordStrengthLevel } from '@/components/hooks/useRegisterForm';
 
 /**
- * Password Strength Indicator Component
- *
- * Visual indicator showing password strength and requirements
+ * Password Strength Result interface
+ */
+interface PasswordStrengthResult {
+  level: PasswordStrengthLevel;
+  score: number;
+  requirements: {
+    minLength: boolean;
+    hasUppercase: boolean;
+    hasLowercase: boolean;
+    hasDigit: boolean;
+    hasSpecialChar: boolean;
+  };
+}
+
+/**
+ * Password Strength Indicator Component Props
  */
 interface PasswordStrengthIndicatorProps {
-  password: string;
+  strength: PasswordStrengthResult;
   showDetails?: boolean;
 }
 
-function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStrengthIndicatorProps) {
-  const { getPasswordStrength } = useRegisterForm();
-
-  if (!password) {
-    return null;
-  }
-
-  const strength = getPasswordStrength();
+function PasswordStrengthIndicator({ strength, showDetails = true }: PasswordStrengthIndicatorProps) {
   const { requirements } = strength;
 
   // Map strength level to color
@@ -131,6 +137,7 @@ export default function RegisterForm() {
     togglePasswordVisibility,
     toggleConfirmPasswordVisibility,
     handleSubmit,
+    getPasswordStrength,
     isFormValid,
   } = useRegisterForm();
 
@@ -239,7 +246,7 @@ export default function RegisterForm() {
             {/* Password Strength Indicator */}
             {state.password && (
               <div id={`${passwordInputId}-requirements`} className="mt-3">
-                <PasswordStrengthIndicator password={state.password} showDetails={true} />
+                <PasswordStrengthIndicator strength={getPasswordStrength()} showDetails={true} />
               </div>
             )}
 

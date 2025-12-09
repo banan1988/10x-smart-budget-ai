@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 /**
  * Password strength validation requirements
@@ -139,9 +140,15 @@ export function useRegisterForm() {
         }
       }
 
-      // Re-validate confirmPassword if it's touched and doesn't match
-      if (prev.touched.confirmPassword && prev.confirmPassword && password !== prev.confirmPassword) {
-        newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+      // Re-validate confirmPassword if it's touched
+      if (prev.touched.confirmPassword && prev.confirmPassword) {
+        if (password !== prev.confirmPassword) {
+          newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+        } else {
+          // Passwords now match - clear the error
+          const { confirmPassword, ...rest } = newState.fieldErrors;
+          newState.fieldErrors = rest;
+        }
       }
 
       return newState;
@@ -161,6 +168,7 @@ export function useRegisterForm() {
         } else if (confirmPassword !== prev.password) {
           newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
         } else {
+          // Passwords match - clear the error
           const { confirmPassword: _, ...rest } = prev.fieldErrors;
           newState.fieldErrors = rest;
         }
@@ -311,29 +319,49 @@ export function useRegisterForm() {
             },
             generalError: 'Rejestracja nie powiodła się. Ten email już istnieje w systemie.',
           }));
+          toast.error('Ten adres email jest już zarejestrowany');
         } else {
           setState((prev) => ({
             ...prev,
             isLoading: false,
-            generalError: errorData.message || 'Rejestracja nie powiodła się. Spróbuj ponownie.',
+            generalError: errorData.error || 'Rejestracja nie powiodła się. Spróbuj ponownie.',
           }));
+          toast.error(errorData.error || 'Rejestracja nie powiodła się. Spróbuj ponownie.');
         }
         return;
       }
 
-      // Success - redirect to login or dashboard
+      // Success - show success message
       const data = await response.json();
 
-      // Redirect to dashboard or login
-      window.location.href = '/dashboard';
+      // Show success message about email verification
+      // NOTE: In production with email sending enabled, user would receive email verification link
+      // For local Supabase setup without email sending, the account is created and ready to use
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        generalError: null,
+      }));
+
+      // Show success notification
+      toast.success(data.message || 'Konto zostało utworzone pomyślnie!');
+
+      // Redirect to dashboard since user is already authenticated after signup
+      // Supabase automatically creates session on signup
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Nieznąd błąd podczas rejestracji';
+      const errorMessage = error instanceof Error ? error.message : 'Nieznany błąd podczas rejestracji';
 
       setState((prev) => ({
         ...prev,
         isLoading: false,
         generalError: `Błąd: ${errorMessage}. Spróbuj ponownie.`,
       }));
+
+      toast.error(`Błąd: ${errorMessage}`);
+      console.error('Register error:', error);
     }
   }, [state.email, state.password]);
 

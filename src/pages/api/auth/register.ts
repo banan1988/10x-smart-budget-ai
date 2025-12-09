@@ -40,7 +40,8 @@ function successResponse(data: any, status: number = 201) {
  * POST /api/auth/register
  *
  * Register new user with email and password
- * Sends verification email to user
+ * In production: Sends verification email to user
+ * In local dev (with local Supabase): No email sent - user can immediately log in
  */
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
@@ -85,16 +86,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
 
       // Generic error for other cases
-      return errorResponse('Nie udało się zalogować. Spróbuj ponownie później.', 500);
+      return errorResponse('Nie udało się zarejestrować. Spróbuj ponownie później.', 500);
     }
 
     // Success - return user data
+    // NOTE: In production with email sending enabled, user would need to verify email
+    // For local Supabase setup without email sending, the account is created and ready to use
     return successResponse({
       user: {
         id: data.user?.id,
         email: data.user?.email,
       },
-      message: 'Konto zostało utworzone. Sprawdź swoją skrzynkę email w celu weryfikacji adresu.',
+      message: 'Konto zostało utworzone pomyślnie! Możesz teraz się zalogować.',
     }, 201);
 
   } catch (err) {
