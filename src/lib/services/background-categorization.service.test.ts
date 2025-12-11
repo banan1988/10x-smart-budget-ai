@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, expectTypeOf } from 'vitest';
 import { BackgroundCategorizationService } from './background-categorization.service';
 import { createMockSupabaseClient } from '../../test/mocks/supabase.mock';
 import type { SupabaseClient } from '../../db/supabase.client';
@@ -34,18 +34,69 @@ describe('BackgroundCategorizationService', () => {
     service = new BackgroundCategorizationService(mockSupabase);
   });
 
+  afterEach(() => {
+    // Reset fake timers if any test used them
+    try {
+      vi.useRealTimers();
+    } catch (e) {
+      // Timers may not be fake, that's ok
+    }
+  });
+
   describe('categorizeTransactionInBackground', () => {
     it('should queue background categorization without blocking', async () => {
       // Arrange
+      vi.useFakeTimers();
       const transactionId = 42;
       const description = 'Coffee at Starbucks';
       const userId = 'test-user';
 
-      // Act - This should return immediately
-      await service.categorizeTransactionInBackground(transactionId, description, userId);
+      // Mock AI categorization
+      const mockAiService = AiCategorizationService as any;
+      const aiInstance = new mockAiService();
+      aiInstance.categorizeTransaction.mockResolvedValue({
+        categoryKey: 'dining',
+        confidence: 0.95,
+        reasoning: 'Coffee purchase',
+      });
 
-      // Assert - Method completes without awaiting internal processes
-      expect(true).toBe(true); // If we get here without timeout, the method is non-blocking
+      // Mock category lookup
+      (CategoryService.getCategoryByKey as any).mockResolvedValue({
+        id: 5,
+        key: 'dining',
+        name: 'Dining',
+      });
+
+      // Mock Supabase update
+      const updateSpy = vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => Promise.resolve({ error: null })),
+        })),
+      }));
+      mockSupabase.from = vi.fn(() => ({ update: updateSpy })) as any;
+
+      // Act - Method should return immediately (non-blocking)
+      const result = service.categorizeTransactionInBackground(
+        transactionId,
+        description,
+        userId
+      );
+
+      // Should not await yet - it returns a promise that resolves immediately
+      expect(result).toBeInstanceOf(Promise);
+
+      // Assert Type
+      expectTypeOf(result).toMatchTypeOf<Promise<void>>();
+
+      // Advance timers for background processing to complete
+      vi.advanceTimersByTime(100);
+      await vi.runAllTimersAsync();
+
+      // Assert - Verify side effects occurred
+      expect(mockSupabase.from).toHaveBeenCalledWith('transactions');
+      expect(updateSpy).toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
 
     it('should log categorization start', async () => {
@@ -101,11 +152,13 @@ describe('BackgroundCategorizationService', () => {
       const description = '';
       const userId = 'test-user';
 
-      // Act - Should not throw
-      await service.categorizeTransactionInBackground(transactionId, description, userId);
+      // Act - Should queue task successfully without throwing
+      const result = service.categorizeTransactionInBackground(transactionId, description, userId);
 
-      // Assert
-      expect(true).toBe(true);
+      // Assert - Should return a Promise
+      expect(result).toBeInstanceOf(Promise);
+      // Verify it resolves without error
+      await expect(result).resolves.toBeUndefined();
     });
 
     it('should handle null description gracefully', async () => {
@@ -114,11 +167,58 @@ describe('BackgroundCategorizationService', () => {
       const description = null as any;
       const userId = 'test-user';
 
-      // Act - Should not throw
-      await service.categorizeTransactionInBackground(transactionId, description, userId);
+      // Act - Should queue task successfully without throwing
+      const result = service.categorizeTransactionInBackground(transactionId, description, userId);
 
-      // Assert
-      expect(true).toBe(true);
+      // Assert - Should return a Promise
+      expect(result).toBeInstanceOf(Promise);
+      // Verify it resolves without error
+      await expect(result).resolves.toBeUndefined();
+    });
+
+    it('should log error and continue when categorization fails', async () => {
+      // Arrange
+      vi.useFakeTimers();
+      const transactionId = 42;
+      const description = 'Test transaction';
+      const userId = 'test-user';
+
+      // Mock AI categorization to fail
+      const mockAiService = AiCategorizationService as any;
+      const aiInstance = new mockAiService();
+      aiInstance.categorizeTransaction.mockRejectedValue(
+        new Error('API connection error')
+      );
+
+      // Update mock for this test
+      const updateSpy = vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => Promise.resolve({ error: null })),
+        })),
+      }));
+      mockSupabase.from = vi.fn(() => ({ update: updateSpy })) as any;
+      service = new BackgroundCategorizationService(mockSupabase);
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      // Act
+      const result = service.categorizeTransactionInBackground(
+        transactionId,
+        description,
+        userId
+      );
+
+      vi.advanceTimersByTime(100);
+      await vi.runAllTimersAsync();
+
+      // Assert - Should log error when categorization fails
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(consoleSpy.mock.calls.some(call =>
+        (call[0] as string)?.includes('[Background]') || (call[0] as string)?.includes('Error')
+      )).toBe(true);
+
+      consoleSpy.mockRestore();
+      vi.useRealTimers();
     });
   });
 

@@ -1,5 +1,5 @@
 // filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/ai-categorization.service.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, expectTypeOf } from 'vitest';
 import { AiCategorizationService } from './ai-categorization.service';
 import { OpenRouterService } from './openrouter.service';
 import { CategoryService } from './category.service';
@@ -85,6 +85,11 @@ describe('AiCategorizationService', () => {
       expect(result.categoryKey).toBe('dining');
       expect(result.confidence).toBe(0.95);
       expect(mockGetChatCompletion).toHaveBeenCalledTimes(1);
+
+      // Assert Types
+      expectTypeOf(result).toMatchTypeOf<{ categoryKey: string; confidence: number; reasoning: string }>();
+      expectTypeOf(result.categoryKey).toMatchTypeOf<string>();
+      expectTypeOf(result.confidence).toMatchTypeOf<number>();
     });
 
     it('should pass correct parameters to OpenRouter service', async () => {
@@ -252,6 +257,99 @@ describe('AiCategorizationService', () => {
       expect(result.confidence).toBe(0);
       expect(result.reasoning).toContain('AI categorization unavailable');
     });
+
+    it('should handle null response from AI service', async () => {
+      // Arrange
+      mockGetChatCompletion.mockResolvedValue(null);
+
+      // Act
+      const result = await service.categorizeTransaction('Test transaction');
+
+      // Assert
+      expect(result.categoryKey).toBe('other');
+      expect(result.confidence).toBe(0);
+      expect(result.reasoning).toContain('AI categorization unavailable');
+    });
+
+    it('should validate confidence is within valid range (0-1)', async () => {
+      // Arrange - confidence > 1 is normalized to 1 by service
+      mockGetChatCompletion.mockResolvedValue({
+        categoryKey: 'dining',
+        confidence: 1.5, // Out of bounds
+        reasoning: 'Test',
+      });
+
+      // Act
+      const result = await service.categorizeTransaction('Test transaction');
+
+      // Assert - Service normalizes confidence > 1 to 1
+      expect(result.categoryKey).toBe('dining');
+      expect(result.confidence).toBe(1);
+    });
+
+    it('should handle confidence < 0', async () => {
+      // Arrange - confidence < 0 is invalid and service rejects it
+      mockGetChatCompletion.mockResolvedValue({
+        categoryKey: 'dining',
+        confidence: -0.5, // Negative confidence
+        reasoning: 'Test',
+      });
+
+      // Act
+      const result = await service.categorizeTransaction('Test transaction');
+
+      // Assert - Service rejects negative confidence and returns 'other'
+      expect(result.categoryKey).toBe('other');
+      expect(result.confidence).toBe(0);
+    });
+
+    it('should reject unknown category keys not in database', async () => {
+      // Arrange
+      mockGetChatCompletion.mockResolvedValue({
+        categoryKey: 'unknown_category_xyz', // Not in mockCategories
+        confidence: 0.9,
+        reasoning: 'Test',
+      });
+
+      // Act
+      const result = await service.categorizeTransaction('Test transaction');
+
+      // Assert
+      expect(result.categoryKey).toBe('other');
+      expect(result.reasoning).toContain('Invalid category');
+    });
+
+    it('should handle missing categoryKey in response', async () => {
+      // Arrange - Response missing categoryKey
+      mockGetChatCompletion.mockResolvedValue({
+        confidence: 0.9,
+        reasoning: 'Test',
+        // Missing: categoryKey
+      });
+
+      // Act
+      const result = await service.categorizeTransaction('Test transaction');
+
+      // Assert
+      expect(result.categoryKey).toBe('other');
+      expect(result.confidence).toBe(0);
+    });
+
+    it('should handle missing confidence in response', async () => {
+      // Arrange - Response missing confidence
+      mockGetChatCompletion.mockResolvedValue({
+        categoryKey: 'dining',
+        reasoning: 'Test',
+        // Missing: confidence
+      });
+
+      // Act
+      const result = await service.categorizeTransaction('Test transaction');
+
+      // Assert
+      expect(result.categoryKey).toBe('other');
+      expect(result.confidence).toBe(0);
+    });
   });
 
   describe('batchCategorize', () => {
@@ -352,6 +450,28 @@ describe('AiCategorizationService', () => {
       // Assert
       expect(callOrder).toEqual([1, 2, 3]); // Sequential processing
     });
+
+    it('should handle large batch (100+ items) efficiently', async () => {
+      // Arrange
+      const largeDescriptions = Array(150).fill(0).map((_, i) => `Description ${i}`);
+      mockGetChatCompletion.mockResolvedValue({
+        categoryKey: 'other',
+        confidence: 0.5,
+        reasoning: 'Test',
+      });
+
+      // Act
+      const startTime = performance.now();
+      const results = await service.batchCategorize(largeDescriptions);
+      const duration = performance.now() - startTime;
+
+      // Assert - Should process all items successfully
+      expect(results).toHaveLength(150);
+      expect(results.every(r => r.categoryKey === 'other')).toBe(true);
+      // Should complete in reasonable time (not a hard limit, just ensures no infinite loops)
+      expect(duration).toBeLessThan(30000);
+      // Verify all calls were made
+      expect(mockGetChatCompletion).toHaveBeenCalledTimes(150);
+    });
   });
 });
-

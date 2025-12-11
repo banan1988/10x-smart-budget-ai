@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, expectTypeOf } from 'vitest';
 import { UserService } from './user.service';
 import { createMockSupabaseClient } from '../../test/mocks/supabase.mock';
 
@@ -28,6 +28,10 @@ describe('UserService', () => {
       // Assert
       expect(result).toEqual(mockProfileData);
       expect(mockSupabase.from).toHaveBeenCalledWith('user_profiles');
+
+      // Assert Types
+      expectTypeOf(result).toMatchTypeOf<any>();
+      expectTypeOf(result?.nickname).toMatchTypeOf<string | undefined>();
     });
 
     it('should return null when profile is not found', async () => {

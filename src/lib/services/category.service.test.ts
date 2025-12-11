@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, expectTypeOf } from 'vitest';
 import { CategoryService } from './category.service';
 import { createMockSupabaseClient, createMockCategoryData } from '../../test/mocks/supabase.mock';
 
@@ -21,6 +21,12 @@ describe('CategoryService', () => {
       expect(result[0].name).toBe('Rozrywka'); // 'R' comes before 'T' and 'Z' in Polish
       expect(result[1].name).toBe('Transport');
       expect(result[2].name).toBe('Zakupy spożywcze');
+
+      // Assert Types
+      expectTypeOf(result).toMatchTypeOf<any[]>();
+      expectTypeOf(result[0].id).toMatchTypeOf<number>();
+      expectTypeOf(result[0].key).toMatchTypeOf<string>();
+      expectTypeOf(result[0].name).toMatchTypeOf<string>();
     });
 
     it('should transform database records to CategoryDto format', async () => {
@@ -157,6 +163,72 @@ describe('CategoryService', () => {
 
       // Assert - Polish alphabetical order: Ć, Ł, Z, Ż
       expect(result.map((c) => c.name)).toEqual(['Ćma', 'Łódź', 'Zdrowie', 'Żaba']);
+    });
+
+    it('should handle invalid translations structure (null translations)', async () => {
+      // Arrange
+      const mockData = [
+        {
+          id: 1,
+          key: 'test_key',
+          translations: null, // Invalid - null translations
+          created_at: '2025-01-01T00:00:00Z',
+        },
+      ];
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+        })),
+      } as any);
+
+      // Act
+      const result = await CategoryService.getGlobalCategories(mockSupabase);
+
+      // Assert - Should fallback to key when translations is null
+      expect(result[0].name).toBe('test_key');
+    });
+
+    it('should handle categories with empty translations object', async () => {
+      // Arrange
+      const mockData = [
+        {
+          id: 1,
+          key: 'empty_translations',
+          translations: {}, // Empty translations object
+          created_at: '2025-01-01T00:00:00Z',
+        },
+      ];
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+        })),
+      } as any);
+
+      // Act
+      const result = await CategoryService.getGlobalCategories(mockSupabase);
+
+      // Assert - Should fallback to key when no translations exist
+      expect(result[0].name).toBe('empty_translations');
+    });
+
+    it('should verify category structure has no sensitive data', async () => {
+      // Arrange
+      const mockData = createMockCategoryData();
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
+        })),
+      } as any);
+
+      // Act
+      const result = await CategoryService.getGlobalCategories(mockSupabase);
+
+      // Assert - Verify that only expected properties are present
+      // This is more robust than checking each property individually
+      result.forEach((category) => {
+        const keys = Object.keys(category).sort();
+        expect(keys).toEqual(['id', 'key', 'name']);
+      });
     });
   });
 

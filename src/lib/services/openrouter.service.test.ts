@@ -1,26 +1,12 @@
 // filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/openrouter.service.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, expectTypeOf } from 'vitest';
 import { OpenRouterService } from './openrouter.service';
-
-// Mock fetch globally
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
-// Store original env
-const originalApiKey = import.meta.env.OPENROUTER_API_KEY;
+import { TEST_API_KEY } from '../../test/setup';
 
 describe('OpenRouterService', () => {
-  beforeEach(() => {
-    // Reset mocks before each test
-    vi.clearAllMocks();
-
-    // Set default API key for tests
-    import.meta.env.OPENROUTER_API_KEY = 'test-api-key-123';
-  });
-
   describe('constructor', () => {
     it('should initialize successfully with valid API key', () => {
-      // Arrange - API key is already set in beforeEach
+      // Arrange - API key is already set in global setup from setup.ts
 
       // Act & Assert - should not throw
       expect(() => new OpenRouterService()).not.toThrow();
@@ -31,30 +17,47 @@ describe('OpenRouterService', () => {
       const originalKey = import.meta.env.OPENROUTER_API_KEY;
       delete (import.meta.env as any).OPENROUTER_API_KEY;
 
-      // Act & Assert
-      expect(() => new OpenRouterService()).toThrow(
-        'OPENROUTER_API_KEY is not set in environment variables.'
-      );
-
-      // Restore
-      import.meta.env.OPENROUTER_API_KEY = originalKey;
+      try {
+        // Act & Assert
+        expect(() => new OpenRouterService()).toThrow(
+          'OPENROUTER_API_KEY is not set in environment variables.'
+        );
+      } finally {
+        // Restore
+        import.meta.env.OPENROUTER_API_KEY = originalKey;
+      }
     });
 
     it('should throw error when OPENROUTER_API_KEY is empty string', () => {
       // Arrange - mock empty API key
+      const originalKey = import.meta.env.OPENROUTER_API_KEY;
       import.meta.env.OPENROUTER_API_KEY = '';
 
-      // Act & Assert
-      expect(() => new OpenRouterService()).toThrow(
-        'OPENROUTER_API_KEY is not set in environment variables.'
-      );
+      try {
+        // Act & Assert
+        expect(() => new OpenRouterService()).toThrow(
+          'OPENROUTER_API_KEY is not set in environment variables.'
+        );
+      } finally {
+        // Restore
+        import.meta.env.OPENROUTER_API_KEY = originalKey;
+      }
     });
   });
 
   describe('getChatCompletion', () => {
+    // Local setup for this describe block - stub fetch before each test
+    beforeEach(() => {
+      if (!global.fetch || !(global.fetch as any).mockResolvedValueOnce) {
+        vi.stubGlobal('fetch', vi.fn());
+      }
+      vi.clearAllMocks();
+    });
+
     it('should successfully get chat completion with valid response', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const mockResponse = {
         choices: [
           {
@@ -108,11 +111,17 @@ describe('OpenRouterService', () => {
           },
         })
       );
+
+      // Assert Types
+      expectTypeOf(result).toMatchTypeOf<{ category: string; confidence: number }>();
+      expectTypeOf(result.category).toMatchTypeOf<string>();
+      expectTypeOf(result.confidence).toMatchTypeOf<number>();
     });
 
     it('should include temperature and maxTokens in request payload when provided', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const mockResponse = {
         choices: [{ message: { content: JSON.stringify({ result: 'test' }) } }],
       };
@@ -150,6 +159,7 @@ describe('OpenRouterService', () => {
     it('should properly format messages in request payload', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const mockResponse = {
         choices: [{ message: { content: JSON.stringify({ result: 'test' }) } }],
       };
@@ -187,6 +197,7 @@ describe('OpenRouterService', () => {
     it('should throw error when API returns non-ok status', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
@@ -216,6 +227,7 @@ describe('OpenRouterService', () => {
     it('should throw error when response structure is invalid', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const invalidResponse = { invalid: 'structure' };
 
       mockFetch.mockResolvedValueOnce({
@@ -245,6 +257,7 @@ describe('OpenRouterService', () => {
     it('should throw error when model returns invalid JSON', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const mockResponse = {
         choices: [
           {
@@ -283,6 +296,7 @@ describe('OpenRouterService', () => {
     it('should throw error for malformed JSON (not truncated)', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const mockResponse = {
         choices: [
           {
@@ -320,6 +334,7 @@ describe('OpenRouterService', () => {
     it('should handle network errors', async () => {
       // Arrange
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       mockFetch.mockRejectedValueOnce(new Error('Network failure'));
 
       const options = {
@@ -348,6 +363,7 @@ describe('OpenRouterService', () => {
       }
 
       const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
       const expectedData: ExpectedResponse = {
         category: 'groceries',
         confidence: 0.88,
@@ -391,5 +407,152 @@ describe('OpenRouterService', () => {
       expect(result.subcategories).toHaveLength(2);
     });
   });
-});
 
+  describe('getChatCompletion - Network & Server Error Cases', () => {
+    // Local setup for this describe block - stub fetch before each test
+    beforeEach(() => {
+      if (!global.fetch || !(global.fetch as any).mockRejectedValue) {
+        vi.stubGlobal('fetch', vi.fn());
+      }
+      vi.clearAllMocks();
+    });
+
+    it('should handle network timeout error', async () => {
+      // Arrange
+      const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
+      mockFetch.mockRejectedValue(new Error('Network timeout'));
+
+      const options = {
+        model: 'anthropic/claude-3.5-sonnet',
+        userPrompt: 'test',
+        responseFormat: {
+          type: 'json_schema' as const,
+          json_schema: {
+            name: 'test',
+            schema: { type: 'object', properties: {} },
+          },
+        },
+      };
+
+      // Act & Assert
+      await expect(service.getChatCompletion(options)).rejects.toThrow(
+        'Network timeout'
+      );
+    });
+
+    it('should handle HTTP 500 server error', async () => {
+      // Arrange
+      const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => '{"error": "Internal server error"}',
+      });
+
+      const options = {
+        model: 'anthropic/claude-3.5-sonnet',
+        userPrompt: 'test',
+        responseFormat: {
+          type: 'json_schema' as const,
+          json_schema: {
+            name: 'test',
+            schema: { type: 'object', properties: {} },
+          },
+        },
+      };
+
+      // Act & Assert
+      await expect(service.getChatCompletion(options)).rejects.toThrow(
+        'API request failed with status 500'
+      );
+    });
+
+    it('should handle rate limit error (429)', async () => {
+      // Arrange
+      const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        statusText: 'Too Many Requests',
+        text: async () => '{"error": "Rate limited"}',
+      });
+
+      const options = {
+        model: 'anthropic/claude-3.5-sonnet',
+        userPrompt: 'test',
+        responseFormat: {
+          type: 'json_schema' as const,
+          json_schema: {
+            name: 'test',
+            schema: { type: 'object', properties: {} },
+          },
+        },
+      };
+
+      // Act & Assert
+      await expect(service.getChatCompletion(options)).rejects.toThrow(
+        'API request failed with status 429'
+      );
+    });
+
+    it('should handle authentication error (401)', async () => {
+      // Arrange
+      const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => '{"error": "Invalid API key"}',
+      });
+
+      const options = {
+        model: 'anthropic/claude-3.5-sonnet',
+        userPrompt: 'test',
+        responseFormat: {
+          type: 'json_schema' as const,
+          json_schema: {
+            name: 'test',
+            schema: { type: 'object', properties: {} },
+          },
+        },
+      };
+
+      // Act & Assert
+      await expect(service.getChatCompletion(options)).rejects.toThrow(
+        'API request failed with status 401'
+      );
+    });
+
+    it('should handle malformed JSON response from API', async () => {
+      // Arrange
+      const service = new OpenRouterService();
+      const mockFetch = global.fetch as any;
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => {
+          throw new Error('Invalid JSON');
+        },
+      });
+
+      const options = {
+        model: 'anthropic/claude-3.5-sonnet',
+        userPrompt: 'test',
+        responseFormat: {
+          type: 'json_schema' as const,
+          json_schema: {
+            name: 'test',
+            schema: { type: 'object', properties: {} },
+          },
+        },
+      };
+
+      // Act & Assert
+      await expect(service.getChatCompletion(options)).rejects.toThrow();
+    });
+  });
+});

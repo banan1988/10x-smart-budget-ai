@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, expectTypeOf } from 'vitest';
 import { TransactionService } from './transaction.service';
 import { CategoryService } from './category.service';
 import { createMockSupabaseClient } from '../../test/mocks/supabase.mock';
@@ -54,6 +54,34 @@ function createMockTransactionData(overrides = {}) {
   };
 }
 
+/**
+ * Helper function to create mock Supabase client for transaction queries
+ * Reduces duplication of complex chained mocking (from → select → eq → gte → lte → order → range)
+ */
+function createMockSupabaseForTransactionQuery(mockData = [], count = 0, error = null) {
+  return createMockSupabaseClient({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          gte: vi.fn(() => ({
+            lte: vi.fn(() => ({
+              order: vi.fn(() => ({
+                range: vi.fn(() =>
+                  Promise.resolve({
+                    data: mockData,
+                    error,
+                    count: count || mockData.length,
+                  })
+                ),
+              })),
+            })),
+          })),
+        })),
+      })),
+    })),
+  } as any);
+}
+
 describe('TransactionService', () => {
   const userId = 'test-user-id';
 
@@ -70,21 +98,7 @@ describe('TransactionService', () => {
         createMockTransactionData({ id: 2, date: '2025-11-10' }),
       ];
 
-      const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => ({
-                  order: vi.fn(() => ({
-                    range: vi.fn(() => Promise.resolve({ data: mockData, error: null, count: 2 })),
-                  })),
-                })),
-              })),
-            })),
-          })),
-        })),
-      } as any);
+      const mockSupabase = createMockSupabaseForTransactionQuery(mockData, 2);
 
       // Act
       const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
@@ -99,26 +113,17 @@ describe('TransactionService', () => {
         total: 2,
         totalPages: 1,
       });
+
+      // Assert Types
+      expectTypeOf(result).toMatchTypeOf<{ data: any[]; pagination: any }>();
+      expectTypeOf(result.data[0].id).toMatchTypeOf<number>();
+      expectTypeOf(result.pagination.page).toMatchTypeOf<number>();
     });
 
     it('should transform database records to TransactionDto format', async () => {
       // Arrange
       const mockData = [createMockTransactionData()];
-      const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => ({
-                  order: vi.fn(() => ({
-                    range: vi.fn(() => Promise.resolve({ data: mockData, error: null, count: 1 })),
-                  })),
-                })),
-              })),
-            })),
-          })),
-        })),
-      } as any);
+      const mockSupabase = createMockSupabaseForTransactionQuery(mockData, 1);
 
       // Act
       const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
@@ -140,21 +145,7 @@ describe('TransactionService', () => {
     it('should include category with Polish translation', async () => {
       // Arrange
       const mockData = [createMockTransactionData()];
-      const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => ({
-                  order: vi.fn(() => ({
-                    range: vi.fn(() => Promise.resolve({ data: mockData, error: null, count: 1 })),
-                  })),
-                })),
-              })),
-            })),
-          })),
-        })),
-      } as any);
+      const mockSupabase = createMockSupabaseForTransactionQuery(mockData, 1);
 
       // Act
       const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
@@ -175,6 +166,101 @@ describe('TransactionService', () => {
           categories: null,
         }),
       ];
+      const mockSupabase = createMockSupabaseForTransactionQuery(mockData, 1);
+
+      // Act
+      const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
+
+      // Assert
+      expect(result.data[0].category).toBeNull();
+    });
+
+    it('should return empty array when no data', async () => {
+      // Arrange
+      const mockSupabase = createMockSupabaseForTransactionQuery([], 0);
+
+      // Act
+      const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
+
+      // Assert
+      expect(result.data).toEqual([]);
+      expect(result.pagination.total).toBe(0);
+    });
+
+    it('should throw error when database query fails', async () => {
+      // Arrange
+      const mockSupabase = createMockSupabaseForTransactionQuery([], 0, { message: 'Database error' });
+
+      // Act & Assert
+      await expect(
+        TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 })
+      ).rejects.toThrow('Failed to fetch transactions: Database error');
+    });
+
+    it('should handle pagination correctly for second page', async () => {
+      // Arrange
+      const mockData = [
+        createMockTransactionData({ id: 21, date: '2025-11-21' }),
+        createMockTransactionData({ id: 22, date: '2025-11-22' }),
+      ];
+
+      let rangeCallArgs: [number, number] | null = null;
+
+      const mockSupabase = createMockSupabaseClient({
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              gte: vi.fn(() => ({
+                lte: vi.fn(() => ({
+                  order: vi.fn(() => ({
+                    range: vi.fn((from: number, to: number) => {
+                      rangeCallArgs = [from, to];
+                      return Promise.resolve({ data: mockData, error: null, count: 100 });
+                    }),
+                  })),
+                })),
+              })),
+            })),
+          })),
+        })),
+      } as any);
+
+      // Act
+      const result = await TransactionService.getTransactions(mockSupabase, userId, {
+        month: '2025-11',
+        page: 2,
+        limit: 20,
+      });
+
+      // Assert - Page 2 with limit 20: Supabase range uses (start, end-1)
+      // So for page 2: offset = 20, limit = 20 → range(20, 39)
+      expect(rangeCallArgs).toEqual([20, 39]);
+      expect(result.pagination).toEqual({
+        page: 2,
+        limit: 20,
+        total: 100,
+        totalPages: 5,
+      });
+    });
+
+    it('should throw error when invalid month format is provided', async () => {
+      // Arrange
+      const mockSupabase = createMockSupabaseClient({});
+
+      // Act & Assert
+      await expect(
+        TransactionService.getTransactions(mockSupabase, userId, {
+          month: 'invalid',
+          page: 1,
+          limit: 20,
+        })
+      ).rejects.toThrow();
+    });
+
+    it('should handle very large limit', async () => {
+      // Arrange
+      const mockData = [createMockTransactionData()];
+
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
           select: vi.fn(() => ({
@@ -192,62 +278,15 @@ describe('TransactionService', () => {
       } as any);
 
       // Act
-      const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
+      const result = await TransactionService.getTransactions(mockSupabase, userId, {
+        month: '2025-11',
+        page: 1,
+        limit: 1000,
+      });
 
-      // Assert
-      expect(result.data[0].category).toBeNull();
-    });
-
-    it('should return empty array when no data', async () => {
-      // Arrange
-      const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => ({
-                  order: vi.fn(() => ({
-                    range: vi.fn(() => Promise.resolve({ data: null, error: null, count: 0 })),
-                  })),
-                })),
-              })),
-            })),
-          })),
-        })),
-      } as any);
-
-      // Act
-      const result = await TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 });
-
-      // Assert
-      expect(result.data).toEqual([]);
-      expect(result.pagination.total).toBe(0);
-    });
-
-    it('should throw error when database query fails', async () => {
-      // Arrange
-      const mockSupabase = createMockSupabaseClient({
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              gte: vi.fn(() => ({
-                lte: vi.fn(() => ({
-                  order: vi.fn(() => ({
-                    range: vi.fn(() =>
-                      Promise.resolve({ data: null, error: { message: 'Database error' }, count: null })
-                    ),
-                  })),
-                })),
-              })),
-            })),
-          })),
-        })),
-      } as any);
-
-      // Act & Assert
-      await expect(
-        TransactionService.getTransactions(mockSupabase, userId, { month: '2025-11', page: 1, limit: 20 })
-      ).rejects.toThrow('Failed to fetch transactions: Database error');
+      // Assert - Should work with large limit
+      expect(result.data).toHaveLength(1);
+      expect(result.pagination.limit).toBe(1000);
     });
   });
 
