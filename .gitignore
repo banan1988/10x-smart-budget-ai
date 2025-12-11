@@ -28,3 +28,12 @@ pnpm-debug.log*
 
 # AI instructions
 /.10x-lessons/instructions*.md
+
+# Test artifacts
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+.playwright/
+
+

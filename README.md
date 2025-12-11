@@ -5,6 +5,7 @@ A personal finance application that leverages AI to provide smart budgeting and 
 ## Table of Contents
 
 - [Tech Stack](#tech-stack)
+- [Testing](#testing)
 - [Project Structure](#project-structure)
 - [AI Ready](#ai-ready)
 - [Getting Started Locally](#getting-started-locally)
@@ -32,6 +33,29 @@ A personal finance application that leverages AI to provide smart budgeting and 
 - **API Mocking**: [Mock Service Worker (MSW)](https://mswjs.io/)
 - **Performance Testing**: [Lighthouse](https://developer.chrome.com/docs/lighthouse/)
 
+For comprehensive testing documentation and setup summary, see:
+- **Setup Summary**: [.ai/test-setup-summary.md](./.ai/test-setup-summary.md) - Complete overview of testing configuration
+- **Testing Guide**: [.ai-summary/testing-guide.md](./.ai-summary/testing-guide.md) - Detailed guide with examples
+
+### Running Tests
+
+```bash
+# Unit & Integration tests (watch mode)
+npm run test
+
+# Unit & Integration tests (UI mode)
+npm run test:ui
+
+# E2E tests (UI mode - recommended)
+npm run test:e2e:ui
+
+# E2E tests (CLI)
+npm run test:e2e
+
+# Coverage report
+npm run test:coverage
+```
+
 ## Project Structure
 
 ```
@@ -48,6 +72,13 @@ A personal finance application that leverages AI to provide smart budgeting and 
     │   └── index.ts - Astro middleware
     ├── pages/ - Astro pages
     │   └── api/ - API endpoints
+    ├── test/ - Unit and integration test utilities
+    │   ├── setup.ts - Global test configuration
+    │   ├── mocks/ - Mock Service Worker configuration
+    │   └── README.md - Unit testing documentation
+    ├── e2e/ - End-to-End tests
+    │   ├── fixtures/ - Page Object Models
+    │   └── README.md - E2E testing documentation
     └── types.ts - Shared types for backend and frontend (Entities, DTOs)
 ```
 
