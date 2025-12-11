@@ -28,10 +28,9 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
       onClick={toggleTheme}
       aria-label={theme === 'light' ? 'Przełącz na tryb ciemny' : 'Przełącz na tryb jasny'}
-      className="h-9 w-9"
+      className="h-full px-3"
     >
       {theme === 'light' ? (
         <svg

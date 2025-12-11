@@ -106,8 +106,8 @@ export function AppHeader({ currentPage, userEmail, userNickname, userRole = 'us
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center justify-between px-6">
+    <header className="sticky top-0 z-30 w-full h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center justify-between h-full px-6">
         {/* Logo - visible on mobile, hidden on desktop (sidebar has it) */}
         <div className="flex items-center gap-2 lg:hidden">
           <a href="/dashboard" className="flex items-center space-x-2">
@@ -130,7 +130,7 @@ export function AppHeader({ currentPage, userEmail, userNickname, userRole = 'us
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 px-3 py-2 h-auto"
+                  className="flex items-center gap-2 px-3 h-full"
                 >
                   {/* User icon */}
                   <svg
@@ -183,7 +183,7 @@ export function AppHeader({ currentPage, userEmail, userNickname, userRole = 'us
           <div className="lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Button variant="ghost" className="h-full px-3">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"

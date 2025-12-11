@@ -235,6 +235,11 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
               Menu
             </div>
           )}
+          {!isExpanded && (
+            <div className="flex justify-center py-2">
+              <span className="text-xs font-semibold text-muted-foreground">MENU</span>
+            </div>
+          )}
           <div className={cn('space-y-1', isExpanded && 'ml-2 pl-2')}>
             {navItems.map((item) => (
               <a
@@ -258,11 +263,18 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
           </div>
 
           {/* Admin section */}
-          {isExpanded && isAdmin && (
+          {isAdmin && (
             <div className="pt-2">
-              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Panel Administratora
-              </div>
+              {isExpanded && (
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Panel Administratora
+                </div>
+              )}
+              {!isExpanded && (
+                <div className="flex justify-center py-2">
+                  <span className="text-xs font-semibold text-muted-foreground">ADMIN</span>
+                </div>
+              )}
               <div className={cn('space-y-1', isExpanded && 'ml-2 pl-2')}>
                 {adminItems.map((item) => (
                   <a
@@ -283,37 +295,9 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
                     )}>
                       {item.icon}
                     </span>
-                    <span className="text-sm font-medium">{item.name}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Admin section - collapsed mode */}
-          {!isExpanded && isAdmin && (
-            <div>
-              <div className="border-t my-2" />
-              <div className="space-y-1">
-                {adminItems.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      item.active
-                        ? 'bg-blue-600 text-white'
-                        : 'text-muted-foreground'
+                    {isExpanded && (
+                      <span className="text-sm font-medium">{item.name}</span>
                     )}
-                    title={item.name}
-                  >
-                    <span className={cn(
-                      'flex-shrink-0',
-                      !item.active && 'text-blue-500'
-                    )}>
-                      {item.icon}
-                    </span>
                   </a>
                 ))}
               </div>
@@ -322,7 +306,7 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
         </nav>
 
         {/* Bottom section - Settings */}
-        <div className="space-y-2 border-t p-2">
+        <div className="space-y-2 p-2">
           <a
             href="/profile/settings"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
