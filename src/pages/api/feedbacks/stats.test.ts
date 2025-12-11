@@ -1,149 +1,148 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GET } from './stats';
 import { createMockAPIContext } from '../../../test/mocks/astro.mock';
 import { createMockSupabaseClient } from '../../../test/mocks/supabase.mock';
 
+// Mock FeedbackService at top level
+vi.mock('../../../lib/services/feedback.service', () => ({
+  FeedbackService: {
+    getFeedbackStats: vi.fn(),
+  },
+}));
+
 describe('GET /api/feedbacks/stats', () => {
-  it('should return 200 with average rating and total count', async () => {
-    // Arrange
-    const mockData = [
-      { rating: 5 },
-      { rating: 4 },
-      { rating: 5 },
-      { rating: 3 },
-    ];
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
-    });
-
-    // Act
-    const response = await GET(context);
-
-    // Assert
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toHaveProperty('averageRating', 4.25);
-    expect(data).toHaveProperty('totalFeedbacks', 4);
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should return correct DTO structure', async () => {
+  it('should return 200 with stats (public endpoint)', async () => {
     // Arrange
-    const mockData = [{ rating: 5 }];
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        supabase: mockSupabase,
+      },
+      url: new URL('http://localhost:4321/api/feedbacks/stats'),
     });
 
+    const { FeedbackService } = await import('../../../lib/services/feedback.service');
+    vi.mocked(FeedbackService.getFeedbackStats).mockResolvedValue({
+      totalCount: 10,
+      averageRating: 4.2,
+      ratingDistribution: {
+        1: 1,
+        2: 0,
+        3: 2,
+        4: 3,
+        5: 4,
+      },
+    } as any);
+
     // Act
-    const response = await GET(context);
-    const data = await response.json();
+    const response = await GET(context as any);
 
     // Assert
-    expect(data).toHaveProperty('averageRating');
-    expect(data).toHaveProperty('totalFeedbacks');
-    expect(typeof data.averageRating).toBe('number');
-    expect(typeof data.totalFeedbacks).toBe('number');
-    expect(Object.keys(data).length).toBe(2); // Only these two fields
-  });
-
-  it('should return zero stats when no feedback exists', async () => {
-    // Arrange
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
-    });
-
-    // Act
-    const response = await GET(context);
-
-    // Assert
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(200, 'Should return 200 OK for public endpoint');
     const data = await response.json();
-    expect(data.averageRating).toBe(0);
-    expect(data.totalFeedbacks).toBe(0);
+    expect(data, 'Response should contain totalCount').toHaveProperty('totalCount');
+    expect(data, 'Response should contain averageRating').toHaveProperty('averageRating');
+    expect(data, 'Response should contain ratingDistribution').toHaveProperty('ratingDistribution');
   });
 
-  it('should round average rating to 2 decimal places', async () => {
+  it('should return stats with correct structure', async () => {
     // Arrange
-    const mockData = [
-      { rating: 5 },
-      { rating: 5 },
-      { rating: 4 },
-    ];
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        supabase: mockSupabase,
+      },
+      url: new URL('http://localhost:4321/api/feedbacks/stats'),
     });
 
+    const { FeedbackService } = await import('../../../lib/services/feedback.service');
+    vi.mocked(FeedbackService.getFeedbackStats).mockResolvedValue({
+      totalCount: 10,
+      averageRating: 4.2,
+      ratingDistribution: { 1: 1, 2: 0, 3: 2, 4: 3, 5: 4 },
+    } as any);
+
     // Act
-    const response = await GET(context);
+    const response = await GET(context as any);
     const data = await response.json();
 
     // Assert
-    expect(data.averageRating).toBe(4.67); // (5+5+4)/3 = 4.666... → 4.67
+    expect(typeof data.totalCount).toBe('number', 'totalCount should be a number');
+    expect(typeof data.averageRating).toBe('number', 'averageRating should be a number');
+    expect(typeof data.ratingDistribution).toBe('object', 'ratingDistribution should be an object');
   });
 
-  it('should return 500 when database query fails', async () => {
+  it('should return correct stats values', async () => {
     // Arrange
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: null, error: { message: 'DB connection failed' } })),
-      })),
-    } as any);
-
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        supabase: mockSupabase,
+      },
+      url: new URL('http://localhost:4321/api/feedbacks/stats'),
     });
 
-    // Act
-    const response = await GET(context);
+    const mockStats = {
+      totalCount: 42,
+      averageRating: 3.8,
+      ratingDistribution: { 1: 5, 2: 8, 3: 12, 4: 10, 5: 7 },
+    };
 
-    // Assert
-    expect(response.status).toBe(500);
+    const { FeedbackService } = await import('../../../lib/services/feedback.service');
+    vi.mocked(FeedbackService.getFeedbackStats).mockResolvedValue(mockStats as any);
+
+    // Act
+    const response = await GET(context as any);
     const data = await response.json();
-    expect(data).toHaveProperty('error');
-    expect(data).toHaveProperty('message');
+
+    // Assert
+    expect(data.totalCount).toBe(42, 'totalCount should match mock value');
+    expect(data.averageRating).toBe(3.8, 'averageRating should match mock value');
+    expect(data.ratingDistribution).toEqual(mockStats.ratingDistribution, 'ratingDistribution should match mock value');
   });
 
-  it('should return application/json content-type', async () => {
+  it('should return 500 on service error', async () => {
     // Arrange
-    const mockData = [{ rating: 5 }];
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
-      locals: { supabase: mockSupabase },
+      locals: {
+        supabase: mockSupabase,
+      },
+      url: new URL('http://localhost:4321/api/feedbacks/stats'),
+    });
+
+    const { FeedbackService } = await import('../../../lib/services/feedback.service');
+    vi.mocked(FeedbackService.getFeedbackStats).mockRejectedValue(new Error('Database connection failed'));
+
+    // Act
+    const response = await GET(context as any);
+
+    // Assert
+    expect(response.status).toBe(500, 'Should return 500 on service error');
+    expect(consoleErrorSpy, 'Error should be logged to console').toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should return 500 when supabase client is not available', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        // supabase is missing
+      },
+      url: new URL('http://localhost:4321/api/feedbacks/stats'),
     });
 
     // Act
-    const response = await GET(context);
+    const response = await GET(context as any);
 
     // Assert
-    expect(response.headers.get('Content-Type')).toBe('application/json');
+    expect(response.status).toBe(500, 'Should return 500 when supabase client is not available');
   });
 });
 

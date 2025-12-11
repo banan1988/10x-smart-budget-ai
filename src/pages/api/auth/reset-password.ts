@@ -19,7 +19,10 @@ type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
 function errorResponse(message: string, status: number) {
   return new Response(
     JSON.stringify({ error: message }),
-    { status }
+    {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    }
   );
 }
 
@@ -29,7 +32,10 @@ function errorResponse(message: string, status: number) {
 function successResponse(data: any = {}, status: number = 200) {
   return new Response(
     JSON.stringify(data),
-    { status }
+    {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    }
   );
 }
 

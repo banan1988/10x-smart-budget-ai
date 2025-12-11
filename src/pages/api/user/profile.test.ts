@@ -1,117 +1,373 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { GET, PUT } from './profile';
+import { createMockAPIContext } from '../../../test/mocks/astro.mock';
+import { createMockSupabaseClient } from '../../../test/mocks/supabase.mock';
 
-describe('GET /api/user/profile - Endpoint Changes', () => {
-  describe('Response structure', () => {
-    it('should return profile data wrapped in success response', () => {
-      // New response format: { data: { id, email, role, nickname, createdAt } }
-      const expectedResponse = {
-        data: {
+// Mock UserService at top level with proper factory pattern
+vi.mock('../../../lib/services/user.service', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../lib/services/user.service')>();
+  return {
+    ...actual,
+    UserService: {
+      ...actual.UserService,
+      updateUserProfile: vi.fn(),
+      getUserProfile: vi.fn(),
+      deleteUser: vi.fn(),
+    },
+  };
+});
+
+function createMockRequest(body: any = null, method: string = 'GET') {
+  return new Request('http://localhost:4321/api/user/profile', {
+    method,
+    body: body ? JSON.stringify(body) : undefined,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+describe('GET /api/user/profile', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return 401 when not authenticated', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: { supabase: createMockSupabaseClient() },
+      request: createMockRequest(null, 'GET'),
+    });
+
+    // Act
+    const response = await GET(context as any);
+
+    // Assert
+    expect(response.status).toBe(401, 'Should return 401 Unauthorized when user is not authenticated');
+  });
+
+  it('should return 200 with user profile', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: {
           id: 'user-123',
-          email: 'test@example.com',
+          email: 'user@example.com',
           role: 'user',
           nickname: 'TestUser',
-          createdAt: '2025-12-09T00:00:00Z',
+          createdAt: '2025-11-01T00:00:00Z',
         },
-      };
-
-      expect(expectedResponse).toHaveProperty('data');
-      expect(expectedResponse.data).toHaveProperty('id');
-      expect(expectedResponse.data).toHaveProperty('email');
-      expect(expectedResponse.data).toHaveProperty('role');
-      expect(expectedResponse.data).toHaveProperty('createdAt');
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest(null, 'GET'),
     });
 
-    it('should have correct property types', () => {
-      const profile = {
-        id: expect.any(String),
-        email: expect.any(String),
-        role: expect.stringMatching(/^(user|admin)$/),
-        nickname: expect.any(String),
-        createdAt: expect.any(String),
-      };
+    // Act
+    const response = await GET(context as any);
 
-      expect(typeof 'user-id').toBe('string');
-      expect(typeof 'test@example.com').toBe('string');
-      expect(['user', 'admin']).toContain('user');
-      expect(typeof 'TestUser').toBe('string');
-      expect(typeof '2025-12-09T00:00:00Z').toBe('string');
-    });
+    // Assert
+    expect(response.status).toBe(200, 'Should return 200 OK for authenticated user');
+    const data = await response.json();
+    expect(data, 'Response should contain user profile data').toHaveProperty('id', 'user-123');
+    expect(data, 'Response should contain email').toHaveProperty('email', 'user@example.com');
+    expect(data, 'Response should contain role').toHaveProperty('role', 'user');
+    expect(data, 'Response should contain nickname').toHaveProperty('nickname', 'TestUser');
   });
 
-  describe('Data source changes', () => {
-    it('should now use locals.user instead of database query', () => {
-      // Before: supabase.from('user_profiles').select(...)
-      // After: locals.user (populated in middleware)
-
-      const oldMethod = 'supabase.from("user_profiles").select(...)';
-      const newMethod = 'locals.user from middleware';
-
-      expect(newMethod).toContain('locals.user');
-      expect(newMethod).not.toContain('supabase');
+  it('should include private cache headers', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123', email: 'user@example.com' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest(null, 'GET'),
     });
 
-    it('should return createdAt from user session', () => {
-      // createdAt comes from user.created_at in Supabase auth
-      const user = {
-        id: 'user-id',
-        email: 'test@example.com',
-        created_at: '2025-12-09T00:00:00Z',
-      };
+    // Act
+    const response = await GET(context as any);
 
-      const createdAt = user.created_at;
-      expect(createdAt).toMatch(/^\d{4}-\d{2}-\d{2}/);
-    });
-
-    it('should return role and nickname from middleware cache', () => {
-      // role: fetched in middleware for page requests
-      // nickname: fetched in middleware for page requests
-
-      const middlewareUser = {
-        id: 'user-id',
-        email: 'test@example.com',
-        role: 'admin',
-        nickname: 'AdminUser',
-        createdAt: '2025-12-09T00:00:00Z',
-      };
-
-      expect(['user', 'admin']).toContain(middlewareUser.role);
-      expect(typeof middlewareUser.nickname).toBe('string');
-    });
+    // Assert
+    const cacheControl = response.headers.get('Cache-Control');
+    expect(cacheControl, 'Cache-Control header should be present').toBeTruthy();
+    expect(cacheControl).toContain('private', 'Cache-Control should have private directive');
+    expect(cacheControl).toContain('max-age', 'Cache-Control should have max-age directive');
   });
 
-  describe('Performance improvement', () => {
-    it('should be ~100x faster than old implementation', () => {
-      // Before: ~9876ms (database query)
-      // After: ~50-100ms (from locals)
-
-      const beforeMs = 9876;
-      const afterMs = 100;
-      const improvement = beforeMs / afterMs;
-
-      expect(improvement).toBeGreaterThan(50);
-      expect(improvement).toBeLessThan(200); // sanity check
+  it('should return application/json content type', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123', email: 'user@example.com' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest(null, 'GET'),
     });
 
-    it('should not make additional database queries', () => {
-      // Old: UserService.getUserProfile(supabase, userId)
-      // New: Just return locals.user
+    // Act
+    const response = await GET(context as any);
 
-      const dbQueryCount = 0; // No database queries
-      expect(dbQueryCount).toBe(0);
-    });
+    // Assert
+    expect(response.headers.get('Content-Type')).toBe(
+      'application/json',
+      'Response Content-Type should be application/json'
+    );
+  });
+});
+
+describe('PUT /api/user/profile', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe('Response codes', () => {
-    it('should return 200 when authenticated', () => {
-      const statusCode = 200;
-      expect(statusCode).toBe(200);
+  it('should return 401 when not authenticated', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: { supabase: createMockSupabaseClient() },
+      request: createMockRequest({ nickname: 'NewNickname' }, 'PUT'),
     });
 
-    it('should return 401 when not authenticated', () => {
-      // checkAuthentication() should return 401
-      const statusCode = 401;
-      expect(statusCode).toBe(401);
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(401, 'Should return 401 Unauthorized when user is not authenticated');
+  });
+
+  it('should return 200 on successful nickname update', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: 'NewNickname' }, 'PUT'),
     });
+
+    const { UserService } = await import('../../../lib/services/user.service');
+    vi.mocked(UserService.updateUserProfile).mockResolvedValue({
+      id: 'user-123',
+      nickname: 'NewNickname',
+    } as any);
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(200, 'Should return 200 OK on successful update');
+    const data = await response.json();
+    expect(data, 'Response should have success property').toHaveProperty('success', true);
+    expect(data, 'Response should have nickname in data').toHaveProperty('data.nickname', 'NewNickname');
+  });
+
+  it('should return 400 for empty nickname', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: '' }, 'PUT'),
+    });
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(400, 'Should return 400 Bad Request for empty nickname');
+    const data = await response.json();
+    expect(data, 'Error response should contain error details').toHaveProperty('error');
+  });
+
+  it('should return 400 for nickname exceeding 50 characters', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: 'a'.repeat(51) }, 'PUT'),
+    });
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(400, 'Should return 400 Bad Request for nickname > 50 characters');
+  });
+
+  it('should accept nickname with exactly 50 characters', async () => {
+    // Arrange
+    const exactlyFiftyChars = 'a'.repeat(50);
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: exactlyFiftyChars }, 'PUT'),
+    });
+
+    const { UserService } = await import('../../../lib/services/user.service');
+    vi.mocked(UserService.updateUserProfile).mockResolvedValue({
+      id: 'user-123',
+      nickname: exactlyFiftyChars,
+    } as any);
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(200, 'Should accept nickname with exactly 50 characters');
+  });
+
+  it('should reject nickname with invalid special characters', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: 'Invalid@#$%' }, 'PUT'),
+    });
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(400, 'Should return 400 for nickname with invalid special characters');
+  });
+
+  it('should accept valid nicknames with alphanumeric, spaces, hyphens, and underscores', async () => {
+    // Arrange
+    const validNicknames = ['User123', 'User Name', 'user-name', 'user_name', 'User-Name_123'];
+
+    for (const nickname of validNicknames) {
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request: createMockRequest({ nickname }, 'PUT'),
+      });
+
+      const { UserService } = await import('../../../lib/services/user.service');
+      vi.mocked(UserService.updateUserProfile).mockResolvedValue({
+        id: 'user-123',
+        nickname,
+      } as any);
+
+      // Act
+      const response = await PUT(context as any);
+
+      // Assert
+      expect(response.status).toBe(
+        200,
+        `Should accept valid nickname format: "${nickname}"`
+      );
+    }
+  });
+
+  it('should return 400 on malformed JSON request body', async () => {
+    // Arrange
+    const request = new Request('http://localhost:4321/api/user/profile', {
+      method: 'PUT',
+      body: 'invalid json',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request,
+    });
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(400, 'Should return 400 for malformed JSON request body');
+  });
+
+  it('should return 500 on service error', async () => {
+    // Arrange
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: 'NewNickname' }, 'PUT'),
+    });
+
+    const { UserService } = await import('../../../lib/services/user.service');
+    vi.mocked(UserService.updateUserProfile).mockRejectedValue(new Error('Service error'));
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(500, 'Should return 500 Internal Server Error when service fails');
+    expect(consoleErrorSpy).toHaveBeenCalled('Should log error to console');
+    // Verify the error was logged with correct prefix
+    const callArgs = consoleErrorSpy.mock.calls[0];
+    expect(callArgs[0]).toContain('Error updating user profile', 'Should log with correct error prefix');
+
+    // Cleanup
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should return application/json content type', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: 'NewNickname' }, 'PUT'),
+    });
+
+    const { UserService } = await import('../../../lib/services/user.service');
+    vi.mocked(UserService.updateUserProfile).mockResolvedValue({
+      id: 'user-123',
+      nickname: 'NewNickname',
+    } as any);
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.headers.get('Content-Type')).toBe(
+      'application/json',
+      'Response Content-Type should be application/json'
+    );
+  });
+
+  it('should trim whitespace from nickname', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
+      },
+      request: createMockRequest({ nickname: '  NewNickname  ' }, 'PUT'),
+    });
+
+    const { UserService } = await import('../../../lib/services/user.service');
+    const updateMock = vi.mocked(UserService.updateUserProfile);
+    updateMock.mockResolvedValue({
+      id: 'user-123',
+      nickname: 'NewNickname',
+    } as any);
+
+    // Act
+    const response = await PUT(context as any);
+
+    // Assert
+    expect(response.status).toBe(200, 'Should return 200 OK after trimming whitespace');
+    expect(updateMock).toHaveBeenCalled('updateUserProfile should be called to update trimmed nickname');
+    // Verify the trimmed value was passed
+    const callArgs = updateMock.mock.calls[0];
+    expect(callArgs[2], 'Should pass trimmed nickname to service').toEqual({ nickname: 'NewNickname' });
   });
 });
 

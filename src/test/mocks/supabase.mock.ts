@@ -27,9 +27,69 @@ export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>): S
           },
         })
       ),
-    } as any,
+    },
     ...overrides,
   } as unknown as SupabaseClient;
+}
+
+/**
+ * Factory function to create a mock Supabase query for simple SELECT operations.
+ * Useful for reducing boilerplate in tests.
+ *
+ * @example
+ * const mockSupabase = createMockSupabaseClient({
+ *   from: vi.fn(() => createMockSelectQuery(mockData))
+ * });
+ */
+export function createMockSelectQuery(data: any, error: any = null) {
+  return {
+    select: vi.fn(() => Promise.resolve({ data, error })),
+    eq: vi.fn(() => ({
+      gte: vi.fn(() => ({
+        lte: vi.fn(() => ({
+          order: vi.fn(() => ({
+            range: vi.fn(() => Promise.resolve({ data, error })),
+          })),
+        })),
+      })),
+    })),
+    insert: vi.fn(() => ({
+      select: vi.fn(() => ({
+        single: vi.fn(() => Promise.resolve({ data, error })),
+      })),
+    })),
+  };
+}
+
+/**
+ * Factory function to create a mock Supabase client with a chained query for transactions.
+ * Handles complex query chains like: from().select().eq().gte().lte().order().range()
+ * Also supports: in(), ilike() for filters
+ *
+ * @example
+ * const mockSupabase = createMockSupabaseClient({
+ *   from: vi.fn(() => createMockTransactionQuery(mockData))
+ * });
+ */
+export function createMockTransactionQuery(data: any, error: any = null) {
+  const chainableMethods = {
+    eq: vi.fn(() => chainableMethods),
+    in: vi.fn(() => chainableMethods),
+    ilike: vi.fn(() => chainableMethods),
+    gte: vi.fn(() => chainableMethods),
+    lte: vi.fn(() => chainableMethods),
+    order: vi.fn(() => chainableMethods),
+    range: vi.fn(() => Promise.resolve({ data, error, count: data?.length ?? 0 })),
+  };
+
+  return {
+    select: vi.fn(() => chainableMethods),
+    insert: vi.fn(() => ({
+      select: vi.fn(() => ({
+        single: vi.fn(() => Promise.resolve({ data, error })),
+      })),
+    })),
+  };
 }
 
 /**

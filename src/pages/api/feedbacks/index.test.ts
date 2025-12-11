@@ -1,185 +1,492 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { POST, GET } from './index';
+import { createMockAPIContext } from '../../../test/mocks/astro.mock';
+import { createMockSupabaseClient } from '../../../test/mocks/supabase.mock';
+
+// Mock FeedbackService at top level
+vi.mock('../../../lib/services/feedback.service', () => ({
+  FeedbackService: {
+    createFeedback: vi.fn(),
+    getAllFeedback: vi.fn(),
+  },
+}));
+
+// Mock api-auth with partial mocking using importOriginal
+vi.mock('../../../lib/api-auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../lib/api-auth')>();
+  return {
+    ...actual,
+    checkAuthentication: vi.fn(),
+    checkAdminRole: vi.fn(),
+  };
+});
+
+/**
+ * Mock feedback data
+ */
+function mockFeedbackData(overrides = {}) {
+  return {
+    id: 'feedback-123',
+    user_id: 'user-123',
+    rating: 5,
+    comment: 'Great app!',
+    created_at: '2025-12-09T00:00:00Z',
+    ...overrides,
+  };
+}
+
+function createMockRequest(body: any) {
+  return new Request('http://localhost:4321/api/feedbacks', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 describe('POST /api/feedbacks', () => {
-  describe('Request validation', () => {
-    it('should require rating field (1-5)', () => {
-      const validRatings = [1, 2, 3, 4, 5];
-      const invalidRatings = [0, 6, -1, 4.5, 'invalid'];
 
-      validRatings.forEach(rating => {
-        expect(validRatings).toContain(rating);
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Valid feedback submission', () => {
+    it('should return 201 on valid feedback with rating', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const { FeedbackService } = await import('../../../lib/services/feedback.service');
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as any);
+
+      const request = createMockRequest({
+        rating: 5,
+        comment: 'Great app!',
       });
 
-      invalidRatings.forEach(rating => {
-        expect(validRatings).not.toContain(rating);
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
       });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(201, 'Should return 201 Created status on valid feedback');
+      const data = await response.json();
+      expect(data, 'Response should contain rating property').toHaveProperty('rating');
+      expect(data.rating, 'Rating should match input value').toBe(5);
     });
 
-    it('should accept optional comment field (max 1000 chars)', () => {
-      const validComment = 'a'.repeat(1000);
-      const invalidComment = 'a'.repeat(1001);
+    it('should return 201 with feedback only (no comment)', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
 
-      expect(validComment.length).toBeLessThanOrEqual(1000);
-      expect(invalidComment.length).toBeGreaterThan(1000);
-    });
+      const { FeedbackService } = await import('../../../lib/services/feedback.service');
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData({ comment: undefined }) as any);
 
-    it('should require authentication', () => {
-      // If no locals.user, return 401
-      const hasUser = false;
-      const shouldReturn401 = !hasUser;
-      expect(shouldReturn401).toBe(true);
+      const request = createMockRequest({
+        rating: 4,
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(201, 'Should return 201 Created status without comment');
     });
   });
 
-  describe('Response format', () => {
-    it('should return 201 Created on success', () => {
-      const statusCode = 201;
-      expect(statusCode).toBe(201);
-    });
+  describe('Rating validation', () => {
+    it('should return 400 for rating 0 (out of range)', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
 
-    it('should return created feedback data', () => {
-      const response = {
-        data: {
-          id: 'feedback-1',
-          user_id: 'user-1',
-          rating: 5,
-          comment: 'Great app!',
-          created_at: '2025-12-09T00:00:00Z',
+      const request = createMockRequest({
+        rating: 0,
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
         },
-      };
+        request,
+      });
 
-      expect(response).toHaveProperty('data');
-      expect(response.data).toHaveProperty('id');
-      expect(response.data).toHaveProperty('rating');
-      expect(response.data).toHaveProperty('created_at');
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(400, 'Should return 400 for rating 0 (out of range)');
+      const data = await response.json();
+      expect(data, 'Response should contain error property').toHaveProperty('error');
     });
 
-    it('should return 400 Bad Request on validation error', () => {
-      const statusCode = 400;
-      expect(statusCode).toBe(400);
+    it('should return 400 for rating 6 (out of range)', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const request = createMockRequest({
+        rating: 6,
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(400, 'Should return 400 for rating 6 (out of range)');
     });
 
-    it('should return 401 Unauthorized when not authenticated', () => {
-      const statusCode = 401;
-      expect(statusCode).toBe(401);
+    it('should return 400 for non-integer rating', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const request = createMockRequest({
+        rating: 4.5,
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(400, 'Should return 400 for non-integer rating');
+    });
+
+    it('should return 400 for missing rating', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const request = createMockRequest({
+        comment: 'Good app',
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(400, 'Should return 400 for missing rating');
+      const data = await response.json();
+      expect(data, 'Response should contain error property').toHaveProperty('error');
+    });
+  });
+
+  describe('Comment validation', () => {
+    it('should return 400 when comment exceeds 1000 chars', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const request = createMockRequest({
+        rating: 5,
+        comment: 'a'.repeat(1001),
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(400, 'Should return 400 for comment exceeding 1000 characters');
+      const data = await response.json();
+      expect(data, 'Response should contain error property').toHaveProperty('error');
+    });
+
+    it('should accept comment with exactly 1000 chars', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const { FeedbackService } = await import('../../../lib/services/feedback.service');
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as any);
+
+      const request = createMockRequest({
+        rating: 5,
+        comment: 'a'.repeat(1000),
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(201, 'Should accept comment with exactly 1000 characters');
+    });
+  });
+
+  describe('Request validation', () => {
+    it('should return 400 on invalid JSON', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const request = new Request('http://localhost:4321/api/feedbacks', {
+        method: 'POST',
+        body: 'invalid json',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(400, 'Should return 400 for invalid JSON');
+    });
+  });
+
+  describe('Authentication', () => {
+    it('should return 401 when not authenticated', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([false, new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })] as any);
+
+      const request = createMockRequest({
+        rating: 5,
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(401, 'Should return 401 when not authenticated');
+      const data = await response.json();
+      expect(data, 'Response should contain error property').toHaveProperty('error');
+    });
+  });
+
+  describe('Content-Type', () => {
+    it('should return application/json', async () => {
+      // Arrange
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+
+      const { FeedbackService } = await import('../../../lib/services/feedback.service');
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as any);
+
+      const request = createMockRequest({
+        rating: 5,
+      });
+
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
+
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.headers.get('Content-Type')).toBe('application/json', 'Response should have Content-Type: application/json');
     });
   });
 
   describe('Error handling', () => {
-    it('should reject rating 0 (out of range)', () => {
-      const rating = 0;
-      const isValid = rating >= 1 && rating <= 5;
-      expect(isValid).toBe(false);
-    });
+    it('should return 500 on service error', async () => {
+      // Arrange
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { checkAuthentication } = await import('../../../lib/api-auth');
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
 
-    it('should reject rating 6 (out of range)', () => {
-      const rating = 6;
-      const isValid = rating >= 1 && rating <= 5;
-      expect(isValid).toBe(false);
-    });
+      const { FeedbackService } = await import('../../../lib/services/feedback.service');
+      vi.mocked(FeedbackService.createFeedback).mockRejectedValue(new Error('Service error'));
 
-    it('should reject non-integer ratings', () => {
-      const rating = 4.5;
-      const isInteger = Number.isInteger(rating);
-      expect(isInteger).toBe(false);
-    });
+      const request = createMockRequest({
+        rating: 5,
+      });
 
-    it('should reject comment > 1000 chars', () => {
-      const comment = 'a'.repeat(1001);
-      const isValid = comment.length <= 1000;
-      expect(isValid).toBe(false);
-    });
+      const context = createMockAPIContext({
+        locals: {
+          user: { id: 'user-123' },
+          supabase: createMockSupabaseClient(),
+        },
+        request,
+      });
 
-    it('should reject invalid JSON', () => {
-      const invalidJson = 'invalid json{';
-      const isValidJson = (() => {
-        try {
-          JSON.parse(invalidJson);
-          return true;
-        } catch {
-          return false;
-        }
-      })();
-      expect(isValidJson).toBe(false);
+      // Act
+      const response = await POST(context as any);
+
+      // Assert
+      expect(response.status).toBe(500, 'Should return 500 on service error');
+      expect(consoleErrorSpy).toHaveBeenCalled('Error should be logged to console');
+
+      consoleErrorSpy.mockRestore();
     });
   });
 });
 
 describe('GET /api/feedbacks', () => {
-  describe('Authorization', () => {
-    it('should require authentication (401)', () => {
-      const hasUser = false;
-      const shouldReturn401 = !hasUser;
-      expect(shouldReturn401).toBe(true);
-    });
-
-    it('should require admin role (403)', () => {
-      const userRole = 'user';
-      const isAdmin = userRole === 'admin';
-      expect(isAdmin).toBe(false);
-    });
-
-    it('should allow admin users (200)', () => {
-      const userRole = 'admin';
-      const isAdmin = userRole === 'admin';
-      expect(isAdmin).toBe(true);
-    });
+  afterEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe('Response format', () => {
-    it('should return paginated feedback list', () => {
-      const response = {
-        data: [
-          { id: 1, rating: 5, comment: 'Good' },
-          { id: 2, rating: 4, comment: 'Great' },
-        ],
-        pagination: {
-          page: 1,
-          limit: 10,
-          total: 2,
-          totalPages: 1,
-        },
-      };
+  it('should return 401 when not authenticated', async () => {
+    // Arrange
+    const { checkAuthentication } = await import('../../../lib/api-auth');
+    vi.mocked(checkAuthentication).mockReturnValue([false, new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })] as any);
 
-      expect(response).toHaveProperty('data');
-      expect(response).toHaveProperty('pagination');
-      expect(Array.isArray(response.data)).toBe(true);
+    const context = createMockAPIContext({
+      locals: {
+        supabase: createMockSupabaseClient(),
+      },
+      url: new URL('http://localhost:4321/api/feedbacks'),
     });
 
-    it('should return 200 OK', () => {
-      const statusCode = 200;
-      expect(statusCode).toBe(200);
-    });
+    // Act
+    const response = await GET(context as any);
+
+    // Assert
+    expect(response.status).toBe(401, 'Should return 401 when not authenticated');
   });
 
-  describe('Query parameters', () => {
-    it('should validate page parameter', () => {
-      const validPages = [1, 2, 3];
-      const invalidPages = [0, -1, 'invalid'];
+  it('should return 403 when not admin', async () => {
+    // Arrange
+    const { checkAuthentication, checkAdminRole } = await import('../../../lib/api-auth');
+    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+    vi.mocked(checkAdminRole).mockResolvedValue([false, new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })] as any);
 
-      validPages.forEach(p => {
-        expect(p).toBeGreaterThanOrEqual(1);
-      });
-
-      invalidPages.forEach(p => {
-        expect(typeof p === 'number' && p >= 1).toBe(false);
-      });
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123', role: 'user' },
+        supabase: createMockSupabaseClient(),
+      },
+      url: new URL('http://localhost:4321/api/feedbacks'),
     });
 
-    it('should validate limit parameter (max 100)', () => {
-      const validLimit = 50;
-      const invalidLimit = 150;
+    // Act
+    const response = await GET(context as any);
 
-      expect(validLimit).toBeLessThanOrEqual(100);
-      expect(invalidLimit).toBeGreaterThan(100);
+    // Assert
+    expect(response.status).toBe(403, 'Should return 403 when user is not admin');
+  });
+
+  it('should return 200 for admin users with pagination', async () => {
+    // Arrange
+    const { checkAuthentication, checkAdminRole } = await import('../../../lib/api-auth');
+    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+    vi.mocked(checkAdminRole).mockResolvedValue([true] as any);
+
+    const { FeedbackService } = await import('../../../lib/services/feedback.service');
+    vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue({
+      data: [mockFeedbackData()],
+      page: 1,
+      limit: 10,
+      total: 1,
+    } as any);
+
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'admin-123', role: 'admin' },
+        supabase: createMockSupabaseClient(),
+      },
+      url: new URL('http://localhost:4321/api/feedbacks?page=1&limit=10'),
     });
 
-    it('should return 400 when limit exceeds max', () => {
-      const limit = 200;
-      const maxLimit = 100;
-      const isValid = limit <= maxLimit;
-      expect(isValid).toBe(false);
+    // Act
+    const response = await GET(context as any);
+
+    // Assert
+    expect(response.status).toBe(200, 'Should return 200 for admin users with pagination');
+  });
+
+  it('should validate pagination parameters', async () => {
+    // Arrange
+    const { checkAuthentication, checkAdminRole } = await import('../../../lib/api-auth');
+    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+    vi.mocked(checkAdminRole).mockResolvedValue([true] as any);
+
+    const { FeedbackService } = await import('../../../lib/services/feedback.service');
+    vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue({
+      data: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+    } as any);
+
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'admin-123', role: 'admin' },
+        supabase: createMockSupabaseClient(),
+      },
+      url: new URL('http://localhost:4321/api/feedbacks?limit=200'),
     });
+
+    // Act
+    const response = await GET(context as any);
+
+    // Assert
+    expect(response.status).toBe(400, 'Should return 400 for limit exceeding maximum (100)');
   });
 });
 

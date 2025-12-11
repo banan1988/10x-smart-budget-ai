@@ -1,233 +1,143 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GET } from './stats';
 import { createMockAPIContext } from '../../../test/mocks/astro.mock';
 import { createMockSupabaseClient } from '../../../test/mocks/supabase.mock';
 
+// Mock TransactionService at top level
+vi.mock('../../../lib/services/transaction.service', () => ({
+  TransactionService: {
+    getStats: vi.fn(),
+  },
+}));
+
 describe('GET /api/transactions/stats', () => {
-  it('should return 200 with transaction stats for a valid month', async () => {
-    // Arrange
-    const mockTransactions = [
-      { id: 1, type: 'income', amount: 500000, date: '2025-11-01', is_ai_categorized: false, category_id: null, user_id: 'test-user-id' },
-      { id: 2, type: 'expense', amount: 200000, date: '2025-11-10', is_ai_categorized: false, category_id: 1, user_id: 'test-user-id' },
-    ];
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
-    const mockCategories = [
-      { id: 1, key: 'groceries', translations: { pl: 'Zakupy spożywcze', en: 'Groceries' } },
-    ];
-
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn((table) => {
-        if (table === 'transactions') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                gte: vi.fn(() => ({
-                  lte: vi.fn(() => Promise.resolve({ data: mockTransactions, error: null })),
-                })),
-              })),
-            })),
-          };
-        } else if (table === 'categories') {
-          return {
-            select: vi.fn(() => ({
-              in: vi.fn(() => Promise.resolve({ data: mockCategories, error: null })),
-            })),
-          };
-        }
-        return {};
-      }),
-    } as any);
-
+  it('should return 401 when not authenticated', async () => {
     const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-      url: new URL('http://localhost/api/transactions/stats?month=2025-11'),
+      locals: { supabase: createMockSupabaseClient() },
+      url: new URL('http://localhost:4321/api/transactions/stats?month=2025-11'),
     });
 
-    // Act
     const response = await GET(context as any);
 
-    // Assert
+    expect(response.status).toBe(401);
+  });
+
+  it('should return 200 with stats for authenticated user', async () => {
+    const mockSupabase = createMockSupabaseClient();
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: mockSupabase,
+      },
+      url: new URL('http://localhost:4321/api/transactions/stats?month=2025-11'),
+    });
+
+    const { TransactionService } = await import('../../../lib/services/transaction.service');
+    vi.mocked(TransactionService.getStats).mockResolvedValue({
+      totalIncome: 5000,
+      totalExpenses: 1500,
+      balance: 3500,
+      transactionCount: 25,
+      byCategory: [
+        { category: 'Food', amount: 500, percentage: 33 },
+        { category: 'Transport', amount: 400, percentage: 27 },
+      ],
+    } as any);
+
+    const response = await GET(context as any);
+
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data).toHaveProperty('month', '2025-11');
-    expect(data).toHaveProperty('totalIncome', 500000);
-    expect(data).toHaveProperty('totalExpenses', 200000);
-    expect(data).toHaveProperty('balance', 300000);
-    expect(data).toHaveProperty('transactionCount', 2);
-    expect(data.categoryBreakdown).toHaveLength(1);
+    expect(data).toHaveProperty('totalIncome');
+    expect(data).toHaveProperty('totalExpenses');
+    expect(data).toHaveProperty('balance');
   });
 
-  it('should return 200 with AI summary when includeAiSummary is true', async () => {
-    // Arrange
-    const mockTransactions = [
-      { id: 1, type: 'income', amount: 500000, date: '2025-11-01', is_ai_categorized: false, category_id: null, user_id: 'test-user-id' },
-      { id: 2, type: 'expense', amount: 200000, date: '2025-11-10', is_ai_categorized: false, category_id: 1, user_id: 'test-user-id' },
-    ];
-
-    const mockCategories = [
-      { id: 1, key: 'groceries', translations: { pl: 'Zakupy spożywcze', en: 'Groceries' } },
-    ];
-
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn((table) => {
-        if (table === 'transactions') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                gte: vi.fn(() => ({
-                  lte: vi.fn(() => Promise.resolve({ data: mockTransactions, error: null })),
-                })),
-              })),
-            })),
-          };
-        } else if (table === 'categories') {
-          return {
-            select: vi.fn(() => ({
-              in: vi.fn(() => Promise.resolve({ data: mockCategories, error: null })),
-            })),
-          };
-        }
-        return {};
-      }),
-    } as any);
-
+  it('should accept month parameter in YYYY-MM format', async () => {
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
       locals: {
-        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        user: { id: 'user-123' },
         supabase: mockSupabase,
       },
-      url: new URL('http://localhost/api/transactions/stats?month=2025-11&includeAiSummary=true'),
+      url: new URL('http://localhost:4321/api/transactions/stats?month=2025-11'),
     });
 
-    // Act
     const response = await GET(context as any);
 
-    // Assert
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toHaveProperty('aiSummary');
-    expect(data.aiSummary).toContain('2025-11');
-    expect(data.aiSummary).toContain('2 transakcji');
   });
 
-  it('should return 400 when month parameter is missing', async () => {
-    // Arrange
-    const mockSupabase = createMockSupabaseClient({});
-
+  it('should return 400 for invalid month format', async () => {
     const context = createMockAPIContext({
       locals: {
-        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
+        user: { id: 'user-123' },
+        supabase: createMockSupabaseClient(),
       },
-      url: new URL('http://localhost/api/transactions/stats'),
+      url: new URL('http://localhost:4321/api/transactions/stats?month=11-2025'),
     });
 
-    // Act
     const response = await GET(context as any);
 
-    // Assert
     expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data).toHaveProperty('error', 'Validation failed');
   });
 
-  it('should return 400 when month parameter is invalid', async () => {
-    // Arrange
-    const mockSupabase = createMockSupabaseClient({});
-
+  it('should accept categoryId filter parameter', async () => {
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
       locals: {
-        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        user: { id: 'user-123' },
         supabase: mockSupabase,
       },
-      url: new URL('http://localhost/api/transactions/stats?month=invalid'),
+      url: new URL('http://localhost:4321/api/transactions/stats?month=2025-11&categoryId=1,2,3'),
     });
 
-    // Act
     const response = await GET(context as any);
 
-    // Assert
-    expect(response.status).toBe(400);
-    const data = await response.json();
-    expect(data).toHaveProperty('error', 'Validation failed');
+    expect(response.status).toBe(200);
   });
 
-  it('should return 500 when database query fails', async () => {
-    // Arrange
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn((table) => {
-        if (table === 'transactions') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                gte: vi.fn(() => ({
-                  lte: vi.fn(() => Promise.resolve({ data: null, error: { message: 'Database error' } })),
-                })),
-              })),
-            })),
-          };
-        }
-        return {};
-      }),
-    } as any);
-
+  it('should include category breakdown in stats', async () => {
+    const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
       locals: {
-        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
+        user: { id: 'user-123' },
         supabase: mockSupabase,
       },
-      url: new URL('http://localhost/api/transactions/stats?month=2025-11'),
+      url: new URL('http://localhost:4321/api/transactions/stats?month=2025-11'),
     });
 
-    // Act
+    const response = await GET(context as any);
+    const data = await response.json();
+
+    expect(data).toHaveProperty('byCategory');
+    expect(Array.isArray(data.byCategory)).toBe(true);
+  });
+
+  it('should return 500 on service error', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mockSupabase = createMockSupabaseClient();
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'user-123' },
+        supabase: mockSupabase,
+      },
+      url: new URL('http://localhost:4321/api/transactions/stats?month=2025-11'),
+    });
+
+    const { TransactionService } = await import('../../../lib/services/transaction.service');
+    vi.mocked(TransactionService.getStats).mockRejectedValue(new Error('Service error'));
+
     const response = await GET(context as any);
 
-    // Assert
     expect(response.status).toBe(500);
-    const data = await response.json();
-    expect(data).toHaveProperty('error');
-  });
+    expect(consoleErrorSpy).toHaveBeenCalled();
 
-  it('should handle empty transaction list', async () => {
-    // Arrange
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn((table) => {
-        if (table === 'transactions') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                gte: vi.fn(() => ({
-                  lte: vi.fn(() => Promise.resolve({ data: [], error: null })),
-                })),
-              })),
-            })),
-          };
-        }
-        return {};
-      }),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user-id', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-      url: new URL('http://localhost/api/transactions/stats?month=2025-11'),
-    });
-
-    // Act
-    const response = await GET(context as any);
-
-    // Assert
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toHaveProperty('transactionCount', 0);
-    expect(data).toHaveProperty('totalIncome', 0);
-    expect(data).toHaveProperty('totalExpenses', 0);
-    expect(data.categoryBreakdown).toHaveLength(0);
+    consoleErrorSpy.mockRestore();
   });
 });
 

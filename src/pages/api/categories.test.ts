@@ -1,24 +1,34 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GET } from './categories';
 import { createMockAPIContext } from '../../test/mocks/astro.mock';
-import { createMockSupabaseClient, createMockCategoryData } from '../../test/mocks/supabase.mock';
+import { createMockSupabaseClient, createMockCategoryData, createMockSelectQuery } from '../../test/mocks/supabase.mock';
+
+/**
+ * Helper function to setup categories test context
+ * Reduces boilerplate and improves maintainability
+ */
+function setupCategoriesTest(mockData = createMockCategoryData(), error = null) {
+  const mockSupabase = createMockSupabaseClient({
+    from: vi.fn(() => createMockSelectQuery(mockData, error)),
+  });
+
+  return createMockAPIContext({
+    locals: {
+      user: { id: 'test-user', email: 'test@example.com', role: 'user' },
+      supabase: mockSupabase,
+    },
+  });
+}
 
 describe('GET /api/categories', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should return 200 with categories array', async () => {
     // Arrange
     const mockData = createMockCategoryData();
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-    });
+    const context = setupCategoriesTest(mockData);
 
     // Act
     const response = await GET(context);
@@ -34,27 +44,20 @@ describe('GET /api/categories', () => {
   it('should return categories with correct DTO structure', async () => {
     // Arrange
     const mockData = createMockCategoryData();
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-    });
+    const context = setupCategoriesTest(mockData);
 
     // Act
     const response = await GET(context);
     const data = await response.json();
 
     // Assert
-    expect(data[0]).toHaveProperty('id');
-    expect(data[0]).toHaveProperty('key');
-    expect(data[0]).toHaveProperty('name');
+    expect(data[0]).toEqual(
+      expect.objectContaining({
+        id: expect.any(Number),
+        key: expect.any(String),
+        name: expect.any(String),
+      })
+    );
     expect(typeof data[0].id).toBe('number');
     expect(typeof data[0].key).toBe('string');
     expect(typeof data[0].name).toBe('string');
@@ -63,18 +66,7 @@ describe('GET /api/categories', () => {
   it('should return application/json content-type', async () => {
     // Arrange
     const mockData = createMockCategoryData();
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-    });
+    const context = setupCategoriesTest(mockData);
 
     // Act
     const response = await GET(context);
@@ -86,18 +78,7 @@ describe('GET /api/categories', () => {
   it('should return categories sorted by Polish name', async () => {
     // Arrange
     const mockData = createMockCategoryData();
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-    });
+    const context = setupCategoriesTest(mockData);
 
     // Act
     const response = await GET(context);
@@ -112,18 +93,8 @@ describe('GET /api/categories', () => {
   it('should return 500 when database query fails', async () => {
     // Arrange
     const mockError = { message: 'Database connection failed' };
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: null, error: mockError })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-    });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const context = setupCategoriesTest(null, mockError);
 
     // Act
     const response = await GET(context);
@@ -134,15 +105,19 @@ describe('GET /api/categories', () => {
     const data = await response.json();
     expect(data).toHaveProperty('error');
     expect(data).toHaveProperty('message');
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('should return 500 when service throws unexpected error', async () => {
     // Arrange
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const mockSupabase = createMockSupabaseClient({
       from: vi.fn(() => {
         throw new Error('Unexpected error');
       }),
-    } as any);
+    });
 
     const context = createMockAPIContext({
       locals: {
@@ -160,22 +135,12 @@ describe('GET /api/categories', () => {
     const data = await response.json();
     expect(data).toHaveProperty('error');
     expect(data).toHaveProperty('message');
+    expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it('should return empty array when no categories exist', async () => {
     // Arrange
-    const mockSupabase = createMockSupabaseClient({
-      from: vi.fn(() => ({
-        select: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      })),
-    } as any);
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
-        supabase: mockSupabase,
-      },
-    });
+    const context = setupCategoriesTest([]);
 
     // Act
     const response = await GET(context);
@@ -191,12 +156,10 @@ describe('GET /api/categories', () => {
   it('should use Supabase client from context.locals', async () => {
     // Arrange
     const mockData = createMockCategoryData();
-    const fromMock = vi.fn(() => ({
-      select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
-    }));
+    const fromMock = vi.fn(() => createMockSelectQuery(mockData));
     const mockSupabase = createMockSupabaseClient({
       from: fromMock,
-    } as any);
+    });
 
     const context = createMockAPIContext({
       locals: {
@@ -210,6 +173,45 @@ describe('GET /api/categories', () => {
 
     // Assert - verify that the supabase client from locals was used
     expect(fromMock).toHaveBeenCalledWith('categories');
+  });
+
+  it('should return 401 when user is not authenticated', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        supabase: createMockSupabaseClient(),
+        // no user property
+      },
+    });
+
+    // Act
+    const response = await GET(context);
+
+    // Assert
+    expect(response.status).toBe(401);
+
+    const data = await response.json();
+    expect(data).toHaveProperty('error');
+    expect(data.error).toBe('Unauthorized');
+  });
+
+  it('should return 500 when supabase client is not available', async () => {
+    // Arrange
+    const context = createMockAPIContext({
+      locals: {
+        user: { id: 'test-user', email: 'test@example.com', role: 'user' },
+        // no supabase client
+      },
+    });
+
+    // Act
+    const response = await GET(context);
+
+    // Assert
+    expect(response.status).toBe(500);
+
+    const data = await response.json();
+    expect(data).toHaveProperty('error');
   });
 });
 
