@@ -24,6 +24,14 @@ A personal finance application that leverages AI to provide smart budgeting and 
 - **Package Manager**: [npm](https://www.npmjs.com/)
 - **Node.js version**: 22.14.0
 
+## Testing
+
+- **Unit & Integration Testing**: [Vitest](https://vitest.dev/)
+- **E2E Testing**: [Playwright](https://playwright.dev/)
+- **Component Testing**: [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+- **API Mocking**: [Mock Service Worker (MSW)](https://mswjs.io/)
+- **Performance Testing**: [Lighthouse](https://developer.chrome.com/docs/lighthouse/)
+
 ## Project Structure
 
 ```
