@@ -12,7 +12,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'src/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -26,10 +26,10 @@ export default defineConfig({
         'src/layouts/**',
       ],
       thresholds: {
-        lines: 50,
-        functions: 50,
-        branches: 50,
-        statements: 50,
+        lines: 50,        // Recommended: 80%
+        functions: 50,    // Recommended: 80%
+        branches: 50,     // Recommended: 70%
+        statements: 50,   // Recommended: 80%
       },
     },
   },

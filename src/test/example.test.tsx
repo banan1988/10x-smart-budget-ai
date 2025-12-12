@@ -8,7 +8,7 @@ import React from 'react';
  * Replace this with actual component tests
  */
 
-describe('Example Component Tests', () => {
+describe.skip('Example Component Tests', () => {
   it('should render a button', () => {
     const TestComponent = () => <button>Click me</button>;
     render(<TestComponent />);

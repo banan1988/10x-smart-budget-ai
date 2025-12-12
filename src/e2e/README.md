@@ -2,38 +2,53 @@
 
 ## Overview
 
-This directory contains End-to-End tests using Playwright. Tests follow the Page Object Model (POM) pattern for maintainability.
+This directory contains End-to-End tests using Playwright. Tests follow the Page Object Model (POM) pattern for maintainability and resilience as per Playwright best practices.
 
 ```
 src/e2e/
 ├── fixtures/
 │   ├── basePage.ts          # Base class for all page objects
 │   ├── loginPage.ts         # Page Object for login page
-│   └── dashboardPage.ts     # Page Object for dashboard (example)
+│   └── [more page objects]
 ├── login.spec.ts            # Test file for login functionality
-└── dashboard.spec.ts        # Test file for dashboard (example)
+└── [more test files]
 ```
 
-## Files
+## Setup & Running Tests
 
-### fixtures/basePage.ts
-Base class that all Page Objects inherit from. Provides:
-- Common navigation methods (`goto()`)
-- Screenshot functionality
-- Navigation helpers
+### Installation
+```bash
+npm install
+```
 
-### fixtures/loginPage.ts
-Page Object Model for the login page. Contains:
-- Locators for form elements
-- Helper methods for user interactions
-- Assertion helper methods
+### Environment Setup
+Create `.env.test` file in the project root:
+```env
+BASE_URL=http://localhost:3000
+TEST_USER_EMAIL=test@example.com
+TEST_USER_PASSWORD=your-test-password
+```
 
-### Test Files (*.spec.ts)
-Actual test scenarios using the Page Objects. Each file:
-- Imports relevant Page Objects
-- Sets up test fixtures
-- Implements test cases
-- Uses Playwright's expect assertions
+### Run Tests
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run specific test file
+npx playwright test src/e2e/login.spec.ts
+
+# Run in headed mode (see browser)
+npx playwright test --headed
+
+# Run in debug mode
+npx playwright test --debug
+
+# Open UI mode for visual debugging
+npx playwright test --ui
+
+# Generate test from browser recording
+npx codegen http://localhost:3000
+```
 
 ## Page Object Model Pattern
 
@@ -44,111 +59,170 @@ import { Page } from '@playwright/test';
 import { BasePage } from './basePage';
 
 export class MyPage extends BasePage {
-  // Locators
-  readonly button = this.page.locator('button');
+  // Locators - use resilient selectors
+  readonly button = this.page.locator('button[type="submit"]');
+  readonly errorAlert = this.page.locator('[role="alert"]');
   
   // Navigation
   async goto() {
-    await super.goto('/my-path');
+    await super.goto('/mypage');
   }
-  
-  // Actions
+
+  // User interactions
   async clickButton() {
     await this.button.click();
   }
-  
-  // Assertions
-  async getButtonText() {
-    return await this.button.textContent();
+
+  // Assertions helpers
+  async isErrorVisible(): Promise<boolean> {
+    try {
+      await this.errorAlert.waitFor({ state: 'visible', timeout: 2000 });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 ```
 
-## Writing Tests
+## Testing Guidelines (Playwright Best Practices)
 
+### 1. Browser Context Isolation ✅
+- Each test uses an isolated browser context for clean test environment
+- Contexts are properly cleaned up in `afterEach` hooks
 ```typescript
-import { test, expect } from '@playwright/test';
-import { MyPage } from './fixtures/myPage';
+test.beforeEach(async ({ page, context }) => {
+  const isolatedPage = await context.newPage();
+  // use isolatedPage
+});
 
-test.describe('My Feature', () => {
-  let myPage: MyPage;
-
-  test.beforeEach(async ({ page }) => {
-    myPage = new MyPage(page);
-    await myPage.goto();
-  });
-
-  test('should perform action', async () => {
-    await myPage.clickButton();
-    expect(await myPage.getButtonText()).toBe('Expected Text');
-  });
+test.afterEach(async () => {
+  await isolatedPage.context().close();
 });
 ```
 
-## Best Practices
+### 2. Resilient Locator Selection ✅
+- Prefer role-based selectors: `page.locator('[role="button"]')`
+- Use type-specific selectors: `input[type="email"]`
+- Avoid positional selectors or too-specific CSS paths
+- Avoid `xpath` unless absolutely necessary
 
-1. **Use Page Objects**: All page interactions should go through Page Objects
-2. **Descriptive test names**: Test names should describe what is being tested
-3. **One assertion concept per test**: Tests should focus on a single behavior
-4. **Use data-testid attributes**: Add `data-testid` to elements for reliable selection
-5. **Leverage API testing**: Use `request` fixture for backend validation
-6. **Wait for elements**: Use locators and proper wait strategies
+### 3. Explicit Waits & Timeouts ✅
+- Wait for elements before interaction: `await element.waitFor({ state: 'visible' })`
+- Set appropriate timeouts (5s for elements, 30s for navigation)
+- Use `expect()` with specific matchers for assertions
 
-## Locator Strategies
+### 4. Test Hooks ✅
+- `test.beforeEach()` - Set up test environment, navigate to page
+- `test.afterEach()` - Clean up, close contexts, logout users
+- Use `test.skip()` for conditional test skipping
 
-Prefer in this order:
-1. `getByRole()` - Most accessible
-2. `getByLabel()` - For form inputs
-3. `getByPlaceholder()` - For input placeholders
-4. `getByText()` - For text content
-5. `locator('[data-testid="..."]')` - For elements without accessible identifiers
+### 5. Assertions Best Practices ✅
+- Use specific matchers: `expect(element).toBeVisible()`, `toHaveURL()`, `toContainText()`
+- Include assertion messages for clarity
+- Assert after each significant action
 
-## Running Tests
-
-```bash
-# Run all E2E tests
-npm run test:e2e
-
-# UI mode (interactive, recommended)
-npm run test:e2e:ui
-
-# Debug mode
-npm run test:e2e:debug
-
-# Show report
-npm run test:e2e:report
-
-# Run specific test
-npm run test:e2e -- src/e2e/login.spec.ts
-
-# Run tests matching pattern
-npm run test:e2e -- --grep "login"
+### 6. Visual Regression Testing
+- Screenshots on failure: configured in `playwright.config.ts`
+- Manual screenshots: `await page.screenshot({ path: 'path' })`
+```typescript
+test('visual test', async ({ page }) => {
+  await expect(page).toHaveScreenshot();
+});
 ```
+
+### 7. API Testing Integration
+- Use `APIRequestContext` for backend validation
+```typescript
+const response = await request.post('/api/login', {
+  data: { email: 'user@example.com', password: 'pass' }
+});
+expect(response.status()).toBe(200);
+```
+
+### 8. Test Organization
+- Group related tests with `test.describe()`
+- Use descriptive test names explaining what is being tested
+- Follow Arrange-Act-Assert pattern:
+```typescript
+test('should show error on invalid email', async () => {
+  // Arrange
+  await loginPage.goto();
+
+  // Act
+  await loginPage.fillEmail('invalid-email');
+  await loginPage.submit();
+
+  // Assert
+  await expect(loginPage.errorMessage).toBeVisible();
+});
+```
+
+## Files Description
+
+### fixtures/basePage.ts
+Base class providing:
+- Navigation with proper wait states
+- Element visibility checks
+- Screenshot functionality
+- URL and title helpers
+- Resilient element waiting with timeouts
+
+### fixtures/loginPage.ts
+Login page Page Object with:
+- Locators for email, password, submit button
+- Error message locator
+- User interaction methods
+- Helper methods for form validation
+
+### login.spec.ts
+Login tests including:
+- Form display verification
+- Invalid credential handling
+- Form validation edge cases
+- Navigation on successful login
+- Error message clearing
 
 ## Configuration
 
-Tests are configured in `playwright.config.ts`:
-- Browser: Chromium only (as per requirements)
-- Base URL: http://localhost:3000 (or BASE_URL env var)
-- Timeout: 30 seconds (default)
-- Retries: 2 in CI, 0 locally
-- Screenshots: Captured on failure
-- Videos: Saved on failure
-- Trace: Recorded on first retry
-- Reports: HTML and JSON
+Configuration in `playwright.config.ts`:
+- Only Chromium browser (can be extended)
+- Desktop Chrome device profile
+- Trace recording on first retry
+- Screenshots on failure
+- Video recording on failure
+- HTML and JSON reports
+- Base URL from environment variables
+- Proper timeout settings for elements and pages
 
 ## Debugging
 
-1. **UI Mode**: `npm run test:e2e:ui` - Best for interactive debugging
-2. **Debug Mode**: `npm run test:e2e:debug` - Step through tests
-3. **Trace Viewer**: Automatically opens trace files in browser
-4. **Screenshots**: Saved in `test-results/e2e/` on failure
-5. **Videos**: Saved in `test-results/e2e/` on failure
+### View HTML Report
+```bash
+npx playwright show-report
+```
 
-## Resources
+### Check Traces
+Traces are recorded on first retry and viewable in HTML report
 
-- [Playwright Documentation](https://playwright.dev/)
-- [Playwright API Testing](https://playwright.dev/docs/api-testing)
-- [Best Practices](https://playwright.dev/docs/best-practices)
-- [Debugging Guide](https://playwright.dev/docs/debug)
+### Debug Single Test
+```bash
+npx playwright test --debug -g "test name"
+```
+
+## CI/CD Integration
+
+In CI environments:
+- Tests run serially (1 worker)
+- Failed tests are retried 2 times
+- No server reuse (fresh server for each run)
+- Full traces and videos recorded
+
+## Tips & Tricks
+
+1. **Locator Debugging**: Use `page.locator().or()` for multiple selectors
+2. **Network Idle**: Use `waitForLoadState('networkidle')` for data-heavy pages
+3. **Conditional Skipping**: `test.skip(condition, 'reason')`
+4. **Slow Motion**: `npx playwright test --slow-motion=1000`
+5. **Timeout Override**: Pass `timeout` option to specific expects
 
