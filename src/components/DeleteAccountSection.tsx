@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { DeleteAccountDialog } from './DeleteAccountDialog';
-import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import { DeleteAccountDialog } from "./DeleteAccountDialog";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 
 /**
  * Component containing the "Delete Account" button and managing the deletion dialog.
@@ -17,16 +17,15 @@ export function DeleteAccountSection() {
         <h2 id="delete-account-heading" className="text-2xl font-semibold text-destructive">
           Strefa niebezpieczna
         </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Trwałe usunięcie konta i wszystkich danych
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Trwałe usunięcie konta i wszystkich danych</p>
       </div>
 
       <Alert variant="destructive" className="mb-6">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Uwaga!</AlertTitle>
         <AlertDescription>
-          Usunięcie konta jest nieodwracalne. Wszystkie Twoje dane, w tym transakcje, kategorie i ustawienia, zostaną trwale usunięte.
+          Usunięcie konta jest nieodwracalne. Wszystkie Twoje dane, w tym transakcje, kategorie i ustawienia, zostaną
+          trwale usunięte.
         </AlertDescription>
       </Alert>
 
@@ -41,20 +40,12 @@ export function DeleteAccountSection() {
           </ul>
         </div>
 
-        <Button
-          variant="destructive"
-          onClick={() => setIsDialogOpen(true)}
-          className="mt-4"
-        >
+        <Button variant="destructive" onClick={() => setIsDialogOpen(true)} className="mt-4">
           Usuń konto
         </Button>
       </div>
 
-      <DeleteAccountDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
+      <DeleteAccountDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </section>
   );
 }
-

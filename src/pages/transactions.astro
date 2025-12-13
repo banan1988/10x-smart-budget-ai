@@ -1,10 +1,10 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import { TransactionsView } from '@/components/TransactionsView';
-import { AppHeader } from '@/components/AppHeader';
-import { AppFooter } from '@/components/AppFooter';
-import { AppSidebar } from '@/components/AppSidebar';
-import { MobileNav } from '@/components/MobileNav';
+import Layout from "@/layouts/Layout.astro";
+import { TransactionsView } from "@/components/TransactionsView";
+import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
+import { AppSidebar } from "@/components/AppSidebar";
+import { MobileNav } from "@/components/MobileNav";
 
 // This page requires authentication (handled by middleware)
 ---
@@ -40,10 +40,10 @@ import { MobileNav } from '@/components/MobileNav';
   <script>
     // Adjust main content padding based on sidebar state
     function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
-      const mainContent = document.getElementById('main-content');
+      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
+      const mainContent = document.getElementById("main-content");
       if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
       }
     }
 
@@ -51,12 +51,11 @@ import { MobileNav } from '@/components/MobileNav';
     updateMainContentPadding();
 
     // Listen for sidebar toggle
-    window.addEventListener('toggle-sidebar', () => {
+    window.addEventListener("toggle-sidebar", () => {
       setTimeout(updateMainContentPadding, 50);
     });
 
     // Listen for resize
-    window.addEventListener('resize', updateMainContentPadding);
+    window.addEventListener("resize", updateMainContentPadding);
   </script>
 </Layout>
-

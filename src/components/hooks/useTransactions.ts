@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { TransactionVM, TransactionFilters, PaginatedResponse, TransactionDto } from '@/types';
-import { UNCATEGORIZED_CATEGORY_NAME, UNCATEGORIZED_CATEGORY_KEY } from '@/types';
+import { useState, useEffect, useCallback } from "react";
+import type { TransactionVM, TransactionFilters, PaginatedResponse, TransactionDto } from "@/types";
+import { UNCATEGORIZED_CATEGORY_NAME, UNCATEGORIZED_CATEGORY_KEY } from "@/types";
 
 interface UseTransactionsReturn {
   transactions: TransactionVM[];
-  pagination: PaginatedResponse<TransactionDto>['pagination'] | null;
+  pagination: PaginatedResponse<TransactionDto>["pagination"] | null;
   filters: TransactionFilters;
   isLoading: boolean;
   error: Error | null;
@@ -17,9 +17,9 @@ interface UseTransactionsReturn {
  * Format amount as currency string
  */
 function formatAmount(amount: number): string {
-  return new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency: 'PLN',
+  return new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: "PLN",
   }).format(amount / 100); // Amount is stored in cents
 }
 
@@ -28,10 +28,10 @@ function formatAmount(amount: number): string {
  */
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('pl-PL', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+  return new Intl.DateTimeFormat("pl-PL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   }).format(date);
 }
 
@@ -60,7 +60,7 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
   const currentMonth = initialMonth || new Date().toISOString().slice(0, 7);
 
   const [transactions, setTransactions] = useState<TransactionVM[]>([]);
-  const [pagination, setPagination] = useState<PaginatedResponse<TransactionDto>['pagination'] | null>(null);
+  const [pagination, setPagination] = useState<PaginatedResponse<TransactionDto>["pagination"] | null>(null);
   const [filters, setFiltersState] = useState<TransactionFilters>({
     month: currentMonth,
     page: 1,
@@ -76,20 +76,20 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
     try {
       // Build query params
       const params = new URLSearchParams();
-      params.append('month', filters.month);
-      if (filters.page) params.append('page', filters.page.toString());
-      if (filters.limit) params.append('limit', filters.limit.toString());
-      if (filters.type) params.append('type', filters.type);
+      params.append("month", filters.month);
+      if (filters.page) params.append("page", filters.page.toString());
+      if (filters.limit) params.append("limit", filters.limit.toString());
+      if (filters.type) params.append("type", filters.type);
       if (filters.categoryId && filters.categoryId.length > 0) {
-        params.append('categoryId', filters.categoryId.join(','));
+        params.append("categoryId", filters.categoryId.join(","));
       }
-      if (filters.search) params.append('search', filters.search);
+      if (filters.search) params.append("search", filters.search);
 
       const response = await fetch(`/api/transactions?${params.toString()}`, {
-        credentials: 'include',
+        credentials: "include",
       });
 
-      console.log('Fetch response:', {
+      console.log("Fetch response:", {
         status: response.status,
         ok: response.ok,
         statusText: response.statusText,
@@ -97,13 +97,13 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response body:', errorText);
+        console.error("Error response body:", errorText);
         throw new Error(`Failed to fetch transactions: ${response.statusText}`);
       }
 
       const data: PaginatedResponse<TransactionDto> = await response.json();
 
-      console.log('Fetched transactions:', data);
+      console.log("Fetched transactions:", data);
 
       // Map DTOs to ViewModels
       const viewModels = data.data.map(mapToViewModel);
@@ -111,8 +111,8 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
       setTransactions(viewModels);
       setPagination(data.pagination);
     } catch (err) {
-      console.error('useTransactions error:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+      console.error("useTransactions error:", err);
+      setError(err instanceof Error ? err : new Error("Unknown error occurred"));
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +124,7 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
 
   // Auto-refresh when there are pending categorizations
   useEffect(() => {
-    const hasPending = transactions.some(t => t.categorizationStatus === 'pending');
+    const hasPending = transactions.some((t) => t.categorizationStatus === "pending");
 
     if (!hasPending) return;
 
@@ -141,7 +141,7 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
   }, []);
 
   const setPage = useCallback((page: number) => {
-    setFiltersState(prev => ({ ...prev, page }));
+    setFiltersState((prev) => ({ ...prev, page }));
   }, []);
 
   const refetch = useCallback(() => {
@@ -159,4 +159,3 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
     refetch,
   };
 }
-

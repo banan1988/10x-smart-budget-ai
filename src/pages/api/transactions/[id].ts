@@ -1,7 +1,12 @@
-import type { APIRoute } from 'astro';
-import { TransactionService } from '../../../lib/services/transaction.service';
-import { UpdateTransactionCommandSchema } from '../../../types';
-import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { TransactionService } from "../../../lib/services/transaction.service";
+import { UpdateTransactionCommandSchema } from "../../../types";
+import {
+  checkAuthentication,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -31,17 +36,17 @@ export const PUT: APIRoute = async (context) => {
     const userId = locals.user!.id;
 
     // Extract and validate transaction ID from URL params
-    const transactionId = parseInt(params.id || '', 10);
+    const transactionId = parseInt(params.id || "", 10);
     if (isNaN(transactionId)) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid transaction ID',
-          message: 'Transaction ID must be a valid integer',
+          error: "Invalid transaction ID",
+          message: "Transaction ID must be a valid integer",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -54,13 +59,13 @@ export const PUT: APIRoute = async (context) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON',
-          message: 'Request body must be valid JSON',
+          error: "Invalid JSON",
+          message: "Request body must be valid JSON",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -84,24 +89,24 @@ export const PUT: APIRoute = async (context) => {
     const updateResponse = createSuccessResponse(transaction, 200);
 
     // Add headers to indicate that related caches should be invalidated
-    updateResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    updateResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return updateResponse;
   } catch (error) {
     // Log error for debugging
-    console.error('Error updating transaction:', error);
+    console.error("Error updating transaction:", error);
 
     // Check if it's a not found error
-    if (error instanceof Error && error.message.includes('not found')) {
+    if (error instanceof Error && error.message.includes("not found")) {
       return new Response(
         JSON.stringify({
-          error: 'Not found',
+          error: "Not found",
           message: error.message,
         }),
         {
           status: 404,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -136,53 +141,49 @@ export const DELETE: APIRoute = async (context) => {
     const userId = locals.user!.id;
 
     // Extract and validate transaction ID from URL params
-    const transactionId = parseInt(params.id || '', 10);
+    const transactionId = parseInt(params.id || "", 10);
     if (isNaN(transactionId)) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid transaction ID',
-          message: 'Transaction ID must be a valid integer',
+          error: "Invalid transaction ID",
+          message: "Transaction ID must be a valid integer",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
     }
 
     // Delete transaction using the service
-    await TransactionService.deleteTransaction(
-      supabase,
-      userId,
-      transactionId
-    );
+    await TransactionService.deleteTransaction(supabase, userId, transactionId);
 
     // Return successful response with no content
     const deleteResponse = new Response(null, {
       status: 204,
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });
 
     return deleteResponse;
   } catch (error) {
     // Log error for debugging
-    console.error('Error deleting transaction:', error);
+    console.error("Error deleting transaction:", error);
 
     // Check if it's a not found error
-    if (error instanceof Error && error.message.includes('not found')) {
+    if (error instanceof Error && error.message.includes("not found")) {
       return new Response(
         JSON.stringify({
-          error: 'Not found',
+          error: "Not found",
           message: error.message,
         }),
         {
           status: 404,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -192,4 +193,3 @@ export const DELETE: APIRoute = async (context) => {
     return createErrorResponse(error, 500);
   }
 };
-

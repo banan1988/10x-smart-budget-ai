@@ -11,8 +11,8 @@
 export function createMockAiStatsResponse(overrides = {}) {
   return {
     period: {
-      startDate: '2025-11-01',
-      endDate: '2025-12-09',
+      startDate: "2025-11-01",
+      endDate: "2025-12-09",
     },
     overall: {
       totalTransactions: 150,
@@ -23,8 +23,8 @@ export function createMockAiStatsResponse(overrides = {}) {
     categoryBreakdown: [
       {
         categoryId: 1,
-        categoryName: 'Food',
-        categoryKey: 'food',
+        categoryName: "Food",
+        categoryKey: "food",
         aiCount: 45,
         manualCount: 5,
         total: 50,
@@ -32,8 +32,8 @@ export function createMockAiStatsResponse(overrides = {}) {
       },
       {
         categoryId: 2,
-        categoryName: 'Transport',
-        categoryKey: 'transport',
+        categoryName: "Transport",
+        categoryKey: "transport",
         aiCount: 35,
         manualCount: 10,
         total: 45,
@@ -41,8 +41,8 @@ export function createMockAiStatsResponse(overrides = {}) {
       },
       {
         categoryId: 3,
-        categoryName: 'Entertainment',
-        categoryKey: 'entertainment',
+        categoryName: "Entertainment",
+        categoryKey: "entertainment",
         aiCount: 25,
         manualCount: 10,
         total: 35,
@@ -50,10 +50,10 @@ export function createMockAiStatsResponse(overrides = {}) {
       },
     ],
     trendData: [
-      { date: '2025-11-01', percentage: 75 },
-      { date: '2025-11-02', percentage: 78 },
-      { date: '2025-11-03', percentage: 80 },
-      { date: '2025-11-04', percentage: 82 },
+      { date: "2025-11-01", percentage: 75 },
+      { date: "2025-11-02", percentage: 78 },
+      { date: "2025-11-03", percentage: 80 },
+      { date: "2025-11-04", percentage: 82 },
     ],
     pagination: {
       page: 1,
@@ -68,7 +68,7 @@ export function createMockAiStatsResponse(overrides = {}) {
 /**
  * Feedback Data Mock Factory
  */
-export function createMockFeedbackData(count: number = 2, overrides = {}) {
+export function createMockFeedbackData(count = 2, overrides = {}) {
   return Array.from({ length: count }, (_, i) => ({
     id: i + 1,
     rating: Math.floor(Math.random() * 5) + 1,
@@ -82,7 +82,7 @@ export function createMockFeedbackData(count: number = 2, overrides = {}) {
 /**
  * Feedback Response with Pagination
  */
-export function createMockFeedbackResponse(count: number = 2, overrides = {}) {
+export function createMockFeedbackResponse(count = 2, overrides = {}) {
   return {
     data: createMockFeedbackData(count),
     page: 1,
@@ -96,12 +96,12 @@ export function createMockFeedbackResponse(count: number = 2, overrides = {}) {
  * Sample data for date range boundary tests
  */
 export const SAMPLE_DATES = {
-  VALID_START: '2025-11-01',
-  VALID_END: '2025-12-09',
-  INVALID_FORMAT_1: '11-01-2025',
-  INVALID_FORMAT_2: 'invalid-date',
-  REVERSED_START: '2025-12-09',
-  REVERSED_END: '2025-11-01',
+  VALID_START: "2025-11-01",
+  VALID_END: "2025-12-09",
+  INVALID_FORMAT_1: "11-01-2025",
+  INVALID_FORMAT_2: "invalid-date",
+  REVERSED_START: "2025-12-09",
+  REVERSED_END: "2025-11-01",
 };
 
 /**
@@ -113,7 +113,7 @@ export const SAMPLE_RATINGS = {
   INVALID_ZERO: 0,
   INVALID_NEGATIVE: -1,
   INVALID_HIGH: 6,
-  INVALID_STRING: 'five',
+  INVALID_STRING: "five",
 };
 
 /**

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { toast } from 'sonner';
-import type { EditProfileFormData, UpdateProfileResponse, ValidationError } from '../types';
+import React, { useState, useEffect } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { toast } from "sonner";
+import type { EditProfileFormData, UpdateProfileResponse, ValidationError } from "../types";
 
 interface EditProfileSectionProps {
   initialNickname: string | null;
@@ -16,9 +16,9 @@ interface EditProfileSectionProps {
  */
 export function EditProfileSection({ initialNickname, onProfileUpdated }: EditProfileSectionProps) {
   const [formData, setFormData] = useState<EditProfileFormData>({
-    nickname: initialNickname || '',
+    nickname: initialNickname || "",
   });
-  const [originalNickname] = useState<string>(initialNickname || '');
+  const [originalNickname] = useState<string>(initialNickname || "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ValidationError | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -32,23 +32,23 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
   const validateNickname = (value: string): ValidationError | null => {
     if (!value || value.trim().length === 0) {
       return {
-        field: 'nickname',
-        message: 'Nickname jest wymagany',
+        field: "nickname",
+        message: "Nickname jest wymagany",
       };
     }
 
     if (value.length > 50) {
       return {
-        field: 'nickname',
-        message: 'Nickname jest zbyt długi. Maksimum 50 znaków.',
+        field: "nickname",
+        message: "Nickname jest zbyt długi. Maksimum 50 znaków.",
       };
     }
 
     const validPattern = /^[a-zA-Z0-9\s\-_]+$/;
     if (!validPattern.test(value)) {
       return {
-        field: 'nickname',
-        message: 'Nickname może zawierać tylko litery, cyfry, spacje, myślniki i podkreślenia',
+        field: "nickname",
+        message: "Nickname może zawierać tylko litery, cyfry, spacje, myślniki i podkreślenia",
       };
     }
 
@@ -81,10 +81,10 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
     setError(null);
 
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           nickname: formData.nickname.trim(),
@@ -99,11 +99,11 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
           setError(errorData.errors[0]);
           toast.error(errorData.errors[0].message);
         } else if (response.status === 401) {
-          toast.error('Sesja wygasła. Zaloguj się ponownie.');
+          toast.error("Sesja wygasła. Zaloguj się ponownie.");
           // Redirect to login
-          window.location.href = '/login';
+          window.location.href = "/login";
         } else {
-          toast.error(errorData.message || 'Nie udało się zaktualizować profilu');
+          toast.error(errorData.message || "Nie udało się zaktualizować profilu");
         }
         return;
       }
@@ -111,7 +111,7 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
       const result: UpdateProfileResponse = await response.json();
 
       if (result.success) {
-        toast.success('Profil został zaktualizowany');
+        toast.success("Profil został zaktualizowany");
         setIsDirty(false);
 
         if (onProfileUpdated && result.data?.nickname) {
@@ -119,8 +119,8 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
         }
       }
     } catch (err) {
-      console.error('Error updating profile:', err);
-      toast.error('Błąd połączenia. Sprawdź swoją sieć internetową i spróbuj ponownie.');
+      console.error("Error updating profile:", err);
+      toast.error("Błąd połączenia. Sprawdź swoją sieć internetową i spróbuj ponownie.");
     } finally {
       setIsLoading(false);
     }
@@ -139,9 +139,7 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
         <h2 id="edit-profile-heading" className="text-2xl font-semibold">
           Edytuj profil
         </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Zaktualizuj swoje dane osobowe
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">Zaktualizuj swoje dane osobowe</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -155,8 +153,8 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
             placeholder="Wprowadź swój nickname"
             disabled={isLoading}
             aria-invalid={error !== null}
-            aria-describedby={error ? 'nickname-error' : undefined}
-            className={error ? 'border-destructive' : ''}
+            aria-describedby={error ? "nickname-error" : undefined}
+            className={error ? "border-destructive" : ""}
           />
           {error && (
             <p id="nickname-error" className="text-sm text-destructive" role="alert">
@@ -169,19 +167,10 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
         </div>
 
         <div className="flex gap-3">
-          <Button
-            type="submit"
-            disabled={!isDirty || isLoading}
-            aria-busy={isLoading}
-          >
-            {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany'}
+          <Button type="submit" disabled={!isDirty || isLoading} aria-busy={isLoading}>
+            {isLoading ? "Zapisywanie..." : "Zapisz zmiany"}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={!isDirty || isLoading}
-          >
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={!isDirty || isLoading}>
             Anuluj
           </Button>
         </div>
@@ -189,4 +178,3 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
     </section>
   );
 }
-

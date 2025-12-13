@@ -1,15 +1,6 @@
-import React from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import React from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface RatingDistribution {
   rating: number;
@@ -76,7 +67,7 @@ export default function RatingDistributionChart({
             <XAxis dataKey="name" />
             <YAxis />
             <Tooltip
-              formatter={(value) => [value, 'Liczba feedbacków']}
+              formatter={(value) => [value, "Liczba feedbacków"]}
               labelFormatter={(label) => `Rating: ${label}`}
             />
             <Legend />
@@ -87,4 +78,3 @@ export default function RatingDistributionChart({
     </Card>
   );
 }
-

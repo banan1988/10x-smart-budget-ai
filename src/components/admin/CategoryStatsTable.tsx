@@ -1,14 +1,7 @@
-import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../ui/table';
-import TrendBadge from './TrendBadge';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import TrendBadge from "./TrendBadge";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 interface CategoryStats {
   categoryId: number;
@@ -19,30 +12,25 @@ interface CategoryStats {
   total: number;
   aiPercentage: number;
   trend?: {
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
     percentage?: number;
   };
 }
 
 interface CategoryStatsTableProps {
   data: CategoryStats[];
-  onSort: (field: string, direction: 'asc' | 'desc') => void;
+  onSort: (field: string, direction: "asc" | "desc") => void;
   isLoading?: boolean;
 }
 
-type SortField = 'category' | 'ai' | 'manual' | 'aiPercentage';
+type SortField = "category" | "ai" | "manual" | "aiPercentage";
 
-export default function CategoryStatsTable({
-  data,
-  onSort,
-  isLoading = false,
-}: CategoryStatsTableProps) {
-  const [sortField, setSortField] = useState<SortField>('category');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+export default function CategoryStatsTable({ data, onSort, isLoading = false }: CategoryStatsTableProps) {
+  const [sortField, setSortField] = useState<SortField>("category");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const handleSort = (field: SortField) => {
-    const newDirection =
-      sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    const newDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
     setSortField(field);
     setSortDirection(newDirection);
     onSort(field, newDirection);
@@ -50,7 +38,7 @@ export default function CategoryStatsTable({
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
-    return sortDirection === 'asc' ? (
+    return sortDirection === "asc" ? (
       <ArrowUp size={16} className="inline ml-1" />
     ) : (
       <ArrowDown size={16} className="inline ml-1" />
@@ -79,28 +67,28 @@ export default function CategoryStatsTable({
         <TableHeader>
           <TableRow>
             <TableHead
-              onClick={() => handleSort('category')}
+              onClick={() => handleSort("category")}
               className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900"
             >
               Kategoria
               <SortIcon field="category" />
             </TableHead>
             <TableHead
-              onClick={() => handleSort('ai')}
+              onClick={() => handleSort("ai")}
               className="cursor-pointer text-right hover:bg-gray-50 dark:hover:bg-gray-900"
             >
               AI
               <SortIcon field="ai" />
             </TableHead>
             <TableHead
-              onClick={() => handleSort('manual')}
+              onClick={() => handleSort("manual")}
               className="cursor-pointer text-right hover:bg-gray-50 dark:hover:bg-gray-900"
             >
               Ręczne
               <SortIcon field="manual" />
             </TableHead>
             <TableHead
-              onClick={() => handleSort('aiPercentage')}
+              onClick={() => handleSort("aiPercentage")}
               className="cursor-pointer text-right hover:bg-gray-50 dark:hover:bg-gray-900"
             >
               % AI
@@ -113,28 +101,26 @@ export default function CategoryStatsTable({
           {data.map((stat) => {
             const isLowAiPercentage = stat.aiPercentage < 50;
             const rowClass = isLowAiPercentage
-              ? 'bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'
-              : 'hover:bg-gray-50 dark:hover:bg-gray-900';
+              ? "bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+              : "hover:bg-gray-50 dark:hover:bg-gray-900";
 
             return (
               <TableRow key={stat.categoryId} className={rowClass}>
                 <TableCell className="font-medium">{stat.categoryName}</TableCell>
                 <TableCell className="text-right">{stat.aiCount}</TableCell>
                 <TableCell className="text-right">{stat.manualCount}</TableCell>
-                <TableCell className="text-right font-semibold">
-                  {stat.aiPercentage.toFixed(1)}%
-                </TableCell>
+                <TableCell className="text-right font-semibold">{stat.aiPercentage.toFixed(1)}%</TableCell>
                 <TableCell className="text-right">
                   {stat.trend && (
                     <TrendBadge
                       direction={stat.trend.direction}
                       percentage={stat.trend.percentage}
                       variant={
-                        stat.trend.direction === 'up'
-                          ? 'success'
-                          : stat.trend.direction === 'down'
-                            ? 'danger'
-                            : 'neutral'
+                        stat.trend.direction === "up"
+                          ? "success"
+                          : stat.trend.direction === "down"
+                            ? "danger"
+                            : "neutral"
                       }
                     />
                   )}
@@ -147,4 +133,3 @@ export default function CategoryStatsTable({
     </div>
   );
 }
-

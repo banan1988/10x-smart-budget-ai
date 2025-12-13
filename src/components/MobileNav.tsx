@@ -1,7 +1,7 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 interface MobileNavProps {
-  currentPage?: 'dashboard' | 'transactions';
+  currentPage?: "dashboard" | "transactions";
 }
 
 /**
@@ -11,8 +11,8 @@ interface MobileNavProps {
 export function MobileNav({ currentPage }: MobileNavProps) {
   const navItems = [
     {
-      name: 'Pulpit',
-      href: '/dashboard',
+      name: "Pulpit",
+      href: "/dashboard",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -31,11 +31,11 @@ export function MobileNav({ currentPage }: MobileNavProps) {
           <rect width="7" height="5" x="3" y="16" rx="1" />
         </svg>
       ),
-      active: currentPage === 'dashboard',
+      active: currentPage === "dashboard",
     },
     {
-      name: 'Transakcje',
-      href: '/transactions',
+      name: "Transakcje",
+      href: "/transactions",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -53,11 +53,11 @@ export function MobileNav({ currentPage }: MobileNavProps) {
           <path d="M10 18h4" />
         </svg>
       ),
-      active: currentPage === 'transactions',
+      active: currentPage === "transactions",
     },
     {
-      name: 'Profil',
-      href: '/profile',
+      name: "Profil",
+      href: "/profile",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -74,7 +74,7 @@ export function MobileNav({ currentPage }: MobileNavProps) {
           <circle cx="12" cy="7" r="4" />
         </svg>
       ),
-      active: currentPage === 'profile',
+      active: currentPage === "profile",
     },
   ];
 
@@ -86,10 +86,8 @@ export function MobileNav({ currentPage }: MobileNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors',
-              item.active
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
+              item.active ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {item.icon}
@@ -100,4 +98,3 @@ export function MobileNav({ currentPage }: MobileNavProps) {
     </nav>
   );
 }
-

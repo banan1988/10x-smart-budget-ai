@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { useDashboardStats } from '@/components/hooks/useDashboardStats';
-import { MetricCard } from '@/components/MetricCard';
-import { ExpensesPieChart } from '@/components/ExpensesPieChart';
-import { DailyIncomeExpensesChart } from '@/components/DailyIncomeExpensesChart';
-import { AiSummary } from '@/components/AiSummary';
-import { DashboardSkeleton } from '@/components/DashboardSkeleton';
-import { EmptyState } from '@/components/EmptyState';
-import { AddTransactionDialog } from '@/components/AddTransactionDialog';
-import { Breadcrumbs } from '@/components/Breadcrumbs';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import { useDashboardStats } from "@/components/hooks/useDashboardStats";
+import { MetricCard } from "@/components/MetricCard";
+import { ExpensesPieChart } from "@/components/ExpensesPieChart";
+import { DailyIncomeExpensesChart } from "@/components/DailyIncomeExpensesChart";
+import { AiSummary } from "@/components/AiSummary";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
+import { AddTransactionDialog } from "@/components/AddTransactionDialog";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 /**
  * Get current month in YYYY-MM format
@@ -17,7 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 function getCurrentMonth(): string {
   const now = new Date();
   const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
 }
 
@@ -48,9 +48,7 @@ export function DashboardView() {
     return (
       <div className="space-y-4">
         <Alert variant="destructive">
-          <AlertDescription>
-            Wystąpił błąd podczas ładowania danych: {error.message}
-          </AlertDescription>
+          <AlertDescription>Wystąpił błąd podczas ładowania danych: {error.message}</AlertDescription>
         </Alert>
         <Button onClick={refetch}>Spróbuj ponownie</Button>
       </div>
@@ -58,7 +56,7 @@ export function DashboardView() {
   }
 
   // Empty state - no data
-  if (!data || data.metrics.every((m) => m.value === '0,00 zł')) {
+  if (!data || data.metrics.every((m) => m.value === "0,00 zł")) {
     return (
       <>
         <EmptyState onAddTransaction={handleAddTransaction} />
@@ -76,10 +74,7 @@ export function DashboardView() {
     <div className="space-y-6">
       {/* Breadcrumbs */}
       <Breadcrumbs
-        items={[
-          { label: 'SmartBudgetAI', href: '/dashboard' },
-          { label: 'Pulpit' },
-        ]}
+        items={[{ label: "SmartBudgetAI", href: "/dashboard" }, { label: "Pulpit" }]}
         showSidebarToggle={true}
       />
 
@@ -88,7 +83,8 @@ export function DashboardView() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Pulpit</h1>
           <p className="text-muted-foreground">
-            Przegląd finansów za {new Date(currentMonth + '-01').toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' })}
+            Przegląd finansów za{" "}
+            {new Date(currentMonth + "-01").toLocaleDateString("pl-PL", { month: "long", year: "numeric" })}
           </p>
         </div>
         <Button onClick={handleAddTransaction}>Dodaj transakcję</Button>
@@ -126,4 +122,3 @@ export function DashboardView() {
     </div>
   );
 }
-

@@ -1,11 +1,5 @@
-import type { ReactNode } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import type { ReactNode } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface FeedbackDialogProps {
   isOpen: boolean;
@@ -23,13 +17,10 @@ export function FeedbackDialog({ isOpen, onOpenChange, children }: FeedbackDialo
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Prześlij opinię</DialogTitle>
-          <DialogDescription>
-            Pomóż nam ulepszyć aplikację. Powiedz nam, co myślisz!
-          </DialogDescription>
+          <DialogDescription>Pomóż nam ulepszyć aplikację. Powiedz nam, co myślisz!</DialogDescription>
         </DialogHeader>
         <div className="py-4">{children}</div>
       </DialogContent>
     </Dialog>
   );
 }
-

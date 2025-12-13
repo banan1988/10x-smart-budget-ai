@@ -1,7 +1,7 @@
-import type { APIRoute } from 'astro';
-import { TransactionService } from '../../lib/services/transaction.service';
-import { GetTransactionsQuerySchema, CreateTransactionCommandSchema } from '../../types';
-import { DEFAULT_USER_ID } from '../../db/constants';
+import type { APIRoute } from "astro";
+import { TransactionService } from "../../lib/services/transaction.service";
+import { GetTransactionsQuerySchema, CreateTransactionCommandSchema } from "../../types";
+import { DEFAULT_USER_ID } from "../../db/constants";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -25,7 +25,7 @@ export const prerender = false;
  */
 export const GET: APIRoute = async ({ locals, url }) => {
   try {
-    console.log('[GET /api/transactions] Request received', {
+    console.log("[GET /api/transactions] Request received", {
       pathname: url.pathname,
       query: url.search,
       hasUser: !!locals.user,
@@ -34,16 +34,16 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     // Check if user is authenticated
     if (!locals.user) {
-      console.log('[GET /api/transactions] Unauthorized - no user in locals');
+      console.log("[GET /api/transactions] Unauthorized - no user in locals");
       return new Response(
         JSON.stringify({
-          error: 'Unauthorized',
-          message: 'Authentication required',
+          error: "Unauthorized",
+          message: "Authentication required",
         }),
         {
           status: 401,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -55,13 +55,13 @@ export const GET: APIRoute = async ({ locals, url }) => {
     if (!supabase) {
       return new Response(
         JSON.stringify({
-          error: 'Internal Server Error',
-          message: 'Supabase client not available',
+          error: "Internal Server Error",
+          message: "Supabase client not available",
         }),
         {
           status: 500,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -71,19 +71,19 @@ export const GET: APIRoute = async ({ locals, url }) => {
     const userId = locals.user.id;
 
     // Extract and validate query parameters
-    const month = url.searchParams.get('month');
+    const month = url.searchParams.get("month");
 
     // Early validation - month is required
     if (!month) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
-          details: [{ message: 'Month parameter is required' }],
+          error: "Validation failed",
+          details: [{ message: "Month parameter is required" }],
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -91,11 +91,11 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     const queryParams = {
       month,
-      categoryId: url.searchParams.get('categoryId') || undefined,
-      type: url.searchParams.get('type') || undefined,
-      search: url.searchParams.get('search') || undefined,
-      page: url.searchParams.get('page') || undefined,
-      limit: url.searchParams.get('limit') || undefined,
+      categoryId: url.searchParams.get("categoryId") || undefined,
+      type: url.searchParams.get("type") || undefined,
+      search: url.searchParams.get("search") || undefined,
+      page: url.searchParams.get("page") || undefined,
+      limit: url.searchParams.get("limit") || undefined,
     };
 
     const validationResult = GetTransactionsQuerySchema.safeParse(queryParams);
@@ -103,49 +103,42 @@ export const GET: APIRoute = async ({ locals, url }) => {
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: validationResult.error.issues,
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
     }
 
     // Fetch transactions using the service
-    const result = await TransactionService.getTransactions(
-      supabase,
-      userId,
-      validationResult.data
-    );
+    const result = await TransactionService.getTransactions(supabase, userId, validationResult.data);
 
     // Return successful response with paginated transactions
-    return new Response(
-      JSON.stringify(result),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   } catch (error) {
     // Log error for debugging
-    console.error('Error fetching transactions:', error);
+    console.error("Error fetching transactions:", error);
 
     // Return error response
     return new Response(
       JSON.stringify({
-        error: 'Failed to fetch transactions',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to fetch transactions",
+        message: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     );
@@ -171,13 +164,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (!locals.user) {
       return new Response(
         JSON.stringify({
-          error: 'Unauthorized',
-          message: 'Authentication required',
+          error: "Unauthorized",
+          message: "Authentication required",
         }),
         {
           status: 401,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -189,13 +182,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (!supabase) {
       return new Response(
         JSON.stringify({
-          error: 'Internal Server Error',
-          message: 'Supabase client not available',
+          error: "Internal Server Error",
+          message: "Supabase client not available",
         }),
         {
           status: 500,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -211,13 +204,13 @@ export const POST: APIRoute = async ({ locals, request }) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON',
-          message: 'Request body must be valid JSON',
+          error: "Invalid JSON",
+          message: "Request body must be valid JSON",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -228,52 +221,44 @@ export const POST: APIRoute = async ({ locals, request }) => {
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({
-          error: 'Validation failed',
+          error: "Validation failed",
           details: validationResult.error.issues,
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
     }
 
     // Create transaction using the service
-    const transaction = await TransactionService.createTransaction(
-      supabase,
-      userId,
-      validationResult.data
-    );
+    const transaction = await TransactionService.createTransaction(supabase, userId, validationResult.data);
 
     // Return successful response with created transaction
-    return new Response(
-      JSON.stringify(transaction),
-      {
-        status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(JSON.stringify(transaction), {
+      status: 201,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   } catch (error) {
     // Log error for debugging
-    console.error('Error creating transaction:', error);
+    console.error("Error creating transaction:", error);
 
     // Return error response
     return new Response(
       JSON.stringify({
-        error: 'Failed to create transaction',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Failed to create transaction",
+        message: error instanceof Error ? error.message : "Unknown error",
       }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     );
   }
 };
-

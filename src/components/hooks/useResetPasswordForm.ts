@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 /**
  * Password strength validation requirements
@@ -11,7 +11,7 @@ interface PasswordStrengthRequirements {
   hasSpecialChar: boolean;
 }
 
-export type PasswordStrengthLevel = 'weak' | 'medium' | 'strong' | 'very-strong';
+export type PasswordStrengthLevel = "weak" | "medium" | "strong" | "very-strong";
 
 interface PasswordStrengthResult {
   level: PasswordStrengthLevel;
@@ -51,13 +51,20 @@ function evaluatePasswordStrength(password: string): PasswordStrengthResult {
   const metRequirements = Object.values(requirements).filter(Boolean).length;
   const score = (metRequirements / 5) * 100;
 
-  let level: PasswordStrengthLevel = 'weak';
-  if (score >= 80 && requirements.minLength && requirements.hasUppercase && requirements.hasLowercase && requirements.hasDigit && requirements.hasSpecialChar) {
-    level = 'very-strong';
+  let level: PasswordStrengthLevel = "weak";
+  if (
+    score >= 80 &&
+    requirements.minLength &&
+    requirements.hasUppercase &&
+    requirements.hasLowercase &&
+    requirements.hasDigit &&
+    requirements.hasSpecialChar
+  ) {
+    level = "very-strong";
   } else if (score >= 60) {
-    level = 'strong';
+    level = "strong";
   } else if (score >= 40) {
-    level = 'medium';
+    level = "medium";
   }
 
   return { level, score, requirements };
@@ -68,8 +75,8 @@ function evaluatePasswordStrength(password: string): PasswordStrengthResult {
  */
 export function useResetPasswordForm() {
   const [state, setState] = useState<FormState>({
-    newPassword: '',
-    confirmPassword: '',
+    newPassword: "",
+    confirmPassword: "",
     showPassword: false,
     showConfirmPassword: false,
     isLoading: false,
@@ -93,9 +100,9 @@ export function useResetPasswordForm() {
         const allRequirementsMet = Object.values(strength.requirements).every(Boolean);
 
         if (!password) {
-          newState.fieldErrors = { ...prev.fieldErrors, newPassword: 'Hasło jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, newPassword: "Hasło jest wymagane" };
         } else if (!allRequirementsMet) {
-          newState.fieldErrors = { ...prev.fieldErrors, newPassword: 'Hasło nie spełnia wszystkich wymagań' };
+          newState.fieldErrors = { ...prev.fieldErrors, newPassword: "Hasło nie spełnia wszystkich wymagań" };
         } else {
           const { newPassword: _, ...rest } = prev.fieldErrors;
           newState.fieldErrors = rest;
@@ -103,7 +110,7 @@ export function useResetPasswordForm() {
       }
 
       if (prev.touched.confirmPassword && prev.confirmPassword && password !== prev.confirmPassword) {
-        newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+        newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
       }
 
       return newState;
@@ -119,9 +126,9 @@ export function useResetPasswordForm() {
 
       if (prev.touched.confirmPassword) {
         if (!confirmPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Potwierdzenie hasła jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Potwierdzenie hasła jest wymagane" };
         } else if (confirmPassword !== prev.newPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
           const { confirmPassword: _, ...rest } = prev.fieldErrors;
           newState.fieldErrors = rest;
@@ -135,24 +142,24 @@ export function useResetPasswordForm() {
   /**
    * Handles field blur event for validation
    */
-  const handleBlur = useCallback((field: keyof FormState['touched']) => {
+  const handleBlur = useCallback((field: keyof FormState["touched"]) => {
     setState((prev) => {
       const newState = { ...prev, touched: { ...prev.touched, [field]: true } };
 
-      if (field === 'newPassword') {
+      if (field === "newPassword") {
         const strength = evaluatePasswordStrength(prev.newPassword);
         const allRequirementsMet = Object.values(strength.requirements).every(Boolean);
 
         if (!prev.newPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, newPassword: 'Hasło jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, newPassword: "Hasło jest wymagane" };
         } else if (!allRequirementsMet) {
-          newState.fieldErrors = { ...prev.fieldErrors, newPassword: 'Hasło nie spełnia wszystkich wymagań' };
+          newState.fieldErrors = { ...prev.fieldErrors, newPassword: "Hasło nie spełnia wszystkich wymagań" };
         }
-      } else if (field === 'confirmPassword') {
+      } else if (field === "confirmPassword") {
         if (!prev.confirmPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Potwierdzenie hasła jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Potwierdzenie hasła jest wymagane" };
         } else if (prev.confirmPassword !== prev.newPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         }
       }
 
@@ -187,10 +194,10 @@ export function useResetPasswordForm() {
     }));
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           newPassword: state.newPassword,
@@ -198,7 +205,7 @@ export function useResetPasswordForm() {
       });
 
       if (!response.ok) {
-        throw new Error('Nie udało się zmienić hasła');
+        throw new Error("Nie udało się zmienić hasła");
       }
 
       setState((prev) => ({
@@ -206,12 +213,12 @@ export function useResetPasswordForm() {
         isLoading: false,
       }));
 
-      window.location.href = '/login';
+      window.location.href = "/login";
     } catch (error) {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        generalError: error instanceof Error ? error.message : 'Something went wrong',
+        generalError: error instanceof Error ? error.message : "Something went wrong",
       }));
     }
   }, [state.newPassword, state.confirmPassword]);
@@ -252,4 +259,3 @@ export function useResetPasswordForm() {
     isFormValid,
   };
 }
-

@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
-import { MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { FeedbackDialog } from './FeedbackDialog';
-import { FeedbackForm } from './FeedbackForm';
-import type { FeedbackButtonVM } from '@/types';
+import { useState, useCallback } from "react";
+import { MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FeedbackDialog } from "./FeedbackDialog";
+import { FeedbackForm } from "./FeedbackForm";
+import type { FeedbackButtonVM } from "@/types";
 
 interface FeedbackButtonProps {
   isAuthenticated: boolean;
@@ -50,7 +50,7 @@ export function FeedbackButton({ isAuthenticated }: FeedbackButtonProps) {
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
         onClick={handleButtonClick}
         aria-label="Prześlij opinię"
-        title={isAuthenticated ? 'Prześlij opinię' : 'Zaloguj się, aby przesłać opinię'}
+        title={isAuthenticated ? "Prześlij opinię" : "Zaloguj się, aby przesłać opinię"}
       >
         <MessageSquare className="h-6 w-6" />
       </Button>
@@ -59,7 +59,11 @@ export function FeedbackButton({ isAuthenticated }: FeedbackButtonProps) {
       {showLoginPrompt && !isAuthenticated && (
         <div className="fixed bottom-24 right-6 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 shadow-lg max-w-xs animate-in fade-in slide-in-from-bottom-2">
           <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
-            Aby przesłać opinię, musisz się <a href="/login" className="underline hover:no-underline font-semibold">zalogować</a>.
+            Aby przesłać opinię, musisz się{" "}
+            <a href="/login" className="underline hover:no-underline font-semibold">
+              zalogować
+            </a>
+            .
           </p>
         </div>
       )}
@@ -73,4 +77,3 @@ export function FeedbackButton({ isAuthenticated }: FeedbackButtonProps) {
     </>
   );
 }
-

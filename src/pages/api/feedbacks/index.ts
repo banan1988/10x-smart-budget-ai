@@ -1,7 +1,13 @@
-import type { APIRoute } from 'astro';
-import { CreateFeedbackCommandSchema } from '../../../types';
-import { FeedbackService } from '../../../lib/services/feedback.service';
-import { checkAuthentication, checkAdminRole, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { CreateFeedbackCommandSchema } from "../../../types";
+import { FeedbackService } from "../../../lib/services/feedback.service";
+import {
+  checkAuthentication,
+  checkAdminRole,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -38,8 +44,8 @@ export const GET: APIRoute = async (context) => {
     const supabase = locals.supabase!;
 
     // Parse and validate pagination parameters
-    const pageParam = url.searchParams.get('page');
-    const limitParam = url.searchParams.get('limit');
+    const pageParam = url.searchParams.get("page");
+    const limitParam = url.searchParams.get("limit");
 
     const page = pageParam ? Math.max(parseInt(pageParam, 10) || DEFAULT_PAGE, 1) : DEFAULT_PAGE;
     let limit = limitParam ? parseInt(limitParam, 10) || DEFAULT_LIMIT : DEFAULT_LIMIT;
@@ -59,14 +65,17 @@ export const GET: APIRoute = async (context) => {
     const result = await FeedbackService.getAllFeedback(supabase, { page, limit });
 
     // Return success response with pagination
-    return createSuccessResponse({
-      data: result.data,
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-    }, 200);
+    return createSuccessResponse(
+      {
+        data: result.data,
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+      },
+      200
+    );
   } catch (error) {
-    console.error('Error in GET /api/feedbacks:', error);
+    console.error("Error in GET /api/feedbacks:", error);
     return createErrorResponse(error, 500);
   }
 };
@@ -101,13 +110,13 @@ export const POST: APIRoute = async (context) => {
     } catch {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON in request body',
-          message: 'The request body must be valid JSON',
+          error: "Invalid JSON in request body",
+          message: "The request body must be valid JSON",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -121,16 +130,12 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Create feedback using service
-    const feedback = await FeedbackService.createFeedback(
-      supabase,
-      userId,
-      validationResult.data
-    );
+    const feedback = await FeedbackService.createFeedback(supabase, userId, validationResult.data);
 
     // Return success response with created feedback
     return createSuccessResponse(feedback, 201);
   } catch (error) {
-    console.error('Error in POST /api/feedbacks:', error);
+    console.error("Error in POST /api/feedbacks:", error);
     return createErrorResponse(error, 500);
   }
 };

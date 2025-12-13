@@ -1,16 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import FeedbackFilterControls from './admin/FeedbackFilterControls';
-import RatingDistributionChart from './admin/RatingDistributionChart';
-import FeedbacksTable from './admin/FeedbacksTable';
-import MetricCard from './admin/MetricCard';
-import TrendBadge from './admin/TrendBadge';
-import EmptyStateAdmin from './EmptyStateAdmin';
-import {
-  MetricCardSkeleton,
-  ChartSkeleton,
-  FilterSkeleton,
-  TableSkeleton,
-} from './SkeletonsAdmin';
+import React, { useMemo, useState } from "react";
+import FeedbackFilterControls from "./admin/FeedbackFilterControls";
+import RatingDistributionChart from "./admin/RatingDistributionChart";
+import FeedbacksTable from "./admin/FeedbacksTable";
+import MetricCard from "./admin/MetricCard";
+import TrendBadge from "./admin/TrendBadge";
+import EmptyStateAdmin from "./EmptyStateAdmin";
+import { MetricCardSkeleton, ChartSkeleton, FilterSkeleton, TableSkeleton } from "./SkeletonsAdmin";
 import {
   Pagination,
   PaginationContent,
@@ -18,32 +13,20 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from './ui/pagination';
-import { useAdminFeedbacks } from './hooks/useAdminFeedbacks';
-import type { FeedbackFilters } from '../types';
+} from "./ui/pagination";
+import { useAdminFeedbacks } from "./hooks/useAdminFeedbacks";
+import type { FeedbackFilters } from "../types";
 
 interface AdminFeedbacksViewProps {
   initialPage?: number;
 }
 
-export default function AdminFeedbacksView({
-  initialPage = 1,
-}: AdminFeedbacksViewProps) {
-  const {
-    feedbacks,
-    totalCount,
-    page,
-    totalPages,
-    isLoading,
-    error,
-    filters,
-    setPage,
-    setFilters,
-    refetch,
-  } = useAdminFeedbacks({ page: initialPage });
+export default function AdminFeedbacksView({ initialPage = 1 }: AdminFeedbacksViewProps) {
+  const { feedbacks, totalCount, page, totalPages, isLoading, error, filters, setPage, setFilters, refetch } =
+    useAdminFeedbacks({ page: initialPage });
 
-  const [sortField, setSortField] = useState('created_at');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -61,8 +44,7 @@ export default function AdminFeedbacksView({
       };
     }
 
-    const avgRating =
-      feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length;
+    const avgRating = feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length;
 
     // Calculate rating distribution from current page
     const distribution = [
@@ -88,13 +70,13 @@ export default function AdminFeedbacksView({
       let aVal: any = a[sortField as keyof typeof a];
       let bVal: any = b[sortField as keyof typeof b];
 
-      if (typeof aVal === 'string') {
+      if (typeof aVal === "string") {
         aVal = aVal.toLowerCase();
         bVal = (bVal as string).toLowerCase();
       }
 
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
 
@@ -105,7 +87,7 @@ export default function AdminFeedbacksView({
     setFilters(newFilters);
   };
 
-  const handleSort = (field: string, direction: 'asc' | 'desc') => {
+  const handleSort = (field: string, direction: "asc" | "desc") => {
     setSortField(field);
     setSortDirection(direction);
   };
@@ -125,9 +107,7 @@ export default function AdminFeedbacksView({
     return (
       <div className="space-y-6">
         <div className="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950">
-          <h3 className="mb-2 font-semibold text-red-900 dark:text-red-50">
-            Błąd podczas ładowania
-          </h3>
+          <h3 className="mb-2 font-semibold text-red-900 dark:text-red-50">Błąd podczas ładowania</h3>
           <p className="mb-4 text-sm text-red-800 dark:text-red-200">{error}</p>
           <button
             onClick={handleRetry}
@@ -198,27 +178,19 @@ export default function AdminFeedbacksView({
         <MetricCard
           title="Ocena 5 ⭐"
           value={stats.ratingDistribution.find((r) => r.rating === 5)?.count || 0}
-          description={`${Math.round((stats.ratingDistribution.find((r) => r.rating === 5)?.count || 0) / Math.max(totalCount, 1) * 100)}% wszystkich`}
+          description={`${Math.round(((stats.ratingDistribution.find((r) => r.rating === 5)?.count || 0) / Math.max(totalCount, 1)) * 100)}% wszystkich`}
           badge={<TrendBadge direction="neutral" variant="neutral" />}
         />
       </div>
 
       {/* Chart */}
-      {isLoading ? (
-        <ChartSkeleton />
-      ) : (
-        <RatingDistributionChart data={stats.ratingDistribution} isLoading={false} />
-      )}
+      {isLoading ? <ChartSkeleton /> : <RatingDistributionChart data={stats.ratingDistribution} isLoading={false} />}
 
       {/* Filters */}
       {isLoading ? (
         <FilterSkeleton />
       ) : (
-        <FeedbackFilterControls
-          onFilterChange={handleFilterChange}
-          isLoading={isLoading}
-          defaultValues={filters}
-        />
+        <FeedbackFilterControls onFilterChange={handleFilterChange} isLoading={isLoading} defaultValues={filters} />
       )}
 
       {/* Table section */}
@@ -230,7 +202,7 @@ export default function AdminFeedbacksView({
           description="Nie znaleziono feedbacków spełniających wybrane kryteria filtrowania. Spróbuj zmienić filtry."
           icon="🔍"
           action={{
-            label: 'Wyczyść filtry',
+            label: "Wyczyść filtry",
             onClick: () => setFilters({}),
           }}
         />
@@ -257,7 +229,7 @@ export default function AdminFeedbacksView({
                         e.preventDefault();
                         handlePageChange(page - 1);
                       }}
-                      className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+                      className={page === 1 ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
 
@@ -308,9 +280,7 @@ export default function AdminFeedbacksView({
                         e.preventDefault();
                         handlePageChange(page + 1);
                       }}
-                      className={
-                        page === totalPages ? 'pointer-events-none opacity-50' : ''
-                      }
+                      className={page === totalPages ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -320,8 +290,8 @@ export default function AdminFeedbacksView({
 
           {/* Info text */}
           <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-            Wyświetlanie {feedbacks.length > 0 ? (page - 1) * 20 + 1 : 0} -{' '}
-            {Math.min(page * 20, totalCount)} z {totalCount} feedbacków
+            Wyświetlanie {feedbacks.length > 0 ? (page - 1) * 20 + 1 : 0} - {Math.min(page * 20, totalCount)} z{" "}
+            {totalCount} feedbacków
           </div>
         </>
       )}

@@ -1,5 +1,5 @@
-import type { ProfileCardData } from '../types';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import type { ProfileCardData } from "../types";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 /**
  * ProfileCard component - displays user profile information in a card.
@@ -9,10 +9,10 @@ export default function ProfileCard({ email, nickname, registeredAt }: ProfileCa
   // Format the registration date to be more user-friendly
   const formatDate = (isoDate: string): string => {
     const date = new Date(isoDate);
-    return date.toLocaleDateString('pl-PL', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return date.toLocaleDateString("pl-PL", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -42,4 +42,3 @@ export default function ProfileCard({ email, nickname, registeredAt }: ProfileCa
     </Card>
   );
 }
-

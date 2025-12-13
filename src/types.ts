@@ -1,18 +1,18 @@
-import type { Tables, TablesInsert, TablesUpdate } from './db/database.types';
-import { z } from 'zod';
+import type { Tables, TablesInsert, TablesUpdate } from "./db/database.types";
+import { z } from "zod";
 
 /**
  * Constants for transactions and categories
  */
-export const UNCATEGORIZED_CATEGORY_KEY = 'uncategorized';
-export const UNCATEGORIZED_CATEGORY_NAME = 'Do kategoryzacji AI';
+export const UNCATEGORIZED_CATEGORY_KEY = "uncategorized";
+export const UNCATEGORIZED_CATEGORY_NAME = "Do kategoryzacji AI";
 
 /**
  * Response DTO for a category.
  * The `name` is derived from the `translations` JSON object in the database
  * based on the user's locale.
  */
-export type CategoryDto = Pick<Tables<'categories'>, 'id' | 'key'> & {
+export type CategoryDto = Pick<Tables<"categories">, "id" | "key"> & {
   name: string;
 };
 
@@ -24,12 +24,9 @@ export type CategoryDto = Pick<Tables<'categories'>, 'id' | 'key'> & {
  *   - 'pending': Transaction created, waiting for AI categorization in background
  *   - 'completed': Categorization finished (either successful or fallback)
  */
-export type TransactionDto = Omit<
-  Tables<'transactions'>,
-  'category_id' | 'user_id' | 'created_at' | 'updated_at'
-> & {
+export type TransactionDto = Omit<Tables<"transactions">, "category_id" | "user_id" | "created_at" | "updated_at"> & {
   category: CategoryDto | null;
-  categorization_status: 'pending' | 'completed';
+  categorization_status: "pending" | "completed";
 };
 
 /**
@@ -41,10 +38,7 @@ export type TransactionDto = Omit<
  * - `description`: Max 255 characters. Required.
  * - `date`: Must be in `YYYY-MM-DD` format. Required.
  */
-export type CreateTransactionRequest = Pick<
-  TablesInsert<'transactions'>,
-  'type' | 'amount' | 'description' | 'date'
->;
+export type CreateTransactionRequest = Pick<TablesInsert<"transactions">, "type" | "amount" | "description" | "date">;
 
 /**
  * Request body for updating an existing transaction.
@@ -58,7 +52,7 @@ export type CreateTransactionRequest = Pick<
  * - `categoryId`: ID of an existing category. Can be `null`.
  */
 export type UpdateTransactionRequest = Partial<
-  Pick<TablesUpdate<'transactions'>, 'type' | 'amount' | 'description' | 'date'> & {
+  Pick<TablesUpdate<"transactions">, "type" | "amount" | "description" | "date"> & {
     categoryId: number | null;
   }
 >;
@@ -67,29 +61,49 @@ export type UpdateTransactionRequest = Partial<
  * Zod schema for validating GET /api/transactions query parameters
  */
 export const GetTransactionsQuerySchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format').refine((val) => {
-    const [year, month] = val.split('-').map(Number);
-    return month >= 1 && month <= 12;
-  }, {
-    message: 'Month must be between 01 and 12',
-  }),
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
+    .refine(
+      (val) => {
+        const [year, month] = val.split("-").map(Number);
+        return month >= 1 && month <= 12;
+      },
+      {
+        message: "Month must be between 01 and 12",
+      }
+    ),
   // Filtering
-  categoryId: z.string().optional().transform((val) => {
-    if (!val) return undefined;
-    return val.split(',').map(Number).filter(n => !isNaN(n));
-  }),
-  type: z.enum(['income', 'expense']).optional(),
+  categoryId: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined;
+      return val
+        .split(",")
+        .map(Number)
+        .filter((n) => !isNaN(n));
+    }),
+  type: z.enum(["income", "expense"]).optional(),
   search: z.string().max(255).optional(),
   // Pagination
-  page: z.string().optional().default('1').transform((val) => {
-    const num = parseInt(val, 10);
-    return isNaN(num) ? 1 : Math.max(num, 1);
-  }),
-  limit: z.string().optional().default('20').transform((val) => {
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return 20;
-    return Math.min(Math.max(num, 1), 100); // Between 1 and 100
-  }),
+  page: z
+    .string()
+    .optional()
+    .default("1")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      return isNaN(num) ? 1 : Math.max(num, 1);
+    }),
+  limit: z
+    .string()
+    .optional()
+    .default("20")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      if (isNaN(num)) return 20;
+      return Math.min(Math.max(num, 1), 100); // Between 1 and 100
+    }),
 });
 
 export type GetTransactionsQuery = z.infer<typeof GetTransactionsQuerySchema>;
@@ -98,10 +112,10 @@ export type GetTransactionsQuery = z.infer<typeof GetTransactionsQuerySchema>;
  * Zod schema for validating POST /api/transactions request body
  */
 export const CreateTransactionCommandSchema = z.object({
-  type: z.enum(['income', 'expense']),
-  amount: z.number().int().positive('Amount must be a positive integer'),
-  description: z.string().min(1, 'Description is required').max(255, 'Description must not exceed 255 characters'),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+  type: z.enum(["income", "expense"]),
+  amount: z.number().int().positive("Amount must be a positive integer"),
+  description: z.string().min(1, "Description is required").max(255, "Description must not exceed 255 characters"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   categoryId: z.number().int().nullable().optional(),
 });
 
@@ -110,15 +124,24 @@ export type CreateTransactionCommand = z.infer<typeof CreateTransactionCommandSc
 /**
  * Zod schema for validating PUT /api/transactions/[id] request body
  */
-export const UpdateTransactionCommandSchema = z.object({
-  type: z.enum(['income', 'expense']).optional(),
-  amount: z.number().int().positive('Amount must be a positive integer').optional(),
-  description: z.string().min(1, 'Description is required').max(255, 'Description must not exceed 255 characters').optional(),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional(),
-  categoryId: z.number().int().nullable().optional(),
-}).refine((data) => Object.keys(data).length > 0, {
-  message: 'At least one field must be provided for update',
-});
+export const UpdateTransactionCommandSchema = z
+  .object({
+    type: z.enum(["income", "expense"]).optional(),
+    amount: z.number().int().positive("Amount must be a positive integer").optional(),
+    description: z
+      .string()
+      .min(1, "Description is required")
+      .max(255, "Description must not exceed 255 characters")
+      .optional(),
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+      .optional(),
+    categoryId: z.number().int().nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided for update",
+  });
 
 export type UpdateTransactionCommand = z.infer<typeof UpdateTransactionCommandSchema>;
 
@@ -183,22 +206,30 @@ export interface TransactionStatsDto {
  * Zod schema for validating GET /api/transactions/stats query parameters
  */
 export const GetTransactionStatsQuerySchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format').refine((val) => {
-    const [year, month] = val.split('-').map(Number);
-    return month >= 1 && month <= 12;
-  }, {
-    message: 'Month must be between 01 and 12',
-  }),
-  includeAiSummary: z.string().optional().transform((val) => val === 'true'),
+  month: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
+    .refine(
+      (val) => {
+        const [year, month] = val.split("-").map(Number);
+        return month >= 1 && month <= 12;
+      },
+      {
+        message: "Month must be between 01 and 12",
+      }
+    ),
+  includeAiSummary: z
+    .string()
+    .optional()
+    .transform((val) => val === "true"),
 });
 
 export type GetTransactionStatsQuery = z.infer<typeof GetTransactionStatsQuerySchema>;
 
-
 /**
  * Response DTO for the user's profile data.
  */
-export type UserProfileDto = Pick<Tables<'user_profiles'>, 'nickname' | 'preferences'>;
+export type UserProfileDto = Pick<Tables<"user_profiles">, "nickname" | "preferences">;
 
 /**
  * ViewModel for the Profile page.
@@ -218,17 +249,17 @@ export interface ProfilePageVM {
  * - `rating`: Must be an integer between 1 and 5. Required.
  * - `comment`: Max 1000 characters. Optional.
  */
-export type FeedbackRequest = {
+export interface FeedbackRequest {
   rating: number;
   comment: string;
-};
+}
 
 /**
  * Zod schema for validating POST /api/feedbacks request body
  */
 export const CreateFeedbackCommandSchema = z.object({
-  rating: z.number().int().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
-  comment: z.string().max(1000, 'Comment must not exceed 1000 characters').optional().default(''),
+  rating: z.number().int().min(1, "Rating must be at least 1").max(5, "Rating must be at most 5"),
+  comment: z.string().max(1000, "Comment must not exceed 1000 characters").optional().default(""),
 });
 
 export type CreateFeedbackCommand = z.infer<typeof CreateFeedbackCommandSchema>;
@@ -236,9 +267,9 @@ export type CreateFeedbackCommand = z.infer<typeof CreateFeedbackCommandSchema>;
 /**
  * Response DTO for feedback submission.
  */
-export type FeedbackResponse = {
+export interface FeedbackResponse {
   message: string;
-};
+}
 
 /**
  * Form data for feedback form (internal state)
@@ -268,21 +299,21 @@ export interface FeedbackDialogVM {
 /**
  * Response DTO for a single feedback entry.
  */
-export type FeedbackDto = {
+export interface FeedbackDto {
   id: number;
   user_id: string;
   rating: number;
   comment: string | null;
   created_at: string;
-};
+}
 
 /**
  * Response DTO for feedback statistics (average rating and total count).
  */
-export type FeedbackStatsDto = {
+export interface FeedbackStatsDto {
   averageRating: number;
   totalFeedbacks: number;
-};
+}
 
 /**
  * ViewModel for the ProfileCard component.
@@ -312,7 +343,7 @@ export interface ProfileSettingsPageVM {
  * - `rating`: Integer between 1 and 5. Required.
  * - `comment`: Max 1000 characters. Optional.
  */
-export type FeedbackRequest = Pick<TablesInsert<'feedback'>, 'rating' | 'comment'>;
+export type FeedbackRequest = Pick<TablesInsert<"feedback">, "rating" | "comment">;
 
 /**
  * Response DTO for feedback statistics.
@@ -325,7 +356,7 @@ export interface FeedbackStatsDto {
 /**
  * Response DTO for a single feedback entry, intended for admin use.
  */
-export type FeedbackDto = Tables<'feedback'>;
+export type FeedbackDto = Tables<"feedback">;
 
 /**
  * Filter state for feedbacks view (admin)
@@ -357,7 +388,7 @@ export interface AdminFeedbackStatsVM {
   totalFeedbacks: number;
   averageRating: number;
   trend?: {
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
     percentage?: number;
   };
 }
@@ -380,7 +411,7 @@ export interface AdminFeedbacksResponse {
  */
 export interface TransactionVM {
   id: number;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   amount: string; // Formatted amount with currency, e.g., "50,00 zł"
   description: string;
   date: string; // Formatted date, e.g., "15 października 2025"
@@ -388,7 +419,7 @@ export interface TransactionVM {
   categoryName: string;
   categoryKey: string;
   isAiCategorized: boolean;
-  categorizationStatus: 'pending' | 'completed'; // pending: waiting for AI categorization, completed: finished
+  categorizationStatus: "pending" | "completed"; // pending: waiting for AI categorization, completed: finished
 }
 
 /**
@@ -398,7 +429,7 @@ export interface TransactionFilters {
   month: string; // YYYY-MM
   page?: number;
   limit?: number;
-  type?: 'income' | 'expense';
+  type?: "income" | "expense";
   categoryId?: number[];
   search?: string;
 }
@@ -409,7 +440,7 @@ export interface TransactionFilters {
 export interface MetricCardVM {
   title: string; // e.g., "Przychody"
   value: string; // Formatted amount, e.g., "10 000,00 zł"
-  variant?: 'income' | 'expense' | 'balance-positive' | 'balance-negative'; // Color variant
+  variant?: "income" | "expense" | "balance-positive" | "balance-negative"; // Color variant
 }
 
 /**
@@ -508,13 +539,14 @@ export interface ValidationError {
  * - `rating`: Integer between 1 and 5. Required.
  * - `comment`: Max 1000 characters. Optional.
  */
-export type FeedbackRequest = Pick<TablesInsert<'feedback'>, 'rating' | 'comment'>;/**
+export type FeedbackRequest = Pick<TablesInsert<"feedback">, "rating" | "comment">; /**
  * Zod schema for validating PUT /api/user/profile request body
  */
 export const UpdateProfileCommandSchema = z.object({
-  nickname: z.string()
-    .max(50, 'Nickname must not exceed 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-_]*$/, 'Nickname can only contain letters, numbers, spaces, hyphens, and underscores')
+  nickname: z
+    .string()
+    .max(50, "Nickname must not exceed 50 characters")
+    .regex(/^[a-zA-Z0-9\s\-_]*$/, "Nickname can only contain letters, numbers, spaces, hyphens, and underscores")
     .optional()
     .or(z.literal(null)),
 });

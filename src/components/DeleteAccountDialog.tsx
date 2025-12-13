@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,8 +8,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from './ui/alert-dialog';
-import { toast } from 'sonner';
+} from "./ui/alert-dialog";
+import { toast } from "sonner";
 
 interface DeleteAccountDialogProps {
   isOpen: boolean;
@@ -29,41 +29,41 @@ export function DeleteAccountDialog({ isOpen, onOpenChange }: DeleteAccountDialo
     setError(null);
 
     try {
-      const response = await fetch('/api/user', {
-        method: 'DELETE',
-        credentials: 'include',
+      const response = await fetch("/api/user", {
+        method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
         if (response.status === 401) {
-          toast.error('Sesja wygasła. Zaloguj się ponownie.');
-          window.location.href = '/login';
+          toast.error("Sesja wygasła. Zaloguj się ponownie.");
+          window.location.href = "/login";
           return;
         }
 
         const errorData = await response.json();
-        const errorMessage = errorData.message || 'Nie udało się usunąć konta';
+        const errorMessage = errorData.message || "Nie udało się usunąć konta";
         setError(errorMessage);
         toast.error(errorMessage);
         return;
       }
 
       // Successful deletion (204 No Content)
-      toast.success('Konto zostało usunięte');
+      toast.success("Konto zostało usunięte");
 
       // Sign out and redirect to home page
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
       });
 
       // Small delay to show the toast
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = "/";
       }, 1000);
     } catch (err) {
-      console.error('Error deleting account:', err);
-      const errorMessage = 'Błąd połączenia. Sprawdź swoją sieć internetową i spróbuj ponownie.';
+      console.error("Error deleting account:", err);
+      const errorMessage = "Błąd połączenia. Sprawdź swoją sieć internetową i spróbuj ponownie.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -82,16 +82,10 @@ export function DeleteAccountDialog({ isOpen, onOpenChange }: DeleteAccountDialo
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-destructive">
-            Czy na pewno chcesz usunąć konto?
-          </AlertDialogTitle>
+          <AlertDialogTitle className="text-destructive">Czy na pewno chcesz usunąć konto?</AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
-            <p>
-              Ta operacja jest nieodwracalna. Wszystkie Twoje dane zostaną trwale usunięte z naszych serwerów.
-            </p>
-            <p className="font-semibold">
-              Nie będziesz mógł odzyskać swoich transakcji, kategorii ani innych danych.
-            </p>
+            <p>Ta operacja jest nieodwracalna. Wszystkie Twoje dane zostaną trwale usunięte z naszych serwerów.</p>
+            <p className="font-semibold">Nie będziesz mógł odzyskać swoich transakcji, kategorii ani innych danych.</p>
             {error && (
               <p className="text-sm text-destructive" role="alert">
                 Błąd: {error}
@@ -108,11 +102,10 @@ export function DeleteAccountDialog({ isOpen, onOpenChange }: DeleteAccountDialo
             disabled={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? 'Usuwanie...' : 'Usuń konto'}
+            {isDeleting ? "Usuwanie..." : "Usuń konto"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-

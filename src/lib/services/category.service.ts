@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '../../db/supabase.client';
-import type { CategoryDto } from '../../types';
+import type { SupabaseClient } from "../../db/supabase.client";
+import type { CategoryDto } from "../../types";
 
 /**
  * Service for managing categories.
@@ -16,9 +16,7 @@ export class CategoryService {
    */
   static async getGlobalCategories(supabase: SupabaseClient): Promise<CategoryDto[]> {
     // Query the categories table
-    const { data, error } = await supabase
-      .from('categories')
-      .select('id, key, translations');
+    const { data, error } = await supabase.from("categories").select("id, key, translations");
 
     // Handle database errors
     if (error) {
@@ -44,7 +42,7 @@ export class CategoryService {
     });
 
     // Sort by translated name (Polish) instead of key for proper alphabetical order
-    return categories.sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+    return categories.sort((a, b) => a.name.localeCompare(b.name, "pl"));
   }
 
   /**
@@ -57,16 +55,12 @@ export class CategoryService {
    */
   static async getCategoryByKey(supabase: SupabaseClient, key: string): Promise<CategoryDto | null> {
     // Query the categories table
-    const { data, error } = await supabase
-      .from('categories')
-      .select('id, key, translations')
-      .eq('key', key)
-      .single();
+    const { data, error } = await supabase.from("categories").select("id, key, translations").eq("key", key).single();
 
     // Handle database errors
     if (error) {
       // Not found is not an error in this case
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         return null;
       }
       throw new Error(`Failed to fetch category: ${error.message}`);
@@ -88,4 +82,3 @@ export class CategoryService {
     };
   }
 }
-

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
 
 interface LoginFormState {
   email: string;
@@ -18,7 +18,7 @@ interface UseLoginFormReturn {
   state: LoginFormState;
   handleEmailChange: (value: string) => void;
   handlePasswordChange: (value: string) => void;
-  handleBlur: (field: 'email' | 'password') => void;
+  handleBlur: (field: "email" | "password") => void;
   handleSubmit: () => Promise<void>;
   isFormValid: boolean;
 }
@@ -33,10 +33,10 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 function validateEmail(email: string): string | undefined {
   if (!email) {
-    return 'Email jest wymagany';
+    return "Email jest wymagany";
   }
   if (!EMAIL_REGEX.test(email)) {
-    return 'Email jest wymagany i musi być prawidłowy';
+    return "Email jest wymagany i musi być prawidłowy";
   }
   return undefined;
 }
@@ -46,10 +46,10 @@ function validateEmail(email: string): string | undefined {
  */
 function validatePassword(password: string): string | undefined {
   if (!password) {
-    return 'Hasło jest wymagane';
+    return "Hasło jest wymagane";
   }
   if (password.length < 6) {
-    return 'Hasło musi mieć co najmniej 6 znaków';
+    return "Hasło musi mieć co najmniej 6 znaków";
   }
   return undefined;
 }
@@ -59,8 +59,8 @@ function validatePassword(password: string): string | undefined {
  */
 export function useLoginForm(): UseLoginFormReturn {
   const [state, setState] = useState<LoginFormState>({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     isLoading: false,
     touched: {
       email: false,
@@ -95,14 +95,14 @@ export function useLoginForm(): UseLoginFormReturn {
   /**
    * Handle blur event for field validation
    */
-  const handleBlur = useCallback((field: 'email' | 'password') => {
+  const handleBlur = useCallback((field: "email" | "password") => {
     setState((prev) => {
       const newState = { ...prev };
       newState.touched[field] = true;
 
-      if (field === 'email') {
+      if (field === "email") {
         newState.emailError = validateEmail(prev.email);
-      } else if (field === 'password') {
+      } else if (field === "password") {
         newState.passwordError = validatePassword(prev.password);
       }
 
@@ -133,10 +133,10 @@ export function useLoginForm(): UseLoginFormReturn {
     setState((prev) => ({ ...prev, isLoading: true, generalError: undefined }));
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: state.email,
@@ -148,41 +148,41 @@ export function useLoginForm(): UseLoginFormReturn {
 
       if (!response.ok) {
         // Handle specific API errors based on response status
-        let errorMessage = 'Coś poszło nie tak. Spróbuj jeszcze raz.';
-        let fieldError: 'email' | 'password' | 'general' = 'general';
+        let errorMessage = "Coś poszło nie tak. Spróbuj jeszcze raz.";
+        let fieldError: "email" | "password" | "general" = "general";
 
         if (response.status === 401) {
           // Invalid credentials
-          errorMessage = data.error || 'Email lub hasło są nieprawidłowe';
-          fieldError = 'password';
+          errorMessage = data.error || "Email lub hasło są nieprawidłowe";
+          fieldError = "password";
         } else if (response.status === 403) {
           // Email not confirmed
-          errorMessage = data.error || 'Potwierdź swój email przed zalogowaniem';
-          fieldError = 'general';
+          errorMessage = data.error || "Potwierdź swój email przed zalogowaniem";
+          fieldError = "general";
         } else if (response.status === 404) {
           // User not found
-          errorMessage = data.error || 'Użytkownik nie istnieje';
-          fieldError = 'password';
+          errorMessage = data.error || "Użytkownik nie istnieje";
+          fieldError = "password";
         } else if (response.status === 429) {
           // Rate limited
-          errorMessage = data.error || 'Za wiele prób logowania. Spróbuj później.';
-          fieldError = 'general';
+          errorMessage = data.error || "Za wiele prób logowania. Spróbuj później.";
+          fieldError = "general";
         } else if (response.status >= 500) {
           // Server error
-          errorMessage = 'Błąd serwera. Spróbuj później.';
-          fieldError = 'general';
+          errorMessage = "Błąd serwera. Spróbuj później.";
+          fieldError = "general";
         }
 
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          ...(fieldError === 'password' && { passwordError: errorMessage }),
-          ...(fieldError === 'general' && { generalError: errorMessage }),
-          ...(fieldError === 'email' && { emailError: errorMessage }),
+          ...(fieldError === "password" && { passwordError: errorMessage }),
+          ...(fieldError === "general" && { generalError: errorMessage }),
+          ...(fieldError === "email" && { emailError: errorMessage }),
         }));
 
-        if (fieldError === 'password') {
-          setState((prev) => ({ ...prev, password: '' }));
+        if (fieldError === "password") {
+          setState((prev) => ({ ...prev, password: "" }));
         }
 
         toast.error(errorMessage);
@@ -190,18 +190,18 @@ export function useLoginForm(): UseLoginFormReturn {
       }
 
       // Success - show success message and redirect
-      toast.success('Pomyślnie zalogowano');
+      toast.success("Pomyślnie zalogowano");
 
       setState((prev) => ({ ...prev, isLoading: false }));
 
       // Redirect after showing success message
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
       }, 500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Błąd połączenia. Spróbuj jeszcze raz.';
+      const errorMessage = error instanceof Error ? error.message : "Błąd połączenia. Spróbuj jeszcze raz.";
       toast.error(errorMessage);
-      console.error('Login error:', error);
+      console.error("Login error:", error);
 
       setState((prev) => ({
         ...prev,

@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { createSupabaseServerInstance } from '../../../db/supabase.client';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { createSupabaseServerInstance } from "../../../db/supabase.client";
 
 export const prerender = false;
 
@@ -8,7 +8,7 @@ export const prerender = false;
  * Validation schema for forgot password request
  */
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Wprowadź prawidłowy adres email'),
+  email: z.string().email("Wprowadź prawidłowy adres email"),
 });
 
 type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
@@ -17,26 +17,20 @@ type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
  * Error response helper
  */
 function errorResponse(message: string, status: number) {
-  return new Response(
-    JSON.stringify({ error: message }),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
  * Success response helper
  */
-function successResponse(data: any = {}, status: number = 200) {
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+function successResponse(data: any = {}, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
@@ -76,7 +70,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Always return success to prevent user enumeration
     // Even if user doesn't exist, we say we sent the email
     if (error) {
-      console.error('[Forgot Password Error]', {
+      console.error("[Forgot Password Error]", {
         email,
         code: error.code,
         message: error.message,
@@ -85,15 +79,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Return success response (regardless of whether email exists)
     return successResponse({
-      message: 'Jeśli istnieje konto z tym adresem email, wysłaliśmy instrukcje do resetowania hasła',
+      message: "Jeśli istnieje konto z tym adresem email, wysłaliśmy instrukcje do resetowania hasła",
     });
-
   } catch (err) {
-    console.error('[Forgot Password Exception]', err);
+    console.error("[Forgot Password Exception]", err);
     // Even on error, don't reveal if user exists
     return successResponse({
-      message: 'Jeśli istnieje konto z tym adresem email, wysłaliśmy instrukcje do resetowania hasła',
+      message: "Jeśli istnieje konto z tym adresem email, wysłaliśmy instrukcje do resetowania hasła",
     });
   }
 };
-

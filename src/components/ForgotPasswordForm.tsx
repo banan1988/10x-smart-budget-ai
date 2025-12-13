@@ -1,10 +1,10 @@
-import { useState, useId } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useForgotPasswordForm } from '@/components/hooks/useForgotPasswordForm';
+import { useState, useId } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useForgotPasswordForm } from "@/components/hooks/useForgotPasswordForm";
 
 /**
  * Forgot Password Form Component
@@ -28,8 +28,8 @@ export default function ForgotPasswordForm() {
         <CardContent className="space-y-6">
           <Alert variant="default" className="border-emerald-500/30 bg-emerald-50 dark:bg-emerald-950/20">
             <AlertDescription className="text-emerald-700 dark:text-emerald-400">
-              Wysłaliśmy na adres <strong className="font-semibold">{state.email}</strong> instrukcje do resetowania hasła.
-              Kliknij w link zawarty w wiadomości, aby ustawić nowe hasło.
+              Wysłaliśmy na adres <strong className="font-semibold">{state.email}</strong> instrukcje do resetowania
+              hasła. Kliknij w link zawarty w wiadomości, aby ustawić nowe hasło.
             </AlertDescription>
           </Alert>
 
@@ -38,11 +38,7 @@ export default function ForgotPasswordForm() {
               Jeśli nie widzisz wiadomości, sprawdź folder spam lub spróbuj ponownie za kilka minut.
             </p>
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => (window.location.href = '/login')}
-            >
+            <Button variant="outline" className="w-full" onClick={() => (window.location.href = "/login")}>
               Powrót do logowania
             </Button>
           </div>
@@ -55,9 +51,7 @@ export default function ForgotPasswordForm() {
     <Card className="w-full shadow-lg border-slate-200 dark:border-slate-800">
       <CardHeader className="space-y-2">
         <CardTitle className="text-2xl font-bold">Resetowanie hasła</CardTitle>
-        <CardDescription>
-          Podaj swój adres e-mail, a wyślemy Ci instrukcje do zmiany hasła
-        </CardDescription>
+        <CardDescription>Podaj swój adres e-mail, a wyślemy Ci instrukcje do zmiany hasła</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -86,18 +80,14 @@ export default function ForgotPasswordForm() {
               placeholder="twoj.email@example.com"
               value={state.email}
               onChange={(e) => handleEmailChange(e.target.value)}
-              onBlur={() => handleBlur('email')}
+              onBlur={() => handleBlur("email")}
               disabled={state.isLoading}
               aria-invalid={state.touched.email && !!state.fieldErrors.email}
               aria-describedby={state.touched.email && state.fieldErrors.email ? `${emailInputId}-error` : undefined}
               className="w-full"
             />
             {state.touched.email && state.fieldErrors.email && (
-              <p
-                id={`${emailInputId}-error`}
-                className="text-sm font-medium text-destructive"
-                role="alert"
-              >
+              <p id={`${emailInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
                 {state.fieldErrors.email}
               </p>
             )}
@@ -116,14 +106,14 @@ export default function ForgotPasswordForm() {
                 <span>Wysyłanie...</span>
               </div>
             ) : (
-              'Wyślij instrukcje'
+              "Wyślij instrukcje"
             )}
           </Button>
         </form>
 
         {/* Back to login link */}
         <div className="text-center text-sm text-slate-600 dark:text-slate-400">
-          Pamiętasz hasło?{' '}
+          Pamiętasz hasło?{" "}
           <a
             href="/login"
             className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded px-1"
@@ -135,4 +125,3 @@ export default function ForgotPasswordForm() {
     </Card>
   );
 }
-

@@ -1,5 +1,5 @@
-import type { APIRoute } from 'astro';
-import { createSupabaseServerInstance } from '../../../db/supabase.client';
+import type { APIRoute } from "astro";
+import { createSupabaseServerInstance } from "../../../db/supabase.client";
 
 export const prerender = false;
 
@@ -7,26 +7,20 @@ export const prerender = false;
  * Error response helper
  */
 function errorResponse(message: string, status: number) {
-  return new Response(
-    JSON.stringify({ error: message }),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
  * Success response helper
  */
-function successResponse(data: any = {}, status: number = 200) {
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+function successResponse(data: any = {}, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
@@ -45,15 +39,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('[Logout Error]', error);
-      return errorResponse('Nie udało się wylogować', 500);
+      console.error("[Logout Error]", error);
+      return errorResponse("Nie udało się wylogować", 500);
     }
 
     // Return success
-    return successResponse({ message: 'Wylogowano pomyślnie' });
+    return successResponse({ message: "Wylogowano pomyślnie" });
   } catch (err) {
-    console.error('[Logout Exception]', err);
-    return errorResponse('Wewnętrzny błąd serwera', 500);
+    console.error("[Logout Exception]", err);
+    return errorResponse("Wewnętrzny błąd serwera", 500);
   }
 };
-

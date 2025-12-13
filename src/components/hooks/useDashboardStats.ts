@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { DashboardVM, MetricCardVM, CategoryBreakdownVM, DailyBreakdownVM, TransactionStatsDto } from '@/types';
+import { useState, useEffect, useCallback } from "react";
+import type { DashboardVM, MetricCardVM, CategoryBreakdownVM, DailyBreakdownVM, TransactionStatsDto } from "@/types";
 
 interface UseDashboardStatsResult {
   data: DashboardVM | null;
@@ -12,9 +12,9 @@ interface UseDashboardStatsResult {
  * Format amount to Polish currency format
  */
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency: 'PLN',
+  return new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: "PLN",
   }).format(amount / 100);
 }
 
@@ -23,34 +23,33 @@ function formatCurrency(amount: number): string {
  */
 function mapToDashboardVM(dto: TransactionStatsDto): DashboardVM {
   const balanceValue = dto.balance;
-  const balanceSign = balanceValue >= 0 ? '+' : '';
+  const balanceSign = balanceValue >= 0 ? "+" : "";
   const balanceFormatted = `${balanceSign}${formatCurrency(balanceValue)}`;
 
   const metrics: MetricCardVM[] = [
     {
-      title: 'Przychody',
+      title: "Przychody",
       value: formatCurrency(dto.totalIncome),
-      variant: 'income',
+      variant: "income",
     },
     {
-      title: 'Wydatki',
+      title: "Wydatki",
       value: formatCurrency(dto.totalExpenses),
-      variant: 'expense',
+      variant: "expense",
     },
     {
-      title: 'Bilans',
+      title: "Bilans",
       value: balanceFormatted,
-      variant: balanceValue >= 0 ? 'balance-positive' : 'balance-negative',
+      variant: balanceValue >= 0 ? "balance-positive" : "balance-negative",
     },
   ];
 
   // Map category breakdown with percentage
-  const categoryBreakdown: CategoryBreakdownVM[] = dto.categoryBreakdown
-    .map((category) => ({
-      name: category.categoryName,
-      total: category.total / 100, // Convert from cents to PLN for chart
-      percentage: category.percentage,
-    }));
+  const categoryBreakdown: CategoryBreakdownVM[] = dto.categoryBreakdown.map((category) => ({
+    name: category.categoryName,
+    total: category.total / 100, // Convert from cents to PLN for chart
+    percentage: category.percentage,
+  }));
 
   // Map daily breakdown
   const dailyBreakdown: DailyBreakdownVM[] = dto.dailyBreakdown.map((day) => ({
@@ -83,7 +82,7 @@ export function useDashboardStats(month: string): UseDashboardStatsResult {
     try {
       const params = new URLSearchParams({
         month,
-        includeAiSummary: 'true',
+        includeAiSummary: "true",
       });
 
       // Add cache buster param when refetching to ensure fresh data
@@ -92,8 +91,8 @@ export function useDashboardStats(month: string): UseDashboardStatsResult {
       const urlWithTimestamp = `/api/transactions/stats?${params}&_t=${timestamp}`;
 
       const response = await fetch(urlWithTimestamp, {
-        credentials: 'include',
-        cache: 'default', // Respect server Cache-Control headers
+        credentials: "include",
+        cache: "default", // Respect server Cache-Control headers
       });
 
       if (!response.ok) {
@@ -104,7 +103,7 @@ export function useDashboardStats(month: string): UseDashboardStatsResult {
       const viewModel = mapToDashboardVM(dto);
       setData(viewModel);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+      setError(err instanceof Error ? err : new Error("Unknown error occurred"));
       setData(null);
     } finally {
       setIsLoading(false);
@@ -126,4 +125,3 @@ export function useDashboardStats(month: string): UseDashboardStatsResult {
     refetch,
   };
 }
-

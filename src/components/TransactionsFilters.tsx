@@ -1,30 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
-import type { TransactionFilters, CategoryDto } from '@/types';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
+import type { TransactionFilters, CategoryDto } from "@/types";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface TransactionsFiltersProps {
   filters: TransactionFilters;
@@ -35,10 +18,7 @@ interface TransactionsFiltersProps {
  * Component for filtering transactions
  * Includes search, type, category, and month filters
  */
-export function TransactionsFilters({
-  filters,
-  onFiltersChange,
-}: TransactionsFiltersProps) {
+export function TransactionsFilters({ filters, onFiltersChange }: TransactionsFiltersProps) {
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -47,15 +27,15 @@ export function TransactionsFilters({
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories', {
-          credentials: 'include',
+        const response = await fetch("/api/categories", {
+          credentials: "include",
         });
         if (response.ok) {
           const data = await response.json();
           setCategories(data);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
       } finally {
         setIsLoadingCategories(false);
       }
@@ -75,7 +55,7 @@ export function TransactionsFilters({
   const handleTypeChange = (value: string) => {
     onFiltersChange({
       ...filters,
-      type: value === 'all' ? undefined : (value as 'income' | 'expense'),
+      type: value === "all" ? undefined : (value as "income" | "expense"),
       page: 1,
     });
   };
@@ -112,9 +92,7 @@ export function TransactionsFilters({
     });
   };
 
-  const selectedCategories = categories.filter((cat) =>
-    filters.categoryId?.includes(cat.id)
-  );
+  const selectedCategories = categories.filter((cat) => filters.categoryId?.includes(cat.id));
 
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-card">
@@ -130,7 +108,7 @@ export function TransactionsFilters({
               id="search"
               placeholder="Opis transakcji..."
               className="pl-8"
-              value={filters.search || ''}
+              value={filters.search || ""}
               onChange={handleSearchChange}
             />
           </div>
@@ -139,21 +117,13 @@ export function TransactionsFilters({
         {/* Month */}
         <div className="space-y-2">
           <Label htmlFor="month">Miesiąc</Label>
-          <Input
-            id="month"
-            type="month"
-            value={filters.month}
-            onChange={handleMonthChange}
-          />
+          <Input id="month" type="month" value={filters.month} onChange={handleMonthChange} />
         </div>
 
         {/* Type */}
         <div className="space-y-2">
           <Label htmlFor="type">Typ</Label>
-          <Select
-            value={filters.type || 'all'}
-            onValueChange={handleTypeChange}
-          >
+          <Select value={filters.type || "all"} onValueChange={handleTypeChange}>
             <SelectTrigger id="type">
               <SelectValue placeholder="Wszystkie" />
             </SelectTrigger>
@@ -176,32 +146,21 @@ export function TransactionsFilters({
                 aria-expanded={isCategoryOpen}
                 className="w-full justify-between"
               >
-                {selectedCategories.length > 0
-                  ? `Wybrano: ${selectedCategories.length}`
-                  : 'Wybierz kategorie'}
+                {selectedCategories.length > 0 ? `Wybrano: ${selectedCategories.length}` : "Wybierz kategorie"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0" align="start">
               <Command>
                 <CommandInput placeholder="Szukaj kategorii..." />
                 <CommandList>
-                  <CommandEmpty>
-                    {isLoadingCategories
-                      ? 'Ładowanie...'
-                      : 'Nie znaleziono kategorii'}
-                  </CommandEmpty>
+                  <CommandEmpty>{isLoadingCategories ? "Ładowanie..." : "Nie znaleziono kategorii"}</CommandEmpty>
                   <CommandGroup>
                     {categories.map((category) => (
-                      <CommandItem
-                        key={category.id}
-                        onSelect={() => handleCategoryToggle(category.id)}
-                      >
+                      <CommandItem key={category.id} onSelect={() => handleCategoryToggle(category.id)}>
                         <div className="flex items-center gap-2 w-full">
                           <div
                             className={`h-4 w-4 border rounded ${
-                              filters.categoryId?.includes(category.id)
-                                ? 'bg-primary border-primary'
-                                : 'border-input'
+                              filters.categoryId?.includes(category.id) ? "bg-primary border-primary" : "border-input"
                             }`}
                           />
                           <span>{category.name}</span>
@@ -220,11 +179,7 @@ export function TransactionsFilters({
       {selectedCategories.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedCategories.map((category) => (
-            <Badge
-              key={category.id}
-              variant="secondary"
-              className="gap-1"
-            >
+            <Badge key={category.id} variant="secondary" className="gap-1">
               {category.name}
               <button
                 type="button"
@@ -241,4 +196,3 @@ export function TransactionsFilters({
     </div>
   );
 }
-

@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { AlertCircle } from 'lucide-react';
+import React, { useState, useCallback } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { AlertCircle } from "lucide-react";
 
 interface DateRange {
   startDate: string;
@@ -17,23 +17,23 @@ interface DateRangeFilterProps {
 }
 
 const PRESET_OPTIONS = [
-  { label: 'Ostatnie 7 dni', days: 7 },
-  { label: 'Ostatnie 30 dni', days: 30 },
-  { label: 'Ostatnie 90 dni', days: 90 },
+  { label: "Ostatnie 7 dni", days: 7 },
+  { label: "Ostatnie 30 dni", days: 30 },
+  { label: "Ostatnie 90 dni", days: 90 },
 ];
 
 /**
  * Get date string in YYYY-MM-DD format
  */
 function formatDateToString(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 }
 
 /**
  * Parse date string in YYYY-MM-DD format
  */
 function parseDateString(dateStr: string): Date {
-  const [year, month, day] = dateStr.split('-').map(Number);
+  const [year, month, day] = dateStr.split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 
@@ -42,7 +42,7 @@ function parseDateString(dateStr: string): Date {
  */
 function isValidDate(dateStr: string): { valid: boolean; message?: string } {
   if (!dateStr) {
-    return { valid: false, message: 'Data jest wymagana' };
+    return { valid: false, message: "Data jest wymagana" };
   }
 
   const date = parseDateString(dateStr);
@@ -50,7 +50,7 @@ function isValidDate(dateStr: string): { valid: boolean; message?: string } {
   today.setHours(0, 0, 0, 0);
 
   if (date > today) {
-    return { valid: false, message: 'Data nie może być w przyszłości' };
+    return { valid: false, message: "Data nie może być w przyszłości" };
   }
 
   return { valid: true };
@@ -92,18 +92,18 @@ export default function DateRangeFilter({
     const endValidation = isValidDate(endDate);
 
     if (!startValidation.valid) {
-      setError(startValidation.message || 'Data początkowa jest nieprawidłowa');
+      setError(startValidation.message || "Data początkowa jest nieprawidłowa");
       return;
     }
 
     if (!endValidation.valid) {
-      setError(endValidation.message || 'Data końcowa jest nieprawidłowa');
+      setError(endValidation.message || "Data końcowa jest nieprawidłowa");
       return;
     }
 
     // Check if start date is before end date
     if (startDate > endDate) {
-      setError('Data początkowa nie może być po dacie końcowej');
+      setError("Data początkowa nie może być po dacie końcowej");
       return;
     }
 
@@ -125,27 +125,28 @@ export default function DateRangeFilter({
   /**
    * Handle preset option selection
    */
-  const handlePreset = useCallback((days: number) => {
-    const endDate = new Date();
-    const startDate = new Date(endDate);
-    startDate.setDate(startDate.getDate() - days);
+  const handlePreset = useCallback(
+    (days: number) => {
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - days);
 
-    const newRange = {
-      startDate: formatDateToString(startDate),
-      endDate: formatDateToString(endDate),
-    };
+      const newRange = {
+        startDate: formatDateToString(startDate),
+        endDate: formatDateToString(endDate),
+      };
 
-    setStartDate(newRange.startDate);
-    setEndDate(newRange.endDate);
-    setError(null);
-    onDateRangeChange(newRange);
-  }, [onDateRangeChange]);
+      setStartDate(newRange.startDate);
+      setEndDate(newRange.endDate);
+      setError(null);
+      onDateRangeChange(newRange);
+    },
+    [onDateRangeChange]
+  );
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-950">
-      <Label className="block text-sm font-semibold text-gray-900 dark:text-white">
-        Zakres dat
-      </Label>
+      <Label className="block text-sm font-semibold text-gray-900 dark:text-white">Zakres dat</Label>
 
       {/* Date Inputs */}
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -189,9 +190,7 @@ export default function DateRangeFilter({
       {/* Preset Buttons */}
       {showPresets && (
         <div className="mt-4">
-          <Label className="text-sm text-gray-700 dark:text-gray-300">
-            Szybkie opcje
-          </Label>
+          <Label className="text-sm text-gray-700 dark:text-gray-300">Szybkie opcje</Label>
           <div className="mt-2 flex flex-wrap gap-2">
             {PRESET_OPTIONS.map((preset) => (
               <Button
@@ -211,23 +210,13 @@ export default function DateRangeFilter({
 
       {/* Action Buttons */}
       <div className="mt-6 flex gap-3">
-        <Button
-          onClick={handleApply}
-          disabled={isLoading}
-          className="flex-1"
-        >
-          {isLoading ? 'Ładowanie...' : 'Zastosuj'}
+        <Button onClick={handleApply} disabled={isLoading} className="flex-1">
+          {isLoading ? "Ładowanie..." : "Zastosuj"}
         </Button>
-        <Button
-          onClick={handleReset}
-          variant="outline"
-          disabled={isLoading}
-          className="flex-1"
-        >
+        <Button onClick={handleReset} variant="outline" disabled={isLoading} className="flex-1">
           Resetuj
         </Button>
       </div>
     </div>
   );
 }
-

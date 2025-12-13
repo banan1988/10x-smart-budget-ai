@@ -1,14 +1,27 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import LoginForm from '@/components/LoginForm';
+import Layout from "@/layouts/Layout.astro";
+import LoginForm from "@/components/LoginForm";
 ---
 
-<Layout title="Logowanie - SmartBudgetAI" description="Zaloguj się do swojego konta SmartBudgetAI aby zarządzać swoimi finansami.">
-  <main class="min-h-screen flex items-start justify-center pt-12 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 relative overflow-hidden">
+<Layout
+  title="Logowanie - SmartBudgetAI"
+  description="Zaloguj się do swojego konta SmartBudgetAI aby zarządzać swoimi finansami."
+>
+  <main
+    class="min-h-screen flex items-start justify-center pt-12 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 relative overflow-hidden"
+  >
     <!-- Decorative background elements -->
-    <div class="absolute top-10 right-10 w-32 h-32 bg-blue-100 dark:bg-blue-900/20 rounded-full blur-3xl opacity-40 animate-pulse"></div>
-    <div class="absolute bottom-20 left-10 w-40 h-40 bg-emerald-100 dark:bg-emerald-900/20 rounded-full blur-3xl opacity-40 animate-pulse" style="animation-delay: 1s"></div>
-    <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-amber-100 dark:bg-amber-900/20 rounded-full blur-2xl opacity-30"></div>
+    <div
+      class="absolute top-10 right-10 w-32 h-32 bg-blue-100 dark:bg-blue-900/20 rounded-full blur-3xl opacity-40 animate-pulse"
+    >
+    </div>
+    <div
+      class="absolute bottom-20 left-10 w-40 h-40 bg-emerald-100 dark:bg-emerald-900/20 rounded-full blur-3xl opacity-40 animate-pulse"
+      style="animation-delay: 1s"
+    >
+    </div>
+    <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-amber-100 dark:bg-amber-900/20 rounded-full blur-2xl opacity-30">
+    </div>
 
     <div class="w-full max-w-md relative z-10 mx-auto">
       <!-- Logo section -->
@@ -16,7 +29,9 @@ import LoginForm from '@/components/LoginForm';
         <!-- Main logo with decorative icons -->
         <div class="relative mb-6">
           <!-- Center logo -->
-          <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+          <div
+            class="w-20 h-20 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg"
+          >
             <svg
               class="w-12 h-12 text-white"
               xmlns="http://www.w3.org/2000/svg"
@@ -34,16 +49,40 @@ import LoginForm from '@/components/LoginForm';
           </div>
 
           <!-- Decorative floating icons around logo -->
-          <div class="absolute -top-6 -right-6 w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center animate-bounce" style="animation-delay: 0s">
-            <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div
+            class="absolute -top-6 -right-6 w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center animate-bounce"
+            style="animation-delay: 0s"
+          >
+            <svg
+              class="w-6 h-6 text-emerald-600 dark:text-emerald-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <!-- Trending up icon (savings) -->
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 17"></polyline>
               <polyline points="17 6 23 6 23 12"></polyline>
             </svg>
           </div>
 
-          <div class="absolute -bottom-6 -left-6 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center animate-bounce" style="animation-delay: 0.3s">
-            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div
+            class="absolute -bottom-6 -left-6 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center animate-bounce"
+            style="animation-delay: 0.3s"
+          >
+            <svg
+              class="w-6 h-6 text-blue-600 dark:text-blue-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <!-- Pie chart icon -->
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M12 2v10"></path>
@@ -51,8 +90,20 @@ import LoginForm from '@/components/LoginForm';
             </svg>
           </div>
 
-          <div class="absolute -bottom-6 -right-6 w-11 h-11 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center animate-bounce" style="animation-delay: 0.6s">
-            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div
+            class="absolute -bottom-6 -right-6 w-11 h-11 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center animate-bounce"
+            style="animation-delay: 0.6s"
+          >
+            <svg
+              class="w-5 h-5 text-amber-600 dark:text-amber-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <!-- Smile icon (happy person) -->
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
@@ -61,16 +112,32 @@ import LoginForm from '@/components/LoginForm';
             </svg>
           </div>
 
-          <div class="absolute -top-6 -left-6 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center animate-bounce" style="animation-delay: 0.9s">
-            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div
+            class="absolute -top-6 -left-6 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center animate-bounce"
+            style="animation-delay: 0.9s"
+          >
+            <svg
+              class="w-6 h-6 text-purple-600 dark:text-purple-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <!-- Brain/AI icon - stylized brain -->
-              <path d="M9.5 2A6.5 6.5 0 0 0 3 8.5V18a6 6 0 0 0 6 6h6a6 6 0 0 0 6-6V8.5A6.5 6.5 0 0 0 14.5 2M9 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2M15 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2"></path>
+              <path
+                d="M9.5 2A6.5 6.5 0 0 0 3 8.5V18a6 6 0 0 0 6 6h6a6 6 0 0 0 6-6V8.5A6.5 6.5 0 0 0 14.5 2M9 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2M15 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2"
+              ></path>
             </svg>
           </div>
         </div>
 
         <!-- App title and subtitle -->
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400 bg-clip-text text-transparent mb-1">
+        <h1
+          class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400 bg-clip-text text-transparent mb-1"
+        >
           SmartBudgetAI
         </h1>
         <p class="text-sm text-slate-600 dark:text-slate-400 text-center mb-4">
@@ -86,7 +153,8 @@ import LoginForm from '@/components/LoginForm';
 
 <style>
   @keyframes bounce {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0);
     }
     50% {
@@ -98,4 +166,3 @@ import LoginForm from '@/components/LoginForm';
     animation: bounce 2s infinite;
   }
 </style>
-

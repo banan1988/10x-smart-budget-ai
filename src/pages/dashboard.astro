@@ -1,15 +1,15 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import { DashboardView } from '@/components/DashboardView';
-import { AppHeader } from '@/components/AppHeader';
-import { AppFooter } from '@/components/AppFooter';
-import { AppSidebar } from '@/components/AppSidebar';
-import { MobileNav } from '@/components/MobileNav';
+import Layout from "@/layouts/Layout.astro";
+import { DashboardView } from "@/components/DashboardView";
+import { AppHeader } from "@/components/AppHeader";
+import { AppFooter } from "@/components/AppFooter";
+import { AppSidebar } from "@/components/AppSidebar";
+import { MobileNav } from "@/components/MobileNav";
 
 // This page requires authentication - middleware will handle redirect
 
 // Set cache headers - don't cache HTML page on client, but API will handle data caching
-Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+Astro.response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 ---
 
 <Layout title="Pulpit - SmartBudgetAI">
@@ -43,10 +43,10 @@ Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate
   <script>
     // Adjust main content padding based on sidebar state
     function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
-      const mainContent = document.getElementById('main-content');
+      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
+      const mainContent = document.getElementById("main-content");
       if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
       }
     }
 
@@ -54,12 +54,11 @@ Astro.response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate
     updateMainContentPadding();
 
     // Listen for sidebar toggle
-    window.addEventListener('toggle-sidebar', () => {
+    window.addEventListener("toggle-sidebar", () => {
       setTimeout(updateMainContentPadding, 50);
     });
 
     // Listen for resize
-    window.addEventListener('resize', updateMainContentPadding);
+    window.addEventListener("resize", updateMainContentPadding);
   </script>
 </Layout>
-

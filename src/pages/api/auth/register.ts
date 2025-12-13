@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { createSupabaseServerInstance } from '../../../db/supabase.client';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { createSupabaseServerInstance } from "../../../db/supabase.client";
 
 export const prerender = false;
 
@@ -8,8 +8,8 @@ export const prerender = false;
  * Validation schema for register request
  */
 const registerSchema = z.object({
-  email: z.string().email('Wprowadź prawidłowy adres email'),
-  password: z.string().min(8, 'Hasło musi mieć co najmniej 8 znaków'),
+  email: z.string().email("Wprowadź prawidłowy adres email"),
+  password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
 });
 
 type RegisterRequest = z.infer<typeof registerSchema>;
@@ -24,7 +24,7 @@ function errorResponse(message: string, status: number) {
     }),
     {
       status,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
     }
   );
 }
@@ -32,14 +32,11 @@ function errorResponse(message: string, status: number) {
 /**
  * Success response helper
  */
-function successResponse(data: any, status: number = 201) {
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+function successResponse(data: any, status = 201) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
@@ -76,39 +73,40 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Handle Supabase auth errors
     if (error) {
-      console.error('[Register Error]', {
+      console.error("[Register Error]", {
         email,
         code: error.code,
         message: error.message,
       });
 
       // Return user-friendly error messages
-      if (error.code === 'user_already_exists' || error.message?.includes('already registered')) {
-        return errorResponse('Ten adres email jest już zarejestrowany', 409);
+      if (error.code === "user_already_exists" || error.message?.includes("already registered")) {
+        return errorResponse("Ten adres email jest już zarejestrowany", 409);
       }
 
-      if (error.message?.includes('Password')) {
-        return errorResponse('Hasło nie spełnia wymagań', 400);
+      if (error.message?.includes("Password")) {
+        return errorResponse("Hasło nie spełnia wymagań", 400);
       }
 
       // Generic error for other cases
-      return errorResponse('Nie udało się zarejestrować. Spróbuj ponownie później.', 500);
+      return errorResponse("Nie udało się zarejestrować. Spróbuj ponownie później.", 500);
     }
 
     // Success - return user data
     // NOTE: In production with email sending enabled, user would need to verify email
     // For local Supabase setup without email sending, the account is created and ready to use
-    return successResponse({
-      user: {
-        id: data.user?.id,
-        email: data.user?.email,
+    return successResponse(
+      {
+        user: {
+          id: data.user?.id,
+          email: data.user?.email,
+        },
+        message: "Konto zostało utworzone pomyślnie! Możesz teraz się zalogować.",
       },
-      message: 'Konto zostało utworzone pomyślnie! Możesz teraz się zalogować.',
-    }, 201);
-
+      201
+    );
   } catch (err) {
-    console.error('[Register Exception]', err);
-    return errorResponse('Wewnętrzny błąd serwera', 500);
+    console.error("[Register Exception]", err);
+    return errorResponse("Wewnętrzny błąd serwera", 500);
   }
 };
-

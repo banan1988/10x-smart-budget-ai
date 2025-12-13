@@ -1,7 +1,7 @@
 // filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/ai-categorization.service.ts
-import { OpenRouterService } from './openrouter.service';
-import { CategoryService } from './category.service';
-import type { SupabaseClient } from '../../db/supabase.client';
+import { OpenRouterService } from "./openrouter.service";
+import { CategoryService } from "./category.service";
+import type { SupabaseClient } from "../../db/supabase.client";
 
 /**
  * Result of AI categorization including category key, confidence, and reasoning.
@@ -12,7 +12,6 @@ export interface CategorizationResult {
   reasoning: string;
 }
 
-
 /**
  * Creates JSON schema for the expected AI response format.
  * Uses strict schema to enforce exact response structure with enum for categoryKey.
@@ -21,27 +20,27 @@ export interface CategorizationResult {
  * @returns JSON schema object
  */
 const createCategoryResponseSchema = (validCategories: string[]) => ({
-  type: 'object',
+  type: "object",
   properties: {
     categoryKey: {
-      type: 'string',
+      type: "string",
       enum: validCategories,
-      description: 'The suggested category key for the transaction',
+      description: "The suggested category key for the transaction",
     },
     confidence: {
-      type: 'number',
+      type: "number",
       minimum: 0,
       maximum: 1,
-      description: 'A confidence score between 0 and 1 indicating how certain the model is about the categorization',
+      description: "A confidence score between 0 and 1 indicating how certain the model is about the categorization",
     },
     reasoning: {
-      type: 'string',
+      type: "string",
       minLength: 1,
       maxLength: 200,
-      description: 'A brief explanation (max 200 chars) of why this category was chosen',
+      description: "A brief explanation (max 200 chars) of why this category was chosen",
     },
   },
-  required: ['categoryKey', 'confidence', 'reasoning'],
+  required: ["categoryKey", "confidence", "reasoning"],
   additionalProperties: false,
 });
 
@@ -51,10 +50,8 @@ const createCategoryResponseSchema = (validCategories: string[]) => ({
  * @param categories - Array of category objects with key and name
  * @returns System prompt string
  */
-const createSystemPrompt = (categories: Array<{ key: string; name: string }>) => {
-  const categoryList = categories
-    .map(cat => `- ${cat.key}: ${cat.name}`)
-    .join('\n');
+const createSystemPrompt = (categories: { key: string; name: string }[]) => {
+  const categoryList = categories.map((cat) => `- ${cat.key}: ${cat.name}`).join("\n");
 
   return `You are an expert in personal finance categorization. Your task is to analyze transaction descriptions and categorize them into appropriate spending categories.
 
@@ -131,7 +128,7 @@ export class AiCategorizationService {
   /**
    * Cached categories from database to avoid repeated queries.
    */
-  private categoriesCache: Array<{ key: string; name: string }> | null = null;
+  private categoriesCache: { key: string; name: string }[] | null = null;
 
   constructor(supabase: SupabaseClient) {
     this.openRouterService = new OpenRouterService();
@@ -143,21 +140,21 @@ export class AiCategorizationService {
 
     // Parse fallback models from env (comma-separated)
     const envModels = fallbackModelsEnv
-      ? fallbackModelsEnv.split(',').map((m: string) => m.trim()).filter(Boolean)
+      ? fallbackModelsEnv
+          .split(",")
+          .map((m: string) => m.trim())
+          .filter(Boolean)
       : [];
 
     // Default free models
     const defaultFreeModels = [
-      'google/gemini-2.0-flash-exp:free',
-      'meta-llama/llama-3.2-3b-instruct:free',
-      'meta-llama/llama-3.2-1b-instruct:free',
+      "google/gemini-2.0-flash-exp:free",
+      "meta-llama/llama-3.2-3b-instruct:free",
+      "meta-llama/llama-3.2-1b-instruct:free",
     ];
 
     // Default paid models
-    const defaultPaidModels = [
-      'openai/gpt-4o-mini',
-      'anthropic/claude-3-haiku',
-    ];
+    const defaultPaidModels = ["openai/gpt-4o-mini", "anthropic/claude-3-haiku"];
 
     // Build final list: custom model + env models + default models
     const allModels: string[] = [];
@@ -182,13 +179,13 @@ export class AiCategorizationService {
    * @returns Promise resolving to array of categories with key and name
    * @throws Error if database query fails
    */
-  private async getCategories(): Promise<Array<{ key: string; name: string }>> {
+  private async getCategories(): Promise<{ key: string; name: string }[]> {
     if (this.categoriesCache) {
       return this.categoriesCache;
     }
 
     const categories = await CategoryService.getGlobalCategories(this.supabase);
-    this.categoriesCache = categories.map(cat => ({
+    this.categoriesCache = categories.map((cat) => ({
       key: cat.key,
       name: cat.name,
     }));
@@ -223,33 +220,31 @@ export class AiCategorizationService {
     // Validate input
     if (!description || description.trim().length === 0) {
       return {
-        categoryKey: 'other',
+        categoryKey: "other",
         confidence: 0,
-        reasoning: 'No description provided',
+        reasoning: "No description provided",
       };
     }
 
     // Load categories from database
-    let categories: Array<{ key: string; name: string }>;
+    let categories: { key: string; name: string }[];
     try {
       categories = await this.getCategories();
     } catch (error) {
-      console.error('Failed to load categories from database:', error);
+      console.error("Failed to load categories from database:", error);
       // Fallback to 'other' if we can't load categories
       return {
-        categoryKey: 'other',
+        categoryKey: "other",
         confidence: 0,
-        reasoning: 'Categories unavailable',
+        reasoning: "Categories unavailable",
       };
     }
 
     // Truncate very long descriptions to avoid excessive token usage
-    const truncatedDescription = description.length > 500
-      ? description.substring(0, 500) + '...'
-      : description;
+    const truncatedDescription = description.length > 500 ? description.substring(0, 500) + "..." : description;
 
     // Try each model in fallback order until one succeeds
-    const errors: Array<{ model: string; error: string }> = [];
+    const errors: { model: string; error: string }[] = [];
 
     for (const model of this.FALLBACK_MODELS) {
       try {
@@ -260,17 +255,18 @@ export class AiCategorizationService {
         // Success! Log which model worked and return
         console.log(`✓ Successfully categorized with model: ${model}`);
         return result;
-
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.warn(`✗ Model ${model} failed:`, errorMessage);
 
         errors.push({ model, error: errorMessage });
 
         // Check if it's a rate limit / credit issue - try next model immediately
-        if (errorMessage.includes('rate limit') ||
-            errorMessage.includes('insufficient_quota') ||
-            errorMessage.includes('402')) {
+        if (
+          errorMessage.includes("rate limit") ||
+          errorMessage.includes("insufficient_quota") ||
+          errorMessage.includes("402")
+        ) {
           console.log(`→ Trying next fallback model due to quota/rate limit...`);
           continue;
         }
@@ -282,9 +278,9 @@ export class AiCategorizationService {
     }
 
     // All models failed - return fallback
-    console.error('All AI models failed for categorization:', errors);
+    console.error("All AI models failed for categorization:", errors);
     return {
-      categoryKey: 'other',
+      categoryKey: "other",
       confidence: 0,
       reasoning: `AI categorization unavailable. Tried ${errors.length} model(s).`,
     };
@@ -304,15 +300,15 @@ export class AiCategorizationService {
   private async categorizeWithModel(
     model: string,
     description: string,
-    categories: Array<{ key: string; name: string }>
+    categories: { key: string; name: string }[]
   ): Promise<CategorizationResult> {
     // Extract category keys for validation
-    const validCategoryKeys = categories.map(cat => cat.key);
+    const validCategoryKeys = categories.map((cat) => cat.key);
 
     // Build the user prompt - keep it concise
     const userPrompt = `Categorize this transaction: "${description}"
 
-Available categories: ${validCategoryKeys.join(', ')}
+Available categories: ${validCategoryKeys.join(", ")}
 
 Provide:
 - categoryKey: exact category name from the list
@@ -330,9 +326,9 @@ Provide:
         systemPrompt,
         userPrompt,
         responseFormat: {
-          type: 'json_schema',
+          type: "json_schema",
           json_schema: {
-            name: 'transaction_category',
+            name: "transaction_category",
             strict: true,
             schema: categorySchema,
           },
@@ -343,12 +339,14 @@ Provide:
 
       return this.validateAndNormalizeResult(result, validCategoryKeys);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '';
+      const errorMessage = error instanceof Error ? error.message : "";
 
       // If json_schema strict mode is not supported, try with json_object
-      if (errorMessage.includes('not supported') ||
-          errorMessage.includes('json_schema') ||
-          errorMessage.includes('strict')) {
+      if (
+        errorMessage.includes("not supported") ||
+        errorMessage.includes("json_schema") ||
+        errorMessage.includes("strict")
+      ) {
         console.log(`Model ${model} doesn't support json_schema strict mode, falling back to json_object`);
 
         const result = await this.openRouterService.getChatCompletion<CategorizationResult>({
@@ -356,7 +354,7 @@ Provide:
           systemPrompt,
           userPrompt,
           responseFormat: {
-            type: 'json_object',
+            type: "json_object",
           },
           temperature: this.TEMPERATURE,
           maxTokens: this.MAX_TOKENS,
@@ -381,41 +379,40 @@ Provide:
    */
   private validateAndNormalizeResult(result: any, validCategoryKeys: string[]): CategorizationResult {
     // Validate basic structure
-    if (!result || typeof result !== 'object') {
-      throw new Error('Invalid response: not an object');
+    if (!result || typeof result !== "object") {
+      throw new Error("Invalid response: not an object");
     }
 
-    if (!result.categoryKey || typeof result.categoryKey !== 'string') {
-      throw new Error('Invalid response: missing or invalid categoryKey');
+    if (!result.categoryKey || typeof result.categoryKey !== "string") {
+      throw new Error("Invalid response: missing or invalid categoryKey");
     }
 
     // Handle confidence as either string or number (for json_object mode)
     let confidence: number;
-    if (typeof result.confidence === 'string') {
+    if (typeof result.confidence === "string") {
       confidence = parseFloat(result.confidence);
       if (isNaN(confidence)) {
-        throw new Error('Invalid response: confidence is not a valid number');
+        throw new Error("Invalid response: confidence is not a valid number");
       }
-    } else if (typeof result.confidence === 'number') {
+    } else if (typeof result.confidence === "number") {
       confidence = result.confidence;
     } else {
-      throw new Error('Invalid response: missing or invalid confidence');
+      throw new Error("Invalid response: missing or invalid confidence");
     }
 
     // Ensure confidence is within valid range
     confidence = Math.max(0, Math.min(1, confidence));
 
     // Handle reasoning - provide default if missing or empty (for json_object mode)
-    const reasoning = result.reasoning &&
-                      typeof result.reasoning === 'string' &&
-                      result.reasoning.trim().length > 0
-      ? result.reasoning.trim()
-      : 'AI categorization completed';
+    const reasoning =
+      result.reasoning && typeof result.reasoning === "string" && result.reasoning.trim().length > 0
+        ? result.reasoning.trim()
+        : "AI categorization completed";
 
     // Check confidence threshold
     if (confidence < this.MIN_CONFIDENCE_THRESHOLD) {
       return {
-        categoryKey: 'other',
+        categoryKey: "other",
         confidence,
         reasoning: `Low confidence (${confidence.toFixed(2)}): ${reasoning}`,
       };
@@ -425,7 +422,7 @@ Provide:
     if (!validCategoryKeys.includes(result.categoryKey)) {
       console.warn(`AI returned unexpected category: ${result.categoryKey}`);
       return {
-        categoryKey: 'other',
+        categoryKey: "other",
         confidence,
         reasoning: `Invalid category "${result.categoryKey}": ${reasoning}`,
       };
@@ -467,4 +464,3 @@ Provide:
     return results;
   }
 }
-

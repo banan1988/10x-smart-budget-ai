@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, expectTypeOf } from 'vitest';
-import { CategoryService } from './category.service';
-import { createMockSupabaseClient, createMockCategoryData } from '../../test/mocks/supabase.mock';
+import { describe, it, expect, vi, expectTypeOf } from "vitest";
+import { CategoryService } from "./category.service";
+import { createMockSupabaseClient, createMockCategoryData } from "../../test/mocks/supabase.mock";
 
-describe('CategoryService', () => {
-  describe('getGlobalCategories', () => {
-    it('should return categories sorted by Polish name', async () => {
+describe("CategoryService", () => {
+  describe("getGlobalCategories", () => {
+    it("should return categories sorted by Polish name", async () => {
       // Arrange
       const mockData = createMockCategoryData();
       const mockSupabase = createMockSupabaseClient({
@@ -18,9 +18,9 @@ describe('CategoryService', () => {
 
       // Assert
       expect(result).toHaveLength(3);
-      expect(result[0].name).toBe('Rozrywka'); // 'R' comes before 'T' and 'Z' in Polish
-      expect(result[1].name).toBe('Transport');
-      expect(result[2].name).toBe('Zakupy spożywcze');
+      expect(result[0].name).toBe("Rozrywka"); // 'R' comes before 'T' and 'Z' in Polish
+      expect(result[1].name).toBe("Transport");
+      expect(result[2].name).toBe("Zakupy spożywcze");
 
       // Assert Types
       expectTypeOf(result).toMatchTypeOf<any[]>();
@@ -29,7 +29,7 @@ describe('CategoryService', () => {
       expectTypeOf(result[0].name).toMatchTypeOf<string>();
     });
 
-    it('should transform database records to CategoryDto format', async () => {
+    it("should transform database records to CategoryDto format", async () => {
       // Arrange
       const mockData = createMockCategoryData();
       const mockSupabase = createMockSupabaseClient({
@@ -42,21 +42,21 @@ describe('CategoryService', () => {
       const result = await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert
-      expect(result[0]).toHaveProperty('id');
-      expect(result[0]).toHaveProperty('key');
-      expect(result[0]).toHaveProperty('name');
-      expect(result[0]).not.toHaveProperty('translations');
-      expect(result[0]).not.toHaveProperty('created_at');
+      expect(result[0]).toHaveProperty("id");
+      expect(result[0]).toHaveProperty("key");
+      expect(result[0]).toHaveProperty("name");
+      expect(result[0]).not.toHaveProperty("translations");
+      expect(result[0]).not.toHaveProperty("created_at");
     });
 
-    it('should extract Polish translation from translations JSON', async () => {
+    it("should extract Polish translation from translations JSON", async () => {
       // Arrange
       const mockData = [
         {
           id: 1,
-          key: 'test',
-          translations: { pl: 'Polski tekst', en: 'English text' },
-          created_at: '2025-01-01T00:00:00Z',
+          key: "test",
+          translations: { pl: "Polski tekst", en: "English text" },
+          created_at: "2025-01-01T00:00:00Z",
         },
       ];
       const mockSupabase = createMockSupabaseClient({
@@ -69,17 +69,17 @@ describe('CategoryService', () => {
       const result = await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert
-      expect(result[0].name).toBe('Polski tekst');
+      expect(result[0].name).toBe("Polski tekst");
     });
 
-    it('should fallback to key if Polish translation is missing', async () => {
+    it("should fallback to key if Polish translation is missing", async () => {
       // Arrange
       const mockData = [
         {
           id: 1,
-          key: 'fallback_key',
-          translations: { en: 'English text' },
-          created_at: '2025-01-01T00:00:00Z',
+          key: "fallback_key",
+          translations: { en: "English text" },
+          created_at: "2025-01-01T00:00:00Z",
         },
       ];
       const mockSupabase = createMockSupabaseClient({
@@ -92,10 +92,10 @@ describe('CategoryService', () => {
       const result = await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert
-      expect(result[0].name).toBe('fallback_key');
+      expect(result[0].name).toBe("fallback_key");
     });
 
-    it('should return empty array when data is null', async () => {
+    it("should return empty array when data is null", async () => {
       // Arrange
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
@@ -110,9 +110,9 @@ describe('CategoryService', () => {
       expect(result).toEqual([]);
     });
 
-    it('should throw error when database query fails', async () => {
+    it("should throw error when database query fails", async () => {
       // Arrange
-      const mockError = { message: 'Database connection failed' };
+      const mockError = { message: "Database connection failed" };
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
           select: vi.fn(() => Promise.resolve({ data: null, error: mockError })),
@@ -121,11 +121,11 @@ describe('CategoryService', () => {
 
       // Act & Assert
       await expect(CategoryService.getGlobalCategories(mockSupabase)).rejects.toThrow(
-        'Failed to fetch categories: Database connection failed'
+        "Failed to fetch categories: Database connection failed"
       );
     });
 
-    it('should call Supabase with correct query', async () => {
+    it("should call Supabase with correct query", async () => {
       // Arrange
       const mockData = createMockCategoryData();
       const selectMock = vi.fn(() => Promise.resolve({ data: mockData, error: null }));
@@ -140,17 +140,17 @@ describe('CategoryService', () => {
       await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert
-      expect(fromMock).toHaveBeenCalledWith('categories');
-      expect(selectMock).toHaveBeenCalledWith('id, key, translations');
+      expect(fromMock).toHaveBeenCalledWith("categories");
+      expect(selectMock).toHaveBeenCalledWith("id, key, translations");
     });
 
-    it('should sort Polish characters correctly (ą, ć, ę, ł, ń, ó, ś, ź, ż)', async () => {
+    it("should sort Polish characters correctly (ą, ć, ę, ł, ń, ó, ś, ź, ż)", async () => {
       // Arrange
       const mockData = [
-        { id: 1, key: 'zdrowie', translations: { pl: 'Zdrowie' }, created_at: '2025-01-01' },
-        { id: 2, key: 'zabawa', translations: { pl: 'Żaba' }, created_at: '2025-01-01' },
-        { id: 3, key: 'lody', translations: { pl: 'Łódź' }, created_at: '2025-01-01' },
-        { id: 4, key: 'auto', translations: { pl: 'Ćma' }, created_at: '2025-01-01' },
+        { id: 1, key: "zdrowie", translations: { pl: "Zdrowie" }, created_at: "2025-01-01" },
+        { id: 2, key: "zabawa", translations: { pl: "Żaba" }, created_at: "2025-01-01" },
+        { id: 3, key: "lody", translations: { pl: "Łódź" }, created_at: "2025-01-01" },
+        { id: 4, key: "auto", translations: { pl: "Ćma" }, created_at: "2025-01-01" },
       ];
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
@@ -162,17 +162,17 @@ describe('CategoryService', () => {
       const result = await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert - Polish alphabetical order: Ć, Ł, Z, Ż
-      expect(result.map((c) => c.name)).toEqual(['Ćma', 'Łódź', 'Zdrowie', 'Żaba']);
+      expect(result.map((c) => c.name)).toEqual(["Ćma", "Łódź", "Zdrowie", "Żaba"]);
     });
 
-    it('should handle invalid translations structure (null translations)', async () => {
+    it("should handle invalid translations structure (null translations)", async () => {
       // Arrange
       const mockData = [
         {
           id: 1,
-          key: 'test_key',
+          key: "test_key",
           translations: null, // Invalid - null translations
-          created_at: '2025-01-01T00:00:00Z',
+          created_at: "2025-01-01T00:00:00Z",
         },
       ];
       const mockSupabase = createMockSupabaseClient({
@@ -185,17 +185,17 @@ describe('CategoryService', () => {
       const result = await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert - Should fallback to key when translations is null
-      expect(result[0].name).toBe('test_key');
+      expect(result[0].name).toBe("test_key");
     });
 
-    it('should handle categories with empty translations object', async () => {
+    it("should handle categories with empty translations object", async () => {
       // Arrange
       const mockData = [
         {
           id: 1,
-          key: 'empty_translations',
+          key: "empty_translations",
           translations: {}, // Empty translations object
-          created_at: '2025-01-01T00:00:00Z',
+          created_at: "2025-01-01T00:00:00Z",
         },
       ];
       const mockSupabase = createMockSupabaseClient({
@@ -208,10 +208,10 @@ describe('CategoryService', () => {
       const result = await CategoryService.getGlobalCategories(mockSupabase);
 
       // Assert - Should fallback to key when no translations exist
-      expect(result[0].name).toBe('empty_translations');
+      expect(result[0].name).toBe("empty_translations");
     });
 
-    it('should verify category structure has no sensitive data', async () => {
+    it("should verify category structure has no sensitive data", async () => {
       // Arrange
       const mockData = createMockCategoryData();
       const mockSupabase = createMockSupabaseClient({
@@ -227,19 +227,19 @@ describe('CategoryService', () => {
       // This is more robust than checking each property individually
       result.forEach((category) => {
         const keys = Object.keys(category).sort();
-        expect(keys).toEqual(['id', 'key', 'name']);
+        expect(keys).toEqual(["id", "key", "name"]);
       });
     });
   });
 
-  describe('getCategoryByKey', () => {
-    it('should return category by key', async () => {
+  describe("getCategoryByKey", () => {
+    it("should return category by key", async () => {
       // Arrange
       const mockData = {
         id: 1,
-        key: 'groceries',
-        translations: { pl: 'Zakupy spożywcze', en: 'Groceries' },
-        created_at: '2025-01-01T00:00:00Z',
+        key: "groceries",
+        translations: { pl: "Zakupy spożywcze", en: "Groceries" },
+        created_at: "2025-01-01T00:00:00Z",
       };
 
       const mockSupabase = createMockSupabaseClient({
@@ -253,45 +253,47 @@ describe('CategoryService', () => {
       } as any);
 
       // Act
-      const result = await CategoryService.getCategoryByKey(mockSupabase, 'groceries');
+      const result = await CategoryService.getCategoryByKey(mockSupabase, "groceries");
 
       // Assert
       expect(result).toEqual({
         id: 1,
-        key: 'groceries',
-        name: 'Zakupy spożywcze',
+        key: "groceries",
+        name: "Zakupy spożywcze",
       });
     });
 
-    it('should return null when category is not found', async () => {
+    it("should return null when category is not found", async () => {
       // Arrange
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
           select: vi.fn(() => ({
             eq: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: null,
-                error: { code: 'PGRST116', message: 'No rows found' }
-              })),
+              single: vi.fn(() =>
+                Promise.resolve({
+                  data: null,
+                  error: { code: "PGRST116", message: "No rows found" },
+                })
+              ),
             })),
           })),
         })),
       } as any);
 
       // Act
-      const result = await CategoryService.getCategoryByKey(mockSupabase, 'non_existent');
+      const result = await CategoryService.getCategoryByKey(mockSupabase, "non_existent");
 
       // Assert
       expect(result).toBeNull();
     });
 
-    it('should extract Polish translation from translations JSON', async () => {
+    it("should extract Polish translation from translations JSON", async () => {
       // Arrange
       const mockData = {
         id: 2,
-        key: 'transport',
-        translations: { pl: 'Transport', en: 'Transport' },
-        created_at: '2025-01-01T00:00:00Z',
+        key: "transport",
+        translations: { pl: "Transport", en: "Transport" },
+        created_at: "2025-01-01T00:00:00Z",
       };
 
       const mockSupabase = createMockSupabaseClient({
@@ -305,19 +307,19 @@ describe('CategoryService', () => {
       } as any);
 
       // Act
-      const result = await CategoryService.getCategoryByKey(mockSupabase, 'transport');
+      const result = await CategoryService.getCategoryByKey(mockSupabase, "transport");
 
       // Assert
-      expect(result?.name).toBe('Transport');
+      expect(result?.name).toBe("Transport");
     });
 
-    it('should fallback to key if Polish translation is missing', async () => {
+    it("should fallback to key if Polish translation is missing", async () => {
       // Arrange
       const mockData = {
         id: 3,
-        key: 'fallback_key',
-        translations: { en: 'English text' },
-        created_at: '2025-01-01T00:00:00Z',
+        key: "fallback_key",
+        translations: { en: "English text" },
+        created_at: "2025-01-01T00:00:00Z",
       };
 
       const mockSupabase = createMockSupabaseClient({
@@ -331,13 +333,13 @@ describe('CategoryService', () => {
       } as any);
 
       // Act
-      const result = await CategoryService.getCategoryByKey(mockSupabase, 'fallback_key');
+      const result = await CategoryService.getCategoryByKey(mockSupabase, "fallback_key");
 
       // Assert
-      expect(result?.name).toBe('fallback_key');
+      expect(result?.name).toBe("fallback_key");
     });
 
-    it('should return null when data is null', async () => {
+    it("should return null when data is null", async () => {
       // Arrange
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
@@ -350,15 +352,15 @@ describe('CategoryService', () => {
       } as any);
 
       // Act
-      const result = await CategoryService.getCategoryByKey(mockSupabase, 'test');
+      const result = await CategoryService.getCategoryByKey(mockSupabase, "test");
 
       // Assert
       expect(result).toBeNull();
     });
 
-    it('should throw error when database query fails with non-not-found error', async () => {
+    it("should throw error when database query fails with non-not-found error", async () => {
       // Arrange
-      const mockError = { code: 'DB_ERROR', message: 'Database connection failed' };
+      const mockError = { code: "DB_ERROR", message: "Database connection failed" };
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
           select: vi.fn(() => ({
@@ -370,18 +372,18 @@ describe('CategoryService', () => {
       } as any);
 
       // Act & Assert
-      await expect(CategoryService.getCategoryByKey(mockSupabase, 'test')).rejects.toThrow(
-        'Failed to fetch category: Database connection failed'
+      await expect(CategoryService.getCategoryByKey(mockSupabase, "test")).rejects.toThrow(
+        "Failed to fetch category: Database connection failed"
       );
     });
 
-    it('should call Supabase with correct query parameters', async () => {
+    it("should call Supabase with correct query parameters", async () => {
       // Arrange
       const mockData = {
         id: 1,
-        key: 'groceries',
-        translations: { pl: 'Zakupy spożywcze' },
-        created_at: '2025-01-01T00:00:00Z',
+        key: "groceries",
+        translations: { pl: "Zakupy spożywcze" },
+        created_at: "2025-01-01T00:00:00Z",
       };
 
       const singleMock = vi.fn(() => Promise.resolve({ data: mockData, error: null }));
@@ -394,22 +396,22 @@ describe('CategoryService', () => {
       } as any);
 
       // Act
-      await CategoryService.getCategoryByKey(mockSupabase, 'groceries');
+      await CategoryService.getCategoryByKey(mockSupabase, "groceries");
 
       // Assert
-      expect(fromMock).toHaveBeenCalledWith('categories');
-      expect(selectMock).toHaveBeenCalledWith('id, key, translations');
-      expect(eqMock).toHaveBeenCalledWith('key', 'groceries');
+      expect(fromMock).toHaveBeenCalledWith("categories");
+      expect(selectMock).toHaveBeenCalledWith("id, key, translations");
+      expect(eqMock).toHaveBeenCalledWith("key", "groceries");
       expect(singleMock).toHaveBeenCalled();
     });
 
-    it('should transform database record to CategoryDto format', async () => {
+    it("should transform database record to CategoryDto format", async () => {
       // Arrange
       const mockData = {
         id: 1,
-        key: 'groceries',
-        translations: { pl: 'Zakupy spożywcze' },
-        created_at: '2025-01-01T00:00:00Z',
+        key: "groceries",
+        translations: { pl: "Zakupy spożywcze" },
+        created_at: "2025-01-01T00:00:00Z",
       };
 
       const mockSupabase = createMockSupabaseClient({
@@ -423,15 +425,14 @@ describe('CategoryService', () => {
       } as any);
 
       // Act
-      const result = await CategoryService.getCategoryByKey(mockSupabase, 'groceries');
+      const result = await CategoryService.getCategoryByKey(mockSupabase, "groceries");
 
       // Assert
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('key');
-      expect(result).toHaveProperty('name');
-      expect(result).not.toHaveProperty('translations');
-      expect(result).not.toHaveProperty('created_at');
+      expect(result).toHaveProperty("id");
+      expect(result).toHaveProperty("key");
+      expect(result).toHaveProperty("name");
+      expect(result).not.toHaveProperty("translations");
+      expect(result).not.toHaveProperty("created_at");
     });
   });
 });
-

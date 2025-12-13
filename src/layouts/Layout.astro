@@ -34,10 +34,11 @@ const isAuthenticated = !!Astro.locals.user;
     <title>{title}</title>
     <script is:inline>
       // Initialize theme before page renders to prevent FOUC
-      (function() {
-        const theme = localStorage.getItem('theme') ||
-          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        document.documentElement.classList.toggle('dark', theme === 'dark');
+      (function () {
+        const theme =
+          localStorage.getItem("theme") ||
+          (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.classList.toggle("dark", theme === "dark");
       })();
     </script>
   </head>

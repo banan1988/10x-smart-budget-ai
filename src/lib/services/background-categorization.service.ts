@@ -1,6 +1,6 @@
-import type { SupabaseClient } from '../../db/supabase.client';
-import { AiCategorizationService } from './ai-categorization.service';
-import { CategoryService } from './category.service';
+import type { SupabaseClient } from "../../db/supabase.client";
+import { AiCategorizationService } from "./ai-categorization.service";
+import { CategoryService } from "./category.service";
 
 /**
  * Service for background AI categorization of transactions.
@@ -60,11 +60,11 @@ export class BackgroundCategorizationService {
   ): Promise<void> {
     // Fire-and-forget: Don't await this, let it run in background
     // We intentionally don't return a promise to indicate this is truly async
-    this.performBackgroundCategorization(transactionId, description, userId).catch(error => {
+    this.performBackgroundCategorization(transactionId, description, userId).catch((error) => {
       // Log error but don't fail - background jobs should be resilient
       console.error(
         `Background categorization failed for transaction ${transactionId}:`,
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : "Unknown error"
       );
     });
   }
@@ -96,10 +96,7 @@ export class BackgroundCategorizationService {
       });
 
       // Step 2: Find category by key
-      const category = await CategoryService.getCategoryByKey(
-        this.supabase,
-        categorizationResult.categoryKey
-      );
+      const category = await CategoryService.getCategoryByKey(this.supabase, categorizationResult.categoryKey);
 
       if (!category) {
         console.warn(
@@ -113,24 +110,21 @@ export class BackgroundCategorizationService {
       // Step 3: Determine if this is a successful AI categorization
       const isSuccessfulCategorization =
         categorizationResult.confidence > 0 &&
-        (categorizationResult.categoryKey !== 'other' || categorizationResult.confidence >= 0.5);
+        (categorizationResult.categoryKey !== "other" || categorizationResult.confidence >= 0.5);
 
       // Step 4: Update transaction with category and completion status
       const { error } = await this.supabase
-        .from('transactions')
+        .from("transactions")
         .update({
           category_id: category.id,
           is_ai_categorized: isSuccessfulCategorization,
-          categorization_status: 'completed',
+          categorization_status: "completed",
         })
-        .eq('id', transactionId)
-        .eq('user_id', userId);
+        .eq("id", transactionId)
+        .eq("user_id", userId);
 
       if (error) {
-        console.error(
-          `[Background] Failed to update transaction ${transactionId} with category:`,
-          error.message
-        );
+        console.error(`[Background] Failed to update transaction ${transactionId} with category:`, error.message);
         // Still try to mark as completed
         await this.markCategorisationComplete(transactionId, userId);
         return;
@@ -138,13 +132,12 @@ export class BackgroundCategorizationService {
 
       console.log(
         `[Background] Successfully categorized transaction ${transactionId} as "${category.name}" ` +
-        `(confidence: ${categorizationResult.confidence.toFixed(2)})`
+          `(confidence: ${categorizationResult.confidence.toFixed(2)})`
       );
-
     } catch (error) {
       console.error(
         `[Background] Unexpected error during categorization of transaction ${transactionId}:`,
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : "Unknown error"
       );
       // Attempt to mark as completed even on error
       try {
@@ -152,7 +145,7 @@ export class BackgroundCategorizationService {
       } catch (markError) {
         console.error(
           `[Background] Failed to mark transaction ${transactionId} as completed:`,
-          markError instanceof Error ? markError.message : 'Unknown error'
+          markError instanceof Error ? markError.message : "Unknown error"
         );
       }
     }
@@ -168,19 +161,15 @@ export class BackgroundCategorizationService {
    */
   private async markCategorisationComplete(transactionId: number, userId: string): Promise<void> {
     const { error } = await this.supabase
-      .from('transactions')
+      .from("transactions")
       .update({
-        categorization_status: 'completed',
+        categorization_status: "completed",
       })
-      .eq('id', transactionId)
-      .eq('user_id', userId);
+      .eq("id", transactionId)
+      .eq("user_id", userId);
 
     if (error) {
-      console.error(
-        `Failed to mark transaction ${transactionId} categorization as completed:`,
-        error.message
-      );
+      console.error(`Failed to mark transaction ${transactionId} categorization as completed:`, error.message);
     }
   }
 }
-

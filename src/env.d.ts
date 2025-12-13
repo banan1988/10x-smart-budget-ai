@@ -6,7 +6,7 @@
 interface User {
   id: string;
   email: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   nickname?: string;
   createdAt?: string; // User registration date (ISO 8601 format)
 }

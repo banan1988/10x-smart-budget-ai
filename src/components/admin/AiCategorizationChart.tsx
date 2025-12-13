@@ -1,12 +1,5 @@
-import React from 'react';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import React from "react";
+import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
 
 interface AiCategorizationChartProps {
   aiCount: number;
@@ -15,7 +8,7 @@ interface AiCategorizationChartProps {
   isLoading?: boolean;
 }
 
-const COLORS = ['#3b82f6', '#10b981'];
+const COLORS = ["#3b82f6", "#10b981"];
 
 export default function AiCategorizationChart({
   aiCount,
@@ -33,11 +26,11 @@ export default function AiCategorizationChart({
 
   const data = [
     {
-      name: 'Kategoryzowane przez AI',
+      name: "Kategoryzowane przez AI",
       value: aiCount,
     },
     {
-      name: 'Kategoryzowane ręcznie',
+      name: "Kategoryzowane ręcznie",
       value: manualCount,
     },
   ];
@@ -59,12 +52,9 @@ export default function AiCategorizationChart({
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip
-          formatter={(value: number) => [value.toString(), 'Liczba']}
-        />
+        <Tooltip formatter={(value: number) => [value.toString(), "Liczba"]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>
   );
 }
-

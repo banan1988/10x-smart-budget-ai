@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface DateRange {
   startDate: string;
@@ -14,7 +14,7 @@ interface CategoryStats {
   total: number;
   aiPercentage: number;
   trend?: {
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
     percentage?: number;
   };
 }
@@ -62,8 +62,8 @@ function getDefaultDateRange(): DateRange {
   startDate.setDate(startDate.getDate() - 30);
 
   return {
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
+    startDate: startDate.toISOString().split("T")[0],
+    endDate: endDate.toISOString().split("T")[0],
   };
 }
 
@@ -90,17 +90,17 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
       });
 
       const response = await fetch(`/api/admin/ai-stats?${params.toString()}`, {
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (!response.ok) {
-        const contentType = response.headers.get('content-type');
+        const contentType = response.headers.get("content-type");
         let errorMessage = `HTTP error! status: ${response.status}`;
 
         // Read body once to avoid "body stream already read" error
         const bodyText = await response.text();
 
-        if (contentType?.includes('application/json')) {
+        if (contentType?.includes("application/json")) {
           try {
             const data = JSON.parse(bodyText);
             errorMessage = data.error || data.message || errorMessage;
@@ -110,31 +110,31 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
           }
         } else {
           // Log non-JSON response for debugging
-          console.error('Non-JSON response from /api/admin/ai-stats:', bodyText.substring(0, 200));
+          console.error("Non-JSON response from /api/admin/ai-stats:", bodyText.substring(0, 200));
         }
 
         throw new Error(errorMessage);
       }
 
-      const contentType = response.headers.get('content-type');
-      console.log('[useAiStatsAdmin] Response status:', response.status, 'Content-Type:', contentType);
+      const contentType = response.headers.get("content-type");
+      console.log("[useAiStatsAdmin] Response status:", response.status, "Content-Type:", contentType);
 
       // Try to parse JSON
       let data: AiCategorizationStatsDto;
       try {
         const responseText = await response.text();
-        console.log('[useAiStatsAdmin] Response body (first 500 chars):', responseText.substring(0, 500));
+        console.log("[useAiStatsAdmin] Response body (first 500 chars):", responseText.substring(0, 500));
         data = JSON.parse(responseText) as AiCategorizationStatsDto;
       } catch (parseErr) {
-        console.error('[useAiStatsAdmin] Failed to parse response as JSON:', parseErr);
-        throw new Error('Invalid response format: server did not return valid JSON');
+        console.error("[useAiStatsAdmin] Failed to parse response as JSON:", parseErr);
+        throw new Error("Invalid response format: server did not return valid JSON");
       }
 
       setStats(data);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error');
+      const error = err instanceof Error ? err : new Error("Unknown error");
       setError(error);
-      console.error('Error fetching AI stats:', error);
+      console.error("Error fetching AI stats:", error);
     } finally {
       setIsLoading(false);
     }
@@ -150,10 +150,13 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
   /**
    * Handle date range change
    */
-  const handleDateRangeChange = useCallback((newRange: DateRange) => {
-    setDateRangeState(newRange);
-    fetchStats(newRange);
-  }, [fetchStats]);
+  const handleDateRangeChange = useCallback(
+    (newRange: DateRange) => {
+      setDateRangeState(newRange);
+      fetchStats(newRange);
+    },
+    [fetchStats]
+  );
 
   /**
    * Refetch stats with current date range
@@ -165,52 +168,55 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
   /**
    * Export stats to CSV
    */
-  const exportToCSV = useCallback((filename = 'ai-stats.csv') => {
-    if (!stats) {
-      console.warn('No stats data to export');
-      return;
-    }
+  const exportToCSV = useCallback(
+    (filename = "ai-stats.csv") => {
+      if (!stats) {
+        console.warn("No stats data to export");
+        return;
+      }
 
-    // Prepare CSV header
-    const headers = ['Kategoria', 'AI', 'Ręczne', '% AI', 'Trend'];
+      // Prepare CSV header
+      const headers = ["Kategoria", "AI", "Ręczne", "% AI", "Trend"];
 
-    // Prepare CSV rows
-    const rows = stats.categoryBreakdown.map(cat => [
-      cat.categoryName,
-      cat.aiCount.toString(),
-      cat.manualCount.toString(),
-      `${cat.aiPercentage.toFixed(2)}%`,
-      cat.trend?.direction || 'neutral',
-    ]);
+      // Prepare CSV rows
+      const rows = stats.categoryBreakdown.map((cat) => [
+        cat.categoryName,
+        cat.aiCount.toString(),
+        cat.manualCount.toString(),
+        `${cat.aiPercentage.toFixed(2)}%`,
+        cat.trend?.direction || "neutral",
+      ]);
 
-    // Add overall stats
-    const overallRow = [
-      'RAZEM',
-      stats.overall.aiCategorized.toString(),
-      stats.overall.manuallyCategorized.toString(),
-      `${stats.overall.aiPercentage.toFixed(2)}%`,
-      '',
-    ];
+      // Add overall stats
+      const overallRow = [
+        "RAZEM",
+        stats.overall.aiCategorized.toString(),
+        stats.overall.manuallyCategorized.toString(),
+        `${stats.overall.aiPercentage.toFixed(2)}%`,
+        "",
+      ];
 
-    // Combine all rows
-    const allRows = [headers, ...rows, overallRow];
+      // Combine all rows
+      const allRows = [headers, ...rows, overallRow];
 
-    // Convert to CSV string
-    const csvContent = allRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+      // Convert to CSV string
+      const csvContent = allRows.map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
 
-    // Create blob and trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
+      // Create blob and trigger download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
 
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [stats]);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    [stats]
+  );
 
   return {
     stats,
@@ -222,4 +228,3 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
     exportToCSV,
   };
 }
-

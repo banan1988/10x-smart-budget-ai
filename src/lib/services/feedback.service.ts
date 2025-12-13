@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '../../db/supabase.client';
-import type { FeedbackRequest, FeedbackStatsDto, FeedbackDto } from '../../types';
+import type { SupabaseClient } from "../../db/supabase.client";
+import type { FeedbackRequest, FeedbackStatsDto, FeedbackDto } from "../../types";
 
 /**
  * Service for managing user feedback.
@@ -15,13 +15,9 @@ export class FeedbackService {
    * @returns Promise resolving to the created FeedbackDto
    * @throws Error if database insertion fails
    */
-  static async createFeedback(
-    supabase: SupabaseClient,
-    userId: string,
-    data: FeedbackRequest
-  ): Promise<FeedbackDto> {
+  static async createFeedback(supabase: SupabaseClient, userId: string, data: FeedbackRequest): Promise<FeedbackDto> {
     const { data: feedback, error } = await supabase
-      .from('feedback')
+      .from("feedback")
       .insert({
         user_id: userId,
         rating: data.rating,
@@ -35,7 +31,7 @@ export class FeedbackService {
     }
 
     if (!feedback) {
-      throw new Error('Failed to create feedback: No data returned');
+      throw new Error("Failed to create feedback: No data returned");
     }
 
     return feedback;
@@ -51,9 +47,7 @@ export class FeedbackService {
    */
   static async getFeedbackStats(supabase: SupabaseClient): Promise<FeedbackStatsDto> {
     // Query all feedback ratings
-    const { data, error } = await supabase
-      .from('feedback')
-      .select('rating', { count: 'exact' });
+    const { data, error } = await supabase.from("feedback").select("rating", { count: "exact" });
 
     if (error) {
       throw new Error(`Failed to fetch feedback stats: ${error.message}`);
@@ -102,9 +96,9 @@ export class FeedbackService {
 
     // Query feedback with pagination
     const { data, error, count } = await supabase
-      .from('feedback')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .from("feedback")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false })
       .range(from, to);
 
     if (error) {
@@ -119,4 +113,3 @@ export class FeedbackService {
     };
   }
 }
-

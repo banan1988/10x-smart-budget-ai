@@ -1,14 +1,14 @@
-import { vi } from 'vitest';
-import type { APIContext } from 'astro';
+import { vi } from "vitest";
+import type { APIContext } from "astro";
 
 /**
  * Mock user profile data factory
  */
 export function createMockUserProfile(overrides: Record<string, any> = {}) {
   return {
-    id: 'user-123',
-    role: 'user',
-    nickname: 'TestUser',
+    id: "user-123",
+    role: "user",
+    nickname: "TestUser",
     ...overrides,
   };
 }
@@ -18,14 +18,14 @@ export function createMockUserProfile(overrides: Record<string, any> = {}) {
  */
 export function createMockAuthRequest(
   body: any,
-  url: string = 'http://localhost:4321/api/auth',
+  url = "http://localhost:4321/api/auth",
   headers: Record<string, string> = {}
 ): Request {
   return new Request(url, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(body),
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...headers,
     },
   });
@@ -35,22 +35,16 @@ export function createMockAuthRequest(
  * Creates a generic mock request - alias for createMockAuthRequest
  * Use for requests without specific endpoint
  */
-export function createMockRequest(
-  body: any,
-  headers: Record<string, string> = {}
-): Request {
-  return createMockAuthRequest(body, 'http://localhost:4321/api/auth', headers);
+export function createMockRequest(body: any, headers: Record<string, string> = {}): Request {
+  return createMockAuthRequest(body, "http://localhost:4321/api/auth", headers);
 }
 
 /**
  * Creates a mock Astro API context for auth endpoints
  */
-export function createMockAuthContext(
-  request?: Request,
-  cookies?: Record<string, any>
-): Partial<APIContext> {
-  const defaultRequest = new Request('http://localhost:4321/api/auth', {
-    method: 'POST',
+export function createMockAuthContext(request?: Request, cookies?: Record<string, any>): Partial<APIContext> {
+  const defaultRequest = new Request("http://localhost:4321/api/auth", {
+    method: "POST",
   });
 
   return {
@@ -68,14 +62,11 @@ export function createMockAuthContext(
 /**
  * Creates a mock Supabase successful auth response
  */
-export function mockSupabaseAuthSuccess(
-  userId: string = 'user-123',
-  email: string = 'test@example.com'
-) {
+export function mockSupabaseAuthSuccess(userId = "user-123", email = "test@example.com") {
   return {
     data: {
       user: { id: userId, email },
-      session: { access_token: 'token-123' },
+      session: { access_token: "token-123" },
     },
     error: null,
   };
@@ -84,18 +75,13 @@ export function mockSupabaseAuthSuccess(
 /**
  * Creates a mock Supabase auth error response
  */
-export function mockSupabaseAuthError(
-  code: string,
-  message: string,
-  status: number = 400
-) {
+export function mockSupabaseAuthError(code: string, message: string, status = 400) {
   return {
     data: null,
     error: {
       code,
       message,
-      status: code === 'invalid_credentials' ? 401 : status,
+      status: code === "invalid_credentials" ? 401 : status,
     },
   };
 }
-

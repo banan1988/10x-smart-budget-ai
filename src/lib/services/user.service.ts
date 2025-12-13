@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '../../db/supabase.client';
-import type { UserProfileDto } from '../../types';
+import type { SupabaseClient } from "../../db/supabase.client";
+import type { UserProfileDto } from "../../types";
 
 /**
  * Service for managing user data.
@@ -14,21 +14,18 @@ export class UserService {
    * @returns Promise resolving to UserProfileDto or null if profile not found
    * @throws Error if database query fails
    */
-  static async getUserProfile(
-    supabase: SupabaseClient,
-    userId: string
-  ): Promise<UserProfileDto | null> {
+  static async getUserProfile(supabase: SupabaseClient, userId: string): Promise<UserProfileDto | null> {
     // Query the user_profiles table for the specific user
     const { data, error } = await supabase
-      .from('user_profiles')
-      .select('nickname, preferences')
-      .eq('id', userId)
+      .from("user_profiles")
+      .select("nickname, preferences")
+      .eq("id", userId)
       .single();
 
     // Handle database errors
     if (error) {
       // If profile not found, return null instead of throwing
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         return null;
       }
       throw new Error(`Failed to fetch user profile: ${error.message}`);
@@ -53,10 +50,10 @@ export class UserService {
   ): Promise<UserProfileDto> {
     // Update the user_profiles table
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from("user_profiles")
       .update(updates)
-      .eq('id', userId)
-      .select('nickname, preferences')
+      .eq("id", userId)
+      .select("nickname, preferences")
       .single();
 
     // Handle database errors
@@ -86,4 +83,3 @@ export class UserService {
     }
   }
 }
-

@@ -1,11 +1,11 @@
-import { useState, useId } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLoginForm } from '@/components/hooks/useLoginForm';
+import { useState, useId } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLoginForm } from "@/components/hooks/useLoginForm";
 
 /**
  * Login Form Component
@@ -55,18 +55,14 @@ export default function LoginForm() {
               placeholder="twoj.email@example.com"
               value={state.email}
               onChange={(e) => handleEmailChange(e.target.value)}
-              onBlur={() => handleBlur('email')}
+              onBlur={() => handleBlur("email")}
               disabled={state.isLoading}
               aria-invalid={state.touched.email && !!state.emailError}
               aria-describedby={state.touched.email && state.emailError ? `${emailInputId}-error` : undefined}
               className="w-full"
             />
             {state.touched.email && state.emailError && (
-              <p
-                id={`${emailInputId}-error`}
-                className="text-sm font-medium text-destructive"
-                role="alert"
-              >
+              <p id={`${emailInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
                 {state.emailError}
               </p>
             )}
@@ -88,25 +84,27 @@ export default function LoginForm() {
             <div className="relative">
               <Input
                 id={passwordInputId}
-                type={isPasswordVisible ? 'text' : 'password'}
+                type={isPasswordVisible ? "text" : "password"}
                 placeholder="••••••"
                 value={state.password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
-                onBlur={() => handleBlur('password')}
+                onBlur={() => handleBlur("password")}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && isFormValid) {
+                  if (e.key === "Enter" && isFormValid) {
                     handleSubmit();
                   }
                 }}
                 disabled={state.isLoading}
                 aria-invalid={state.touched.password && !!state.passwordError}
-                aria-describedby={state.touched.password && state.passwordError ? `${passwordInputId}-error` : undefined}
+                aria-describedby={
+                  state.touched.password && state.passwordError ? `${passwordInputId}-error` : undefined
+                }
                 className="w-full pr-10"
               />
               <button
                 type="button"
                 onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                aria-label={isPasswordVisible ? 'Ukryj hasło' : 'Pokaż hasło'}
+                aria-label={isPasswordVisible ? "Ukryj hasło" : "Pokaż hasło"}
                 aria-pressed={isPasswordVisible}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               >
@@ -118,11 +116,7 @@ export default function LoginForm() {
               </button>
             </div>
             {state.touched.password && state.passwordError && (
-              <p
-                id={`${passwordInputId}-error`}
-                className="text-sm font-medium text-destructive"
-                role="alert"
-              >
+              <p id={`${passwordInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
                 {state.passwordError}
               </p>
             )}
@@ -142,14 +136,14 @@ export default function LoginForm() {
                 <span>Logowanie...</span>
               </div>
             ) : (
-              'Zaloguj się'
+              "Zaloguj się"
             )}
           </Button>
         </form>
 
         {/* Sign up link */}
         <div className="text-center text-sm text-slate-600 dark:text-slate-400">
-          Nie masz konta?{' '}
+          Nie masz konta?{" "}
           <a
             href="/register"
             className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded px-1"

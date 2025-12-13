@@ -1,11 +1,11 @@
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface BreadcrumbsProps {
-  items: Array<{
+  items: {
     label: string;
     href?: string;
-  }>;
+  }[];
   showSidebarToggle?: boolean;
 }
 
@@ -15,7 +15,7 @@ interface BreadcrumbsProps {
  */
 export function Breadcrumbs({ items, showSidebarToggle = false }: BreadcrumbsProps) {
   const handleToggleSidebar = () => {
-    window.dispatchEvent(new Event('toggle-sidebar'));
+    window.dispatchEvent(new Event("toggle-sidebar"));
   };
 
   return (
@@ -65,18 +65,11 @@ export function Breadcrumbs({ items, showSidebarToggle = false }: BreadcrumbsPro
               </svg>
             )}
             {item.href ? (
-              <a
-                href={item.href}
-                className="hover:text-foreground transition-colors"
-              >
+              <a href={item.href} className="hover:text-foreground transition-colors">
                 {item.label}
               </a>
             ) : (
-              <span className={cn(
-                index === items.length - 1 && 'text-foreground font-medium'
-              )}>
-                {item.label}
-              </span>
+              <span className={cn(index === items.length - 1 && "text-foreground font-medium")}>{item.label}</span>
             )}
           </div>
         ))}
@@ -84,4 +77,3 @@ export function Breadcrumbs({ items, showSidebarToggle = false }: BreadcrumbsPro
     </div>
   );
 }
-

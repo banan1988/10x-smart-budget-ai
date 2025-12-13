@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
 
 /**
  * Password strength validation requirements
@@ -12,7 +12,7 @@ interface PasswordStrengthRequirements {
   hasSpecialChar: boolean;
 }
 
-export type PasswordStrengthLevel = 'weak' | 'medium' | 'strong' | 'very-strong';
+export type PasswordStrengthLevel = "weak" | "medium" | "strong" | "very-strong";
 
 interface PasswordStrengthResult {
   level: PasswordStrengthLevel;
@@ -65,13 +65,20 @@ function evaluatePasswordStrength(password: string): PasswordStrengthResult {
   const score = (metRequirements / 5) * 100;
 
   // Determine level
-  let level: PasswordStrengthLevel = 'weak';
-  if (score >= 80 && requirements.minLength && requirements.hasUppercase && requirements.hasLowercase && requirements.hasDigit && requirements.hasSpecialChar) {
-    level = 'very-strong';
+  let level: PasswordStrengthLevel = "weak";
+  if (
+    score >= 80 &&
+    requirements.minLength &&
+    requirements.hasUppercase &&
+    requirements.hasLowercase &&
+    requirements.hasDigit &&
+    requirements.hasSpecialChar
+  ) {
+    level = "very-strong";
   } else if (score >= 60) {
-    level = 'strong';
+    level = "strong";
   } else if (score >= 40) {
-    level = 'medium';
+    level = "medium";
   }
 
   return { level, score, requirements };
@@ -82,9 +89,9 @@ function evaluatePasswordStrength(password: string): PasswordStrengthResult {
  */
 export function useRegisterForm() {
   const [state, setState] = useState<FormState>({
-    email: '',
-    password: '',
-    confirmPassword: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
     showPassword: false,
     showConfirmPassword: false,
     isLoading: false,
@@ -106,9 +113,9 @@ export function useRegisterForm() {
 
       if (prev.touched.email) {
         if (!email) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: 'Email jest wymagany' };
+          newState.fieldErrors = { ...prev.fieldErrors, email: "Email jest wymagany" };
         } else if (!isValidEmail(email)) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: 'Wprowadź prawidłowy adres email' };
+          newState.fieldErrors = { ...prev.fieldErrors, email: "Wprowadź prawidłowy adres email" };
         } else {
           const { email: _, ...rest } = prev.fieldErrors;
           newState.fieldErrors = rest;
@@ -131,9 +138,9 @@ export function useRegisterForm() {
         const allRequirementsMet = Object.values(strength.requirements).every(Boolean);
 
         if (!password) {
-          newState.fieldErrors = { ...prev.fieldErrors, password: 'Hasło jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, password: "Hasło jest wymagane" };
         } else if (!allRequirementsMet) {
-          newState.fieldErrors = { ...prev.fieldErrors, password: 'Hasło nie spełnia wszystkich wymagań' };
+          newState.fieldErrors = { ...prev.fieldErrors, password: "Hasło nie spełnia wszystkich wymagań" };
         } else {
           const { password: _, ...rest } = prev.fieldErrors;
           newState.fieldErrors = rest;
@@ -143,7 +150,7 @@ export function useRegisterForm() {
       // Re-validate confirmPassword if it's touched
       if (prev.touched.confirmPassword && prev.confirmPassword) {
         if (password !== prev.confirmPassword) {
-          newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+          newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
           // Passwords now match - clear the error
           const { confirmPassword, ...rest } = newState.fieldErrors;
@@ -164,9 +171,9 @@ export function useRegisterForm() {
 
       if (prev.touched.confirmPassword) {
         if (!confirmPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Potwierdzenie hasła jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Potwierdzenie hasła jest wymagane" };
         } else if (confirmPassword !== prev.password) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
           // Passwords match - clear the error
           const { confirmPassword: _, ...rest } = prev.fieldErrors;
@@ -181,31 +188,31 @@ export function useRegisterForm() {
   /**
    * Handles field blur event for validation
    */
-  const handleBlur = useCallback((field: keyof FormState['touched']) => {
+  const handleBlur = useCallback((field: keyof FormState["touched"]) => {
     setState((prev) => {
       const newState = { ...prev, touched: { ...prev.touched, [field]: true } };
 
       // Trigger validation for the field
-      if (field === 'email') {
+      if (field === "email") {
         if (!prev.email) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: 'Email jest wymagany' };
+          newState.fieldErrors = { ...prev.fieldErrors, email: "Email jest wymagany" };
         } else if (!isValidEmail(prev.email)) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: 'Wprowadź prawidłowy adres email' };
+          newState.fieldErrors = { ...prev.fieldErrors, email: "Wprowadź prawidłowy adres email" };
         }
-      } else if (field === 'password') {
+      } else if (field === "password") {
         const strength = evaluatePasswordStrength(prev.password);
         const allRequirementsMet = Object.values(strength.requirements).every(Boolean);
 
         if (!prev.password) {
-          newState.fieldErrors = { ...prev.fieldErrors, password: 'Hasło jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, password: "Hasło jest wymagane" };
         } else if (!allRequirementsMet) {
-          newState.fieldErrors = { ...prev.fieldErrors, password: 'Hasło nie spełnia wszystkich wymagań' };
+          newState.fieldErrors = { ...prev.fieldErrors, password: "Hasło nie spełnia wszystkich wymagań" };
         }
-      } else if (field === 'confirmPassword') {
+      } else if (field === "confirmPassword") {
         if (!prev.confirmPassword) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Potwierdzenie hasła jest wymagane' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Potwierdzenie hasła jest wymagane" };
         } else if (prev.confirmPassword !== prev.password) {
-          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: 'Hasła nie są identyczne' };
+          newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         }
       }
 
@@ -231,15 +238,15 @@ export function useRegisterForm() {
    * Validates form before submission
    */
   const validateForm = (): boolean => {
-    let errors: typeof state.fieldErrors = {};
+    const errors: typeof state.fieldErrors = {};
     let isValid = true;
 
     // Validate email
     if (!state.email) {
-      errors.email = 'Email jest wymagany';
+      errors.email = "Email jest wymagany";
       isValid = false;
     } else if (!isValidEmail(state.email)) {
-      errors.email = 'Wprowadź prawidłowy adres email';
+      errors.email = "Wprowadź prawidłowy adres email";
       isValid = false;
     }
 
@@ -248,19 +255,19 @@ export function useRegisterForm() {
     const passwordRequirementsMet = Object.values(passwordStrength.requirements).every(Boolean);
 
     if (!state.password) {
-      errors.password = 'Hasło jest wymagane';
+      errors.password = "Hasło jest wymagane";
       isValid = false;
     } else if (!passwordRequirementsMet) {
-      errors.password = 'Hasło nie spełnia wszystkich wymagań';
+      errors.password = "Hasło nie spełnia wszystkich wymagań";
       isValid = false;
     }
 
     // Validate confirm password
     if (!state.confirmPassword) {
-      errors.confirmPassword = 'Potwierdzenie hasła jest wymagane';
+      errors.confirmPassword = "Potwierdzenie hasła jest wymagane";
       isValid = false;
     } else if (state.confirmPassword !== state.password) {
-      errors.confirmPassword = 'Hasła nie są identyczne';
+      errors.confirmPassword = "Hasła nie są identyczne";
       isValid = false;
     }
 
@@ -294,10 +301,10 @@ export function useRegisterForm() {
     setState((prev) => ({ ...prev, isLoading: true, generalError: null }));
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: state.email,
@@ -315,18 +322,18 @@ export function useRegisterForm() {
             isLoading: false,
             fieldErrors: {
               ...prev.fieldErrors,
-              email: 'Ten adres email jest już zarejestrowany',
+              email: "Ten adres email jest już zarejestrowany",
             },
-            generalError: 'Rejestracja nie powiodła się. Ten email już istnieje w systemie.',
+            generalError: "Rejestracja nie powiodła się. Ten email już istnieje w systemie.",
           }));
-          toast.error('Ten adres email jest już zarejestrowany');
+          toast.error("Ten adres email jest już zarejestrowany");
         } else {
           setState((prev) => ({
             ...prev,
             isLoading: false,
-            generalError: errorData.error || 'Rejestracja nie powiodła się. Spróbuj ponownie.',
+            generalError: errorData.error || "Rejestracja nie powiodła się. Spróbuj ponownie.",
           }));
-          toast.error(errorData.error || 'Rejestracja nie powiodła się. Spróbuj ponownie.');
+          toast.error(errorData.error || "Rejestracja nie powiodła się. Spróbuj ponownie.");
         }
         return;
       }
@@ -344,15 +351,15 @@ export function useRegisterForm() {
       }));
 
       // Show success notification
-      toast.success(data.message || 'Konto zostało utworzone pomyślnie!');
+      toast.success(data.message || "Konto zostało utworzone pomyślnie!");
 
       // Redirect to dashboard since user is already authenticated after signup
       // Supabase automatically creates session on signup
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = "/dashboard";
       }, 500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Nieznany błąd podczas rejestracji';
+      const errorMessage = error instanceof Error ? error.message : "Nieznany błąd podczas rejestracji";
 
       setState((prev) => ({
         ...prev,
@@ -361,7 +368,7 @@ export function useRegisterForm() {
       }));
 
       toast.error(`Błąd: ${errorMessage}`);
-      console.error('Register error:', error);
+      console.error("Register error:", error);
     }
   }, [state.email, state.password]);
 
@@ -388,4 +395,3 @@ export function useRegisterForm() {
     isFormValid,
   };
 }
-

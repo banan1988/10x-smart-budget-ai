@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
-import { CategoryService } from '../../lib/services/category.service';
-import { checkAuthentication, createErrorResponse, createSuccessResponse } from '../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { CategoryService } from "../../lib/services/category.service";
+import { checkAuthentication, createErrorResponse, createSuccessResponse } from "../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -31,10 +31,9 @@ export const GET: APIRoute = async (context) => {
     return createSuccessResponse(categories, 200);
   } catch (error) {
     // Log error for debugging
-    console.error('Error fetching categories:', error);
+    console.error("Error fetching categories:", error);
 
     // Return error response
     return createErrorResponse(error, 500);
   }
 };
-

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 interface AppSidebarProps {
-  currentPage?: 'dashboard' | 'transactions' | 'profile' | 'admin-stats' | 'admin-feedbacks';
-  userRole?: 'user' | 'admin'; // Role of the current user
+  currentPage?: "dashboard" | "transactions" | "profile" | "admin-stats" | "admin-feedbacks";
+  userRole?: "user" | "admin"; // Role of the current user
 }
 
 /**
@@ -11,29 +11,29 @@ interface AppSidebarProps {
  * Inspired by Shadcn/ui dashboard example
  * Collapsible between icon-only and full width with labels
  */
-export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) {
+export function AppSidebar({ currentPage, userRole = "user" }: AppSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<'user' | 'admin'>(userRole);
-  const isAdmin = currentUserRole === 'admin';
+  const [currentUserRole, setCurrentUserRole] = useState<"user" | "admin">(userRole);
+  const isAdmin = currentUserRole === "admin";
 
   useEffect(() => {
     // Load saved state from localStorage
-    const saved = localStorage.getItem('sidebar-expanded');
+    const saved = localStorage.getItem("sidebar-expanded");
     if (saved !== null) {
-      setIsExpanded(saved === 'true');
+      setIsExpanded(saved === "true");
     }
 
     // Listen for toggle events
     const handleToggle = () => {
       setIsExpanded((prev) => {
         const newState = !prev;
-        localStorage.setItem('sidebar-expanded', String(newState));
+        localStorage.setItem("sidebar-expanded", String(newState));
         return newState;
       });
     };
 
-    window.addEventListener('toggle-sidebar', handleToggle);
-    return () => window.removeEventListener('toggle-sidebar', handleToggle);
+    window.addEventListener("toggle-sidebar", handleToggle);
+    return () => window.removeEventListener("toggle-sidebar", handleToggle);
   }, []);
 
   // Check user role dynamically after component mounts
@@ -44,44 +44,44 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
 
     // Try to fetch user profile to get the actual role if it's still 'user'
     // Only fetch if we don't have a cached profile yet
-    if (userRole === 'user') {
+    if (userRole === "user") {
       const checkUserRole = async () => {
         try {
           // Check if we have cached profile in sessionStorage
-          const cachedProfile = sessionStorage.getItem('user_profile');
+          const cachedProfile = sessionStorage.getItem("user_profile");
           if (cachedProfile) {
             try {
               const profile = JSON.parse(cachedProfile);
               if (profile.role && profile.role !== userRole) {
                 setCurrentUserRole(profile.role);
-                console.log('[AppSidebar] User role updated from cache:', profile.role);
+                console.log("[AppSidebar] User role updated from cache:", profile.role);
               }
               return; // Don't fetch if we have valid cache
             } catch (e) {
-              console.error('[AppSidebar] Failed to parse cached profile:', e);
+              console.error("[AppSidebar] Failed to parse cached profile:", e);
             }
           }
 
           // Fetch from API if not in cache
-          const response = await fetch('/api/user/profile', {
-            credentials: 'include',
+          const response = await fetch("/api/user/profile", {
+            credentials: "include",
           });
           if (response.ok) {
             const profileText = await response.text();
             try {
               const profile = JSON.parse(profileText);
               // Cache the profile in sessionStorage for the session
-              sessionStorage.setItem('user_profile', profileText);
+              sessionStorage.setItem("user_profile", profileText);
               if (profile.role && profile.role !== userRole) {
                 setCurrentUserRole(profile.role);
-                console.log('[AppSidebar] User role updated from API:', profile.role);
+                console.log("[AppSidebar] User role updated from API:", profile.role);
               }
             } catch (parseError) {
-              console.error('[AppSidebar] Failed to parse API response:', parseError);
+              console.error("[AppSidebar] Failed to parse API response:", parseError);
             }
           }
         } catch (error) {
-          console.error('[AppSidebar] Failed to fetch user role:', error);
+          console.error("[AppSidebar] Failed to fetch user role:", error);
         }
       };
 
@@ -93,8 +93,8 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
 
   const navItems = [
     {
-      name: 'Pulpit',
-      href: '/dashboard',
+      name: "Pulpit",
+      href: "/dashboard",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -113,11 +113,11 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
           <rect width="7" height="5" x="3" y="16" rx="1" />
         </svg>
       ),
-      active: currentPage === 'dashboard',
+      active: currentPage === "dashboard",
     },
     {
-      name: 'Transakcje',
-      href: '/transactions',
+      name: "Transakcje",
+      href: "/transactions",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -135,11 +135,11 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
           <path d="M10 18h4" />
         </svg>
       ),
-      active: currentPage === 'transactions',
+      active: currentPage === "transactions",
     },
     {
-      name: 'Profil',
-      href: '/profile',
+      name: "Profil",
+      href: "/profile",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -156,14 +156,14 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
           <circle cx="12" cy="7" r="4" />
         </svg>
       ),
-      active: currentPage === 'profile',
+      active: currentPage === "profile",
     },
   ];
 
   const adminItems = [
     {
-      name: 'Statystyki AI',
-      href: '/profile/admin/stats',
+      name: "Statystyki AI",
+      href: "/profile/admin/stats",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -182,11 +182,11 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
           <rect x="13" y="11" width="3" height="7" />
         </svg>
       ),
-      active: currentPage === 'admin-stats',
+      active: currentPage === "admin-stats",
     },
     {
-      name: 'Feedbacki',
-      href: '/profile/admin/feedbacks',
+      name: "Feedbacki",
+      href: "/profile/admin/feedbacks",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -205,7 +205,7 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
           <path d="M16 10h.01" />
         </svg>
       ),
-      active: currentPage === 'admin-feedbacks',
+      active: currentPage === "admin-feedbacks",
     },
   ];
 
@@ -221,9 +221,7 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
         <div className="flex h-16 items-center justify-center border-b">
           <a href="/dashboard" className="flex items-center gap-2">
             <span className="text-2xl">💰</span>
-            {isExpanded && (
-              <span className="text-lg font-bold">SmartBudgetAI</span>
-            )}
+            {isExpanded && <span className="text-lg font-bold">SmartBudgetAI</span>}
           </a>
         </div>
 
@@ -231,33 +229,27 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
         <nav className="flex-1 space-y-2 p-2">
           {/* Main menu section */}
           {isExpanded && (
-            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Menu
-            </div>
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menu</div>
           )}
           {!isExpanded && (
             <div className="flex justify-center py-2">
               <span className="text-xs font-semibold text-muted-foreground">MENU</span>
             </div>
           )}
-          <div className={cn('space-y-1', isExpanded && 'ml-2 pl-2')}>
+          <div className={cn("space-y-1", isExpanded && "ml-2 pl-2")}>
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                  'hover:bg-accent hover:text-accent-foreground',
-                  item.active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground'
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  item.active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                 )}
                 title={item.name}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
-                {isExpanded && (
-                  <span className="text-sm font-medium">{item.name}</span>
-                )}
+                {isExpanded && <span className="text-sm font-medium">{item.name}</span>}
               </a>
             ))}
           </div>
@@ -275,29 +267,20 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
                   <span className="text-xs font-semibold text-muted-foreground">ADMIN</span>
                 </div>
               )}
-              <div className={cn('space-y-1', isExpanded && 'ml-2 pl-2')}>
+              <div className={cn("space-y-1", isExpanded && "ml-2 pl-2")}>
                 {adminItems.map((item) => (
                   <a
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      item.active
-                        ? 'bg-blue-600 text-white'
-                        : 'text-muted-foreground'
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      item.active ? "bg-blue-600 text-white" : "text-muted-foreground"
                     )}
                     title={item.name}
                   >
-                    <span className={cn(
-                      'flex-shrink-0',
-                      !item.active && 'text-blue-500'
-                    )}>
-                      {item.icon}
-                    </span>
-                    {isExpanded && (
-                      <span className="text-sm font-medium">{item.name}</span>
-                    )}
+                    <span className={cn("flex-shrink-0", !item.active && "text-blue-500")}>{item.icon}</span>
+                    {isExpanded && <span className="text-sm font-medium">{item.name}</span>}
                   </a>
                 ))}
               </div>
@@ -328,13 +311,10 @@ export function AppSidebar({ currentPage, userRole = 'user' }: AppSidebarProps) 
                 <circle cx="12" cy="12" r="3" />
               </svg>
             </span>
-            {isExpanded && (
-              <span className="text-sm font-medium">Ustawienia</span>
-            )}
+            {isExpanded && <span className="text-sm font-medium">Ustawienia</span>}
           </a>
         </div>
       </div>
     </aside>
   );
 }
-

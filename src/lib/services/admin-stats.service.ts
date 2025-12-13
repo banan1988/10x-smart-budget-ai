@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface CategoryStats {
   categoryId: number;
@@ -9,7 +9,7 @@ interface CategoryStats {
   total: number;
   aiPercentage: number;
   trend?: {
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
     percentage?: number;
   };
 }
@@ -58,30 +58,28 @@ export class AdminStatsService {
       page?: number;
       limit?: number;
       sortBy?: string;
-      sortOrder?: 'asc' | 'desc';
+      sortOrder?: "asc" | "desc";
     }
   ): Promise<AiCategorizationStatsDto> {
     const page = options?.page || 1;
     const limit = options?.limit || 20;
-    const sortBy = options?.sortBy || 'category';
-    const sortOrder = options?.sortOrder || 'asc';
+    const sortBy = options?.sortBy || "category";
+    const sortOrder = options?.sortOrder || "asc";
 
     try {
       // Fetch all transactions in the date range
       const { data: transactions, error: txError } = await supabase
-        .from('transactions')
-        .select('id, category_id, is_ai_categorized, date, amount')
-        .gte('date', startDate)
-        .lte('date', endDate);
+        .from("transactions")
+        .select("id, category_id, is_ai_categorized, date, amount")
+        .gte("date", startDate)
+        .lte("date", endDate);
 
       if (txError) {
         throw new Error(`Failed to fetch transactions: ${txError.message}`);
       }
 
       // Fetch categories for mapping
-      const { data: categories, error: catError } = await supabase
-        .from('categories')
-        .select('id, key, translations');
+      const { data: categories, error: catError } = await supabase.from("categories").select("id, key, translations");
 
       if (catError) {
         throw new Error(`Failed to fetch categories: ${catError.message}`);
@@ -89,7 +87,7 @@ export class AdminStatsService {
 
       // Build category map
       const categoryMap = new Map(
-        (categories || []).map(cat => [
+        (categories || []).map((cat) => [
           cat.id,
           {
             key: cat.key,
@@ -101,7 +99,7 @@ export class AdminStatsService {
       // Aggregate stats by category
       const categoryStats = new Map<number, { ai: number; manual: number }>();
 
-      (transactions || []).forEach(tx => {
+      (transactions || []).forEach((tx) => {
         const catId = tx.category_id;
         if (!catId) return;
 
@@ -118,33 +116,31 @@ export class AdminStatsService {
       });
 
       // Calculate overall stats
-      const totalAi = (transactions || []).filter(t => t.is_ai_categorized).length;
+      const totalAi = (transactions || []).filter((t) => t.is_ai_categorized).length;
       const totalManual = (transactions || []).length - totalAi;
       const totalTransactions = (transactions || []).length;
       const aiPercentage = totalTransactions > 0 ? (totalAi / totalTransactions) * 100 : 0;
 
       // Build category breakdown
-      const categoryBreakdown: CategoryStats[] = Array.from(categoryStats.entries()).map(
-        ([catId, stats]) => {
-          const category = categoryMap.get(catId);
-          const total = stats.ai + stats.manual;
-          const percentage = total > 0 ? (stats.ai / total) * 100 : 0;
+      const categoryBreakdown: CategoryStats[] = Array.from(categoryStats.entries()).map(([catId, stats]) => {
+        const category = categoryMap.get(catId);
+        const total = stats.ai + stats.manual;
+        const percentage = total > 0 ? (stats.ai / total) * 100 : 0;
 
-          return {
-            categoryId: catId,
-            categoryName: category?.name || `Kategoria ${catId}`,
-            categoryKey: category?.key || `category-${catId}`,
-            aiCount: stats.ai,
-            manualCount: stats.manual,
-            total,
-            aiPercentage: percentage,
-            trend: {
-              direction: 'neutral' as const,
-              percentage: 0,
-            },
-          };
-        }
-      );
+        return {
+          categoryId: catId,
+          categoryName: category?.name || `Kategoria ${catId}`,
+          categoryKey: category?.key || `category-${catId}`,
+          aiCount: stats.ai,
+          manualCount: stats.manual,
+          total,
+          aiPercentage: percentage,
+          trend: {
+            direction: "neutral" as const,
+            percentage: 0,
+          },
+        };
+      });
 
       // Sort category breakdown
       categoryBreakdown.sort((a, b) => {
@@ -152,27 +148,27 @@ export class AdminStatsService {
         let bValue: string | number = b.categoryName;
 
         switch (sortBy) {
-          case 'ai':
+          case "ai":
             aValue = a.aiCount;
             bValue = b.aiCount;
             break;
-          case 'manual':
+          case "manual":
             aValue = a.manualCount;
             bValue = b.manualCount;
             break;
-          case 'aiPercentage':
+          case "aiPercentage":
             aValue = a.aiPercentage;
             bValue = b.aiPercentage;
             break;
         }
 
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
+        if (typeof aValue === "string" && typeof bValue === "string") {
           const cmp = aValue.localeCompare(bValue);
-          return sortOrder === 'asc' ? cmp : -cmp;
+          return sortOrder === "asc" ? cmp : -cmp;
         }
 
         const diff = (aValue as number) - (bValue as number);
-        return sortOrder === 'asc' ? diff : -diff;
+        return sortOrder === "asc" ? diff : -diff;
       });
 
       // Apply pagination
@@ -205,7 +201,7 @@ export class AdminStatsService {
         },
       };
     } catch (error) {
-      console.error('Error fetching AI stats:', error);
+      console.error("Error fetching AI stats:", error);
       throw error;
     }
   }
@@ -214,10 +210,10 @@ export class AdminStatsService {
    * Extract category name from translations JSON based on locale
    */
   private static getCategoryName(translations: Record<string, string> | null): string {
-    if (!translations) return 'Nieznana';
+    if (!translations) return "Nieznana";
 
     // Try Polish locale first, then fallback to any available translation
-    return translations['pl'] || translations['en'] || Object.values(translations)[0] || 'Nieznana';
+    return translations["pl"] || translations["en"] || Object.values(translations)[0] || "Nieznana";
   }
 
   /**
@@ -231,7 +227,7 @@ export class AdminStatsService {
     // Group transactions by date
     const dailyStats = new Map<string, { ai: number; total: number }>();
 
-    transactions.forEach(tx => {
+    transactions.forEach((tx) => {
       const date = tx.date;
       if (!dailyStats.has(date)) {
         dailyStats.set(date, { ai: 0, total: 0 });
@@ -250,7 +246,7 @@ export class AdminStatsService {
     const trendData: { date: string; percentage: number }[] = [];
 
     for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = date.toISOString().split("T")[0];
       const stats = dailyStats.get(dateStr);
 
       if (stats) {
@@ -271,4 +267,3 @@ export class AdminStatsService {
     return trendData;
   }
 }
-

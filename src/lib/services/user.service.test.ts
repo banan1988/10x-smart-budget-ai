@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, expectTypeOf } from 'vitest';
-import { UserService } from './user.service';
-import { createMockSupabaseClient } from '../../test/mocks/supabase.mock';
+import { describe, it, expect, vi, expectTypeOf } from "vitest";
+import { UserService } from "./user.service";
+import { createMockSupabaseClient } from "../../test/mocks/supabase.mock";
 
-describe('UserService', () => {
-  describe('getUserProfile', () => {
-    it('should return user profile data when found', async () => {
+describe("UserService", () => {
+  describe("getUserProfile", () => {
+    it("should return user profile data when found", async () => {
       // Arrange
-      const mockUserId = 'user-123';
+      const mockUserId = "user-123";
       const mockProfileData = {
-        nickname: 'TestUser',
-        preferences: { theme: 'dark', language: 'pl' },
+        nickname: "TestUser",
+        preferences: { theme: "dark", language: "pl" },
       };
 
       const mockSupabase = createMockSupabaseClient({
@@ -27,17 +27,17 @@ describe('UserService', () => {
 
       // Assert
       expect(result).toEqual(mockProfileData);
-      expect(mockSupabase.from).toHaveBeenCalledWith('user_profiles');
+      expect(mockSupabase.from).toHaveBeenCalledWith("user_profiles");
 
       // Assert Types
       expectTypeOf(result).toMatchTypeOf<any>();
       expectTypeOf(result?.nickname).toMatchTypeOf<string | undefined>();
     });
 
-    it('should return null when profile is not found', async () => {
+    it("should return null when profile is not found", async () => {
       // Arrange
-      const mockUserId = 'non-existent-user';
-      const mockError = { code: 'PGRST116', message: 'Not found' };
+      const mockUserId = "non-existent-user";
+      const mockError = { code: "PGRST116", message: "Not found" };
 
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
@@ -56,10 +56,10 @@ describe('UserService', () => {
       expect(result).toBeNull();
     });
 
-    it('should throw error when database query fails', async () => {
+    it("should throw error when database query fails", async () => {
       // Arrange
-      const mockUserId = 'user-123';
-      const mockError = { code: 'SOME_ERROR', message: 'Database error' };
+      const mockUserId = "user-123";
+      const mockError = { code: "SOME_ERROR", message: "Database error" };
 
       const mockSupabase = createMockSupabaseClient({
         from: vi.fn(() => ({
@@ -73,14 +73,14 @@ describe('UserService', () => {
 
       // Act & Assert
       await expect(UserService.getUserProfile(mockSupabase, mockUserId)).rejects.toThrow(
-        'Failed to fetch user profile: Database error'
+        "Failed to fetch user profile: Database error"
       );
     });
 
-    it('should query with correct user id parameter', async () => {
+    it("should query with correct user id parameter", async () => {
       // Arrange
-      const mockUserId = 'user-456';
-      const mockProfileData = { nickname: 'Test', preferences: {} };
+      const mockUserId = "user-456";
+      const mockProfileData = { nickname: "Test", preferences: {} };
 
       const eqMock = vi.fn(() => ({
         single: vi.fn(() => Promise.resolve({ data: mockProfileData, error: null })),
@@ -98,14 +98,14 @@ describe('UserService', () => {
       await UserService.getUserProfile(mockSupabase, mockUserId);
 
       // Assert
-      expect(eqMock).toHaveBeenCalledWith('id', mockUserId);
+      expect(eqMock).toHaveBeenCalledWith("id", mockUserId);
     });
   });
 
-  describe('deleteUser', () => {
-    it('should successfully delete user when operation succeeds', async () => {
+  describe("deleteUser", () => {
+    it("should successfully delete user when operation succeeds", async () => {
       // Arrange
-      const mockUserId = 'user-123';
+      const mockUserId = "user-123";
 
       const mockSupabase = createMockSupabaseClient({
         auth: {
@@ -120,10 +120,10 @@ describe('UserService', () => {
       expect(mockSupabase.auth.admin.deleteUser).toHaveBeenCalledWith(mockUserId);
     });
 
-    it('should throw error when deletion fails', async () => {
+    it("should throw error when deletion fails", async () => {
       // Arrange
-      const mockUserId = 'user-123';
-      const mockError = { message: 'Failed to delete' };
+      const mockUserId = "user-123";
+      const mockError = { message: "Failed to delete" };
 
       const mockSupabase = createMockSupabaseClient({
         auth: {
@@ -135,13 +135,13 @@ describe('UserService', () => {
 
       // Act & Assert
       await expect(UserService.deleteUser(mockSupabase, mockUserId)).rejects.toThrow(
-        'Failed to delete user: Failed to delete'
+        "Failed to delete user: Failed to delete"
       );
     });
 
-    it('should call admin deleteUser method with correct user ID', async () => {
+    it("should call admin deleteUser method with correct user ID", async () => {
       // Arrange
-      const mockUserId = 'user-789';
+      const mockUserId = "user-789";
       const deleteUserMock = vi.fn(() => Promise.resolve({ data: {}, error: null }));
 
       const mockSupabase = createMockSupabaseClient({
@@ -161,4 +161,3 @@ describe('UserService', () => {
     });
   });
 });
-

@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import type { FeedbackDto, FeedbackFilters, AdminFeedbacksResponse } from '../../types';
+import { useState, useCallback, useEffect, useRef } from "react";
+import type { FeedbackDto, FeedbackFilters, AdminFeedbacksResponse } from "../../types";
 
 export interface UseAdminFeedbacksState {
   feedbacks: FeedbackDto[];
@@ -33,23 +33,23 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
   });
 
   // Track previous query params to avoid infinite loops
-  const prevParamsRef = useRef<string>('');
+  const prevParamsRef = useRef<string>("");
 
   // Build query parameters from filters and current page
   const buildQueryParams = useCallback((): string => {
     const params = new URLSearchParams();
 
     if (state.filters.startDate) {
-      params.append('startDate', state.filters.startDate);
+      params.append("startDate", state.filters.startDate);
     }
     if (state.filters.endDate) {
-      params.append('endDate', state.filters.endDate);
+      params.append("endDate", state.filters.endDate);
     }
     if (state.filters.rating) {
-      params.append('rating', state.filters.rating.toString());
+      params.append("rating", state.filters.rating.toString());
     }
-    params.append('page', state.page.toString());
-    params.append('limit', '20');
+    params.append("page", state.page.toString());
+    params.append("limit", "20");
 
     return params.toString();
   }, [state.filters, state.page]);
@@ -60,17 +60,17 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
 
     try {
       const response = await fetch(`/api/admin/feedbacks?${queryString}`, {
-        credentials: 'include',
+        credentials: "include",
       });
 
       if (!response.ok) {
-        const contentType = response.headers.get('content-type');
+        const contentType = response.headers.get("content-type");
         let errorMessage = `Failed to fetch feedbacks: ${response.statusText}`;
 
         // Read body once to avoid "body stream already read" error
         const bodyText = await response.text();
 
-        if (contentType?.includes('application/json')) {
+        if (contentType?.includes("application/json")) {
           try {
             const errorData = JSON.parse(bodyText);
             errorMessage = errorData.message || errorData.error || errorMessage;
@@ -80,24 +80,24 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
           }
         } else {
           // Log non-JSON response for debugging
-          console.error('Non-JSON response from /api/admin/feedbacks:', bodyText.substring(0, 200));
+          console.error("Non-JSON response from /api/admin/feedbacks:", bodyText.substring(0, 200));
         }
 
         throw new Error(errorMessage);
       }
 
-      const contentType = response.headers.get('content-type');
-      console.log('[useAdminFeedbacks] Response status:', response.status, 'Content-Type:', contentType);
+      const contentType = response.headers.get("content-type");
+      console.log("[useAdminFeedbacks] Response status:", response.status, "Content-Type:", contentType);
 
       // Try to parse JSON
       let data: AdminFeedbacksResponse;
       try {
         const responseText = await response.text();
-        console.log('[useAdminFeedbacks] Response body (first 500 chars):', responseText.substring(0, 500));
+        console.log("[useAdminFeedbacks] Response body (first 500 chars):", responseText.substring(0, 500));
         data = JSON.parse(responseText);
       } catch (parseErr) {
-        console.error('[useAdminFeedbacks] Failed to parse response as JSON:', parseErr);
-        throw new Error('Invalid response format: server did not return valid JSON');
+        console.error("[useAdminFeedbacks] Failed to parse response as JSON:", parseErr);
+        throw new Error("Invalid response format: server did not return valid JSON");
       }
 
       setState((prev) => ({
@@ -109,8 +109,8 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
         isLoading: false,
       }));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.error('Error fetching feedbacks:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      console.error("Error fetching feedbacks:", errorMessage);
       setState((prev) => ({
         ...prev,
         error: errorMessage,
@@ -125,24 +125,24 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
     const params = new URLSearchParams();
 
     if (state.filters.startDate) {
-      params.append('startDate', state.filters.startDate);
+      params.append("startDate", state.filters.startDate);
     }
     if (state.filters.endDate) {
-      params.append('endDate', state.filters.endDate);
+      params.append("endDate", state.filters.endDate);
     }
     if (state.filters.rating) {
-      params.append('rating', state.filters.rating.toString());
+      params.append("rating", state.filters.rating.toString());
     }
-    params.append('page', state.page.toString());
-    params.append('limit', '20');
+    params.append("page", state.page.toString());
+    params.append("limit", "20");
 
     const queryString = params.toString();
-    console.log('[useAdminFeedbacks] Query params changed:', queryString);
+    console.log("[useAdminFeedbacks] Query params changed:", queryString);
 
     // Only fetch if query params have actually changed
     if (queryString !== prevParamsRef.current) {
       prevParamsRef.current = queryString;
-      console.log('[useAdminFeedbacks] Fetching feedbacks with params:', queryString);
+      console.log("[useAdminFeedbacks] Fetching feedbacks with params:", queryString);
       fetchFeedbacks(queryString);
     }
   }, [state.filters.startDate, state.filters.endDate, state.filters.rating, state.page, fetchFeedbacks]);
@@ -178,4 +178,3 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
     refetch,
   };
 }
-

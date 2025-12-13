@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { useTransactions } from './hooks/useTransactions';
-import { useMediaQuery } from './hooks/useMediaQuery';
-import { TransactionsFilters } from './TransactionsFilters';
-import { TransactionsTable } from './TransactionsTable';
-import { TransactionsList } from './TransactionsList';
-import { AddTransactionDialog } from './AddTransactionDialog';
-import { Breadcrumbs } from '@/components/Breadcrumbs';
-import type { TransactionVM } from '@/types';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import { toast } from "sonner";
+import { useTransactions } from "./hooks/useTransactions";
+import { useMediaQuery } from "./hooks/useMediaQuery";
+import { TransactionsFilters } from "./TransactionsFilters";
+import { TransactionsTable } from "./TransactionsTable";
+import { TransactionsList } from "./TransactionsList";
+import { AddTransactionDialog } from "./AddTransactionDialog";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import type { TransactionVM } from "@/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,28 +18,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Toaster } from '@/components/ui/sonner';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 /**
  * Main component for the Transactions view
  * Manages the state and coordinates all child components
  */
 export function TransactionsView() {
-  const {
-    transactions,
-    pagination,
-    filters,
-    isLoading,
-    error,
-    setFilters,
-    setPage,
-    refetch,
-  } = useTransactions();
+  const { transactions, pagination, filters, isLoading, error, setFilters, setPage, refetch } = useTransactions();
 
   // Detect if we're on desktop (768px = md breakpoint)
-  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionVM | null>(null);
@@ -68,20 +59,20 @@ export function TransactionsView() {
     setIsDeleting(true);
     try {
       const response = await fetch(`/api/transactions/${transactionToDelete}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete transaction');
+        throw new Error("Failed to delete transaction");
       }
 
       // Refetch transactions after successful deletion
       refetch();
-      toast.success('Transakcja została usunięta');
+      toast.success("Transakcja została usunięta");
     } catch (err) {
-      console.error('Error deleting transaction:', err);
-      toast.error('Nie udało się usunąć transakcji');
+      console.error("Error deleting transaction:", err);
+      toast.error("Nie udało się usunąć transakcji");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -91,17 +82,13 @@ export function TransactionsView() {
 
   const handleTransactionSuccess = () => {
     refetch();
-    toast.success(
-      selectedTransaction ? 'Transakcja została zaktualizowana' : 'Transakcja została dodana'
-    );
+    toast.success(selectedTransaction ? "Transakcja została zaktualizowana" : "Transakcja została dodana");
   };
 
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>
-          Wystąpił błąd podczas pobierania transakcji: {error.message}
-        </AlertDescription>
+        <AlertDescription>Wystąpił błąd podczas pobierania transakcji: {error.message}</AlertDescription>
       </Alert>
     );
   }
@@ -110,23 +97,16 @@ export function TransactionsView() {
     <div className="space-y-6">
       {/* Breadcrumbs */}
       <Breadcrumbs
-        items={[
-          { label: 'SmartBudgetAI', href: '/dashboard' },
-          { label: 'Transakcje' },
-        ]}
+        items={[{ label: "SmartBudgetAI", href: "/dashboard" }, { label: "Transakcje" }]}
         showSidebarToggle={true}
       />
 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transakcje</h1>
-          <p className="text-muted-foreground">
-            Zarządzaj swoimi przychodami i wydatkami
-          </p>
+          <p className="text-muted-foreground">Zarządzaj swoimi przychodami i wydatkami</p>
         </div>
-        <Button onClick={handleAdd}>
-          Dodaj transakcję
-        </Button>
+        <Button onClick={handleAdd}>Dodaj transakcję</Button>
       </div>
 
       {/* Filters */}
@@ -141,25 +121,15 @@ export function TransactionsView() {
         </div>
       ) : transactions.length === 0 ? (
         <Alert>
-          <AlertDescription>
-            Brak transakcji dla wybranych filtrów.
-          </AlertDescription>
+          <AlertDescription>Brak transakcji dla wybranych filtrów.</AlertDescription>
         </Alert>
       ) : (
         <>
           {/* Responsive view: Table for desktop, List for mobile */}
           {isDesktop ? (
-            <TransactionsTable
-              transactions={transactions}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+            <TransactionsTable transactions={transactions} onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
-            <TransactionsList
-              transactions={transactions}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+            <TransactionsList transactions={transactions} onEdit={handleEdit} onDelete={handleDelete} />
           )}
 
           {/* Pagination */}
@@ -207,7 +177,7 @@ export function TransactionsView() {
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? 'Usuwanie...' : 'Usuń'}
+              {isDeleting ? "Usuwanie..." : "Usuń"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -226,4 +196,3 @@ export function TransactionsView() {
     </div>
   );
 }
-

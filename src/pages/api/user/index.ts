@@ -1,8 +1,8 @@
-import type { APIRoute } from 'astro';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../../../db/database.types';
-import { UserService } from '../../../lib/services/user.service';
-import { checkAuthentication, createErrorResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../../../db/database.types";
+import { UserService } from "../../../lib/services/user.service";
+import { checkAuthentication, createErrorResponse } from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -32,7 +32,7 @@ export const DELETE: APIRoute = async (context) => {
     const supabaseServiceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseServiceRoleKey) {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
+      throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
     }
 
     const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
@@ -51,10 +51,9 @@ export const DELETE: APIRoute = async (context) => {
     });
   } catch (error) {
     // Log error for debugging
-    console.error('Error deleting user:', error);
+    console.error("Error deleting user:", error);
 
     // Return error response
     return createErrorResponse(error, 500);
   }
 };
-

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface EmptyStateProps {
   title: string;
@@ -10,24 +10,15 @@ interface EmptyStateProps {
   };
 }
 
-export default function EmptyState({
-  title,
-  description,
-  icon,
-  action,
-}: EmptyStateProps) {
+export default function EmptyState({ title, description, icon, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-4 py-12 dark:border-gray-800 dark:bg-gray-950">
       {icon && <div className="mb-4 text-4xl">{icon}</div>}
 
-      <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-        {title}
-      </h3>
+      <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
 
       {description && (
-        <p className="mb-4 max-w-xs text-center text-sm text-gray-600 dark:text-gray-400">
-          {description}
-        </p>
+        <p className="mb-4 max-w-xs text-center text-sm text-gray-600 dark:text-gray-400">{description}</p>
       )}
 
       {action && (
@@ -41,4 +32,3 @@ export default function EmptyState({
     </div>
   );
 }
-

@@ -1,4 +1,4 @@
-import { Button } from './ui/button';
+import { Button } from "./ui/button";
 
 /**
  * ProfileActions component - provides action buttons for the profile page.
@@ -15,4 +15,3 @@ export default function ProfileActions() {
     </div>
   );
 }
-

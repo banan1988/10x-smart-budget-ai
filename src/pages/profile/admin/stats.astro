@@ -1,17 +1,17 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
-import AiStatsView from '../../../components/AiStatsView';
-import { AppHeader } from '../../../components/AppHeader';
-import { AppFooter } from '../../../components/AppFooter';
-import { AppSidebar } from '../../../components/AppSidebar';
-import { MobileNav } from '../../../components/MobileNav';
-import { Breadcrumbs } from '../../../components/Breadcrumbs';
+import Layout from "../../../layouts/Layout.astro";
+import AiStatsView from "../../../components/AiStatsView";
+import { AppHeader } from "../../../components/AppHeader";
+import { AppFooter } from "../../../components/AppFooter";
+import { AppSidebar } from "../../../components/AppSidebar";
+import { MobileNav } from "../../../components/MobileNav";
+import { Breadcrumbs } from "../../../components/Breadcrumbs";
 
 // Middleware handles authentication and admin role check
 // If not authenticated or not admin, middleware will redirect to /login or /profile
 
-const pageTitle = 'Statystyki AI Kategoryzacji';
-const pageDescription = 'Panel administratora - Monitorowanie efektywności automatycznej kategoryzacji wydatków';
+const pageTitle = "Statystyki AI Kategoryzacji";
+const pageDescription = "Panel administratora - Monitorowanie efektywności automatycznej kategoryzacji wydatków";
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
@@ -37,9 +37,9 @@ const pageDescription = 'Panel administratora - Monitorowanie efektywności auto
           <div class="mb-6">
             <Breadcrumbs
               items={[
-                { label: 'Profil', href: '/profile' },
-                { label: 'Panel Administratora', href: '#' },
-                { label: 'Statystyki AI', href: '#' }
+                { label: "Profil", href: "/profile" },
+                { label: "Panel Administratora", href: "#" },
+                { label: "Statystyki AI", href: "#" },
               ]}
               showSidebarToggle={true}
             />
@@ -60,10 +60,10 @@ const pageDescription = 'Panel administratora - Monitorowanie efektywności auto
   <script>
     // Adjust main content padding based on sidebar state
     function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
-      const mainContent = document.getElementById('main-content');
+      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
+      const mainContent = document.getElementById("main-content");
       if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
       }
     }
 
@@ -71,12 +71,11 @@ const pageDescription = 'Panel administratora - Monitorowanie efektywności auto
     updateMainContentPadding();
 
     // Listen for sidebar toggle
-    window.addEventListener('toggle-sidebar', () => {
+    window.addEventListener("toggle-sidebar", () => {
       setTimeout(updateMainContentPadding, 50);
     });
 
     // Listen for resize
-    window.addEventListener('resize', updateMainContentPadding);
+    window.addEventListener("resize", updateMainContentPadding);
   </script>
 </Layout>
-

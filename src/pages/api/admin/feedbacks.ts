@@ -1,29 +1,52 @@
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { FeedbackService } from '../../../lib/services/feedback.service';
-import { checkAuthentication, checkAdminRole, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { FeedbackService } from "../../../lib/services/feedback.service";
+import {
+  checkAuthentication,
+  checkAdminRole,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
 
 // Zod schema for validating query parameters
 const AdminFeedbacksQuerySchema = z.object({
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  rating: z.string().optional().transform((val) => {
-    if (!val) return undefined;
-    const num = parseInt(val, 10);
-    return isNaN(num) || num < 1 || num > 5 ? undefined : num;
-  }),
-  page: z.string().optional().default('1').transform((val) => {
-    const num = parseInt(val, 10);
-    return isNaN(num) ? 1 : Math.max(num, 1);
-  }),
-  limit: z.string().optional().default('20').transform((val) => {
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return 20;
-    return Math.min(Math.max(num, 1), 100); // Between 1 and 100
-  }),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  rating: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return undefined;
+      const num = parseInt(val, 10);
+      return isNaN(num) || num < 1 || num > 5 ? undefined : num;
+    }),
+  page: z
+    .string()
+    .optional()
+    .default("1")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      return isNaN(num) ? 1 : Math.max(num, 1);
+    }),
+  limit: z
+    .string()
+    .optional()
+    .default("20")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      if (isNaN(num)) return 20;
+      return Math.min(Math.max(num, 1), 100); // Between 1 and 100
+    }),
 });
 
 type AdminFeedbacksQuery = z.infer<typeof AdminFeedbacksQuerySchema>;
@@ -59,11 +82,11 @@ export const GET: APIRoute = async (context) => {
     const supabase = locals.supabase!;
 
     // Parse and validate query parameters
-    const startDate = url.searchParams.get('startDate');
-    const endDate = url.searchParams.get('endDate');
-    const rating = url.searchParams.get('rating');
-    const page = url.searchParams.get('page');
-    const limit = url.searchParams.get('limit');
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+    const rating = url.searchParams.get("rating");
+    const page = url.searchParams.get("page");
+    const limit = url.searchParams.get("limit");
 
     const validationResult = AdminFeedbacksQuerySchema.safeParse({
       startDate: startDate || undefined,
@@ -76,7 +99,7 @@ export const GET: APIRoute = async (context) => {
     if (!validationResult.success) {
       return createValidationErrorResponse(
         validationResult.error.issues.map((issue) => ({
-          field: issue.path.join('.'),
+          field: issue.path.join("."),
           message: issue.message,
         }))
       );
@@ -101,7 +124,7 @@ export const GET: APIRoute = async (context) => {
     // Apply date range filter
     if (validatedStartDate || validatedEndDate) {
       filteredFeedbacks = filteredFeedbacks.filter((feedback) => {
-        const feedbackDate = feedback.created_at.split('T')[0];
+        const feedbackDate = feedback.created_at.split("T")[0];
 
         if (validatedStartDate && feedbackDate < validatedStartDate) {
           return false;
@@ -116,9 +139,7 @@ export const GET: APIRoute = async (context) => {
 
     // Apply rating filter
     if (validatedRating) {
-      filteredFeedbacks = filteredFeedbacks.filter(
-        (feedback) => feedback.rating === validatedRating
-      );
+      filteredFeedbacks = filteredFeedbacks.filter((feedback) => feedback.rating === validatedRating);
     }
 
     // Calculate pagination
@@ -131,21 +152,23 @@ export const GET: APIRoute = async (context) => {
     const paginatedFeedbacks = filteredFeedbacks.slice(from, to);
 
     // Return successful response with paginated data
-    return createSuccessResponse({
-      data: paginatedFeedbacks,
-      pagination: {
-        page: validatedPage,
-        limit: validatedLimit,
-        total: totalFiltered,
-        totalPages,
+    return createSuccessResponse(
+      {
+        data: paginatedFeedbacks,
+        pagination: {
+          page: validatedPage,
+          limit: validatedLimit,
+          total: totalFiltered,
+          totalPages,
+        },
       },
-    }, 200);
+      200
+    );
   } catch (error) {
     // Log error for debugging
-    console.error('Error fetching admin feedbacks:', error);
+    console.error("Error fetching admin feedbacks:", error);
 
     // Return error response
     return createErrorResponse(error, 500);
   }
 };
-

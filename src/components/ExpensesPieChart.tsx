@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import type { CategoryBreakdownVM } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import type { CategoryBreakdownVM } from "@/types";
 
 interface ExpensesPieChartProps {
   data: CategoryBreakdownVM[];
@@ -11,18 +11,18 @@ interface ExpensesPieChartProps {
  * Using vibrant colors that work well in both themes
  */
 const CHART_COLORS = [
-  '#3b82f6', // Blue
-  '#06b6d4', // Cyan
-  '#f59e0b', // Amber
-  '#8b5cf6', // Violet
-  '#ef4444', // Red
-  '#10b981', // Emerald
-  '#ec4899', // Pink
-  '#f97316', // Orange
-  '#6366f1', // Indigo
-  '#14b8a6', // Teal
-  '#84cc16', // Lime
-  '#f43f5e', // Rose
+  "#3b82f6", // Blue
+  "#06b6d4", // Cyan
+  "#f59e0b", // Amber
+  "#8b5cf6", // Violet
+  "#ef4444", // Red
+  "#10b981", // Emerald
+  "#ec4899", // Pink
+  "#f97316", // Orange
+  "#6366f1", // Indigo
+  "#14b8a6", // Teal
+  "#84cc16", // Lime
+  "#f43f5e", // Rose
 ];
 
 /**
@@ -43,9 +43,9 @@ function CustomTooltip({ active, payload }: any) {
   const data = payload[0];
   const value = data.value as number;
   const percentage = data.payload.percentage as number;
-  const formattedValue = new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency: 'PLN',
+  const formattedValue = new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: "PLN",
   }).format(value);
 
   return (
@@ -66,7 +66,7 @@ function renderCustomLabel(entry: any) {
   if (percentage >= 5) {
     return `${percentage.toFixed(0)}%`;
   }
-  return '';
+  return "";
 }
 
 /**
@@ -117,4 +117,3 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
     </Card>
   );
 }
-

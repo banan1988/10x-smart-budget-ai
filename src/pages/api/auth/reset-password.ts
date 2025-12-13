@@ -1,6 +1,6 @@
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { createSupabaseServerInstance } from '../../../db/supabase.client';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { createSupabaseServerInstance } from "../../../db/supabase.client";
 
 export const prerender = false;
 
@@ -8,7 +8,7 @@ export const prerender = false;
  * Validation schema for reset password request
  */
 const resetPasswordSchema = z.object({
-  newPassword: z.string().min(8, 'Hasło musi mieć co najmniej 8 znaków'),
+  newPassword: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
 });
 
 type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
@@ -17,26 +17,20 @@ type ResetPasswordRequest = z.infer<typeof resetPasswordSchema>;
  * Error response helper
  */
 function errorResponse(message: string, status: number) {
-  return new Response(
-    JSON.stringify({ error: message }),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
  * Success response helper
  */
-function successResponse(data: any = {}, status: number = 200) {
-  return new Response(
-    JSON.stringify(data),
-    {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    }
-  );
+function successResponse(data: any = {}, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /**
@@ -65,11 +59,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
 
     // Check if user is authenticated (should have temporary session from reset link)
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error('[Reset Password Auth Error]', userError);
-      return errorResponse('Sesja resetowania hasła wygasła. Spróbuj ponownie.', 401);
+      console.error("[Reset Password Auth Error]", userError);
+      return errorResponse("Sesja resetowania hasła wygasła. Spróbuj ponownie.", 401);
     }
 
     // Update user password
@@ -78,18 +75,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
 
     if (updateError) {
-      console.error('[Reset Password Error]', {
+      console.error("[Reset Password Error]", {
         userId: user.id,
         code: updateError.code,
         message: updateError.message,
       });
 
       // Return user-friendly error message
-      if (updateError.message?.includes('Password')) {
-        return errorResponse('Hasło nie spełnia wymagań', 400);
+      if (updateError.message?.includes("Password")) {
+        return errorResponse("Hasło nie spełnia wymagań", 400);
       }
 
-      return errorResponse('Nie udało się zmienić hasła', 500);
+      return errorResponse("Nie udało się zmienić hasła", 500);
     }
 
     // Sign out user to clear the temporary session
@@ -97,12 +94,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Return success
     return successResponse({
-      message: 'Hasło zostało zmienione. Zaloguj się nowym hasłem.',
+      message: "Hasło zostało zmienione. Zaloguj się nowym hasłem.",
     });
-
   } catch (err) {
-    console.error('[Reset Password Exception]', err);
-    return errorResponse('Wewnętrzny błąd serwera', 500);
+    console.error("[Reset Password Exception]", err);
+    return errorResponse("Wewnętrzny błąd serwera", 500);
   }
 };
-

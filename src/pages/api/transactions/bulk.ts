@@ -1,7 +1,12 @@
-import type { APIRoute } from 'astro';
-import { TransactionService } from '../../../lib/services/transaction.service';
-import { BulkCreateTransactionsCommandSchema, BulkDeleteTransactionsCommandSchema } from '../../../types';
-import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { TransactionService } from "../../../lib/services/transaction.service";
+import { BulkCreateTransactionsCommandSchema, BulkDeleteTransactionsCommandSchema } from "../../../types";
+import {
+  checkAuthentication,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -35,13 +40,13 @@ export const POST: APIRoute = async (context) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON',
-          message: 'Request body must be valid JSON',
+          error: "Invalid JSON",
+          message: "Request body must be valid JSON",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -54,26 +59,25 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Bulk create transactions using the service
-    const transactions = await TransactionService.bulkCreateTransactions(
-      supabase,
-      userId,
-      validationResult.data
-    );
+    const transactions = await TransactionService.bulkCreateTransactions(supabase, userId, validationResult.data);
 
     // Return successful response with created transactions
-    const successResponse = createSuccessResponse({
-      created: transactions.length,
-      transactions,
-    }, 201);
+    const successResponse = createSuccessResponse(
+      {
+        created: transactions.length,
+        transactions,
+      },
+      201
+    );
 
     // Add headers to indicate that related caches should be invalidated
     // The client-side hook (useDashboardStats) will refetch due to onSuccess callback
-    successResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    successResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return successResponse;
   } catch (error) {
     // Log error for debugging
-    console.error('Error bulk creating transactions:', error);
+    console.error("Error bulk creating transactions:", error);
     return createErrorResponse(error, 500);
   }
 };
@@ -107,13 +111,13 @@ export const DELETE: APIRoute = async (context) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid JSON',
-          message: 'Request body must be valid JSON',
+          error: "Invalid JSON",
+          message: "Request body must be valid JSON",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -126,25 +130,23 @@ export const DELETE: APIRoute = async (context) => {
     }
 
     // Bulk delete transactions using the service
-    const deletedCount = await TransactionService.bulkDeleteTransactions(
-      supabase,
-      userId,
-      validationResult.data.ids
-    );
+    const deletedCount = await TransactionService.bulkDeleteTransactions(supabase, userId, validationResult.data.ids);
 
     // Return successful response
-    const deleteResponse = createSuccessResponse({
-      deleted: deletedCount,
-    }, 200);
+    const deleteResponse = createSuccessResponse(
+      {
+        deleted: deletedCount,
+      },
+      200
+    );
 
     // Add headers to indicate that related caches should be invalidated
-    deleteResponse.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    deleteResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return deleteResponse;
   } catch (error) {
     // Log error for debugging
-    console.error('Error bulk deleting transactions:', error);
+    console.error("Error bulk deleting transactions:", error);
     return createErrorResponse(error, 500);
   }
 };
-

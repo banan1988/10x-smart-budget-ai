@@ -1,5 +1,5 @@
 // filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/openrouter.service.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Zod schema for validating OpenRouter API response structure.
@@ -30,11 +30,11 @@ const JsonSchemaDefinition = z.object({
  */
 const ResponseFormatSchema = z.union([
   z.object({
-    type: z.literal('json_schema'),
+    type: z.literal("json_schema"),
     json_schema: JsonSchemaDefinition,
   }),
   z.object({
-    type: z.literal('json_object'),
+    type: z.literal("json_object"),
   }),
 ]);
 
@@ -43,7 +43,7 @@ const ResponseFormatSchema = z.union([
  */
 export type ResponseFormat =
   | {
-      type: 'json_schema';
+      type: "json_schema";
       json_schema: {
         name: string;
         strict?: boolean;
@@ -51,7 +51,7 @@ export type ResponseFormat =
       };
     }
   | {
-      type: 'json_object';
+      type: "json_object";
     };
 
 /**
@@ -103,7 +103,7 @@ export interface ChatCompletionOptions {
  */
 export class OpenRouterService {
   private readonly apiKey: string;
-  private readonly baseUrl = 'https://openrouter.ai/api/v1';
+  private readonly baseUrl = "https://openrouter.ai/api/v1";
 
   /**
    * Initializes the OpenRouter service.
@@ -115,8 +115,8 @@ export class OpenRouterService {
 
     if (!apiKey) {
       // TODO: Implement proper logging service
-      console.error('OpenRouter API key is not configured.');
-      throw new Error('OPENROUTER_API_KEY is not set in environment variables.');
+      console.error("OpenRouter API key is not configured.");
+      throw new Error("OPENROUTER_API_KEY is not set in environment variables.");
     }
 
     this.apiKey = apiKey;
@@ -169,8 +169,8 @@ export class OpenRouterService {
     const payload = {
       model,
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
       response_format: responseFormat,
       temperature,
@@ -178,9 +178,7 @@ export class OpenRouterService {
     };
 
     // Send the request and get validated response
-    const response = await this.makeRequest<{ choices: { message: { content: string } }[] }>(
-      payload
-    );
+    const response = await this.makeRequest<{ choices: { message: { content: string } }[] }>(payload);
 
     // Extract the content from the first choice
     const content = response.choices[0].message.content;
@@ -191,22 +189,26 @@ export class OpenRouterService {
       return parsed;
     } catch (error) {
       // TODO: Implement proper logging service
-      console.error('Failed to parse JSON response from model:', content);
-      console.error('Parse error:', error instanceof Error ? error.message : 'Unknown error');
+      console.error("Failed to parse JSON response from model:", content);
+      console.error("Parse error:", error instanceof Error ? error.message : "Unknown error");
 
       // Try to provide more context about the issue
       if (content.length === 0) {
-        throw new Error('Empty response from model.');
+        throw new Error("Empty response from model.");
       }
 
       // Check if response looks truncated
       const trimmed = content.trim();
-      if (trimmed.endsWith(',') || trimmed.endsWith('{') || trimmed.endsWith('[') ||
-          (!trimmed.endsWith('}') && !trimmed.endsWith(']') && trimmed.includes('{'))) {
-        throw new Error('Truncated JSON response from model. Try increasing maxTokens or using a more concise prompt.');
+      if (
+        trimmed.endsWith(",") ||
+        trimmed.endsWith("{") ||
+        trimmed.endsWith("[") ||
+        (!trimmed.endsWith("}") && !trimmed.endsWith("]") && trimmed.includes("{"))
+      ) {
+        throw new Error("Truncated JSON response from model. Try increasing maxTokens or using a more concise prompt.");
       }
 
-      throw new Error(`Invalid JSON response from model: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Invalid JSON response from model: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
@@ -226,10 +228,10 @@ export class OpenRouterService {
   private async makeRequest<T>(body: object): Promise<T> {
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify(body),
       });
@@ -238,10 +240,7 @@ export class OpenRouterService {
       if (!response.ok) {
         const errorBody = await response.text();
         // TODO: Implement proper logging service
-        console.error(
-          `OpenRouter API error: ${response.status} ${response.statusText}`,
-          errorBody
-        );
+        console.error(`OpenRouter API error: ${response.status} ${response.statusText}`, errorBody);
         throw new Error(`API request failed with status ${response.status}`);
       }
 
@@ -249,11 +248,11 @@ export class OpenRouterService {
       const data = await response.json();
 
       // Log the full response for debugging
-      console.log('OpenRouter API response:', JSON.stringify(data, null, 2));
+      console.log("OpenRouter API response:", JSON.stringify(data, null, 2));
 
       // Check if the response contains an error field (OpenRouter error format)
       if (data.error) {
-        console.error('OpenRouter API returned an error:', data.error);
+        console.error("OpenRouter API returned an error:", data.error);
         throw new Error(`API error: ${data.error.message || JSON.stringify(data.error)}`);
       }
 
@@ -261,9 +260,12 @@ export class OpenRouterService {
       const validation = OpenRouterResponseSchema.safeParse(data);
       if (!validation.success) {
         // TODO: Implement proper logging service
-        console.error('Invalid response structure from OpenRouter API:', JSON.stringify(validation.error.errors, null, 2));
-        console.error('Actual response data:', JSON.stringify(data, null, 2));
-        throw new Error('Invalid response structure from API.');
+        console.error(
+          "Invalid response structure from OpenRouter API:",
+          JSON.stringify(validation.error.errors, null, 2)
+        );
+        console.error("Actual response data:", JSON.stringify(data, null, 2));
+        throw new Error("Invalid response structure from API.");
       }
 
       return validation.data as T;
@@ -271,17 +273,15 @@ export class OpenRouterService {
       // Handle network errors or other fetch failures
       if (error instanceof Error) {
         // Re-throw our custom errors
-        if (error.message.includes('API request failed') ||
-            error.message.includes('Invalid response structure')) {
+        if (error.message.includes("API request failed") || error.message.includes("Invalid response structure")) {
           throw error;
         }
         // Wrap network errors
-        console.error('Network error during OpenRouter API request:', error.message);
+        console.error("Network error during OpenRouter API request:", error.message);
         throw new Error(`Network error: ${error.message}`);
       }
       // Unexpected error type
-      throw new Error('Unexpected error during API request');
+      throw new Error("Unexpected error during API request");
     }
   }
 }
-

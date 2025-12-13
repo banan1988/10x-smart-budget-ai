@@ -1,26 +1,46 @@
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { AdminStatsService } from '../../../lib/services/admin-stats.service';
-import { checkAuthentication, checkAdminRole, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { AdminStatsService } from "../../../lib/services/admin-stats.service";
+import {
+  checkAuthentication,
+  checkAdminRole,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
 
 // Zod schema for validating query parameters
 const AiStatsQuerySchema = z.object({
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  page: z.string().optional().default('1').transform((val) => {
-    const num = parseInt(val, 10);
-    return isNaN(num) ? 1 : Math.max(num, 1);
-  }),
-  limit: z.string().optional().default('20').transform((val) => {
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return 20;
-    return Math.min(Math.max(num, 1), 100); // Between 1 and 100
-  }),
-  sortBy: z.enum(['category', 'ai', 'manual', 'aiPercentage']).optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  page: z
+    .string()
+    .optional()
+    .default("1")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      return isNaN(num) ? 1 : Math.max(num, 1);
+    }),
+  limit: z
+    .string()
+    .optional()
+    .default("20")
+    .transform((val) => {
+      const num = parseInt(val, 10);
+      if (isNaN(num)) return 20;
+      return Math.min(Math.max(num, 1), 100); // Between 1 and 100
+    }),
+  sortBy: z.enum(["category", "ai", "manual", "aiPercentage"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
 });
 
 type AiStatsQuery = z.infer<typeof AiStatsQuerySchema>;
@@ -34,7 +54,7 @@ interface CategoryStats {
   total: number;
   aiPercentage: number;
   trend?: {
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
     percentage?: number;
   };
 }
@@ -72,8 +92,8 @@ function getDefaultDateRange(): { startDate: string; endDate: string } {
   startDate.setDate(startDate.getDate() - 30);
 
   return {
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
+    startDate: startDate.toISOString().split("T")[0],
+    endDate: endDate.toISOString().split("T")[0],
   };
 }
 
@@ -110,12 +130,12 @@ export const GET: APIRoute = async (context) => {
 
     // Extract and validate query parameters
     const queryParams = {
-      startDate: url.searchParams.get('startDate') || undefined,
-      endDate: url.searchParams.get('endDate') || undefined,
-      page: url.searchParams.get('page') || undefined,
-      limit: url.searchParams.get('limit') || undefined,
-      sortBy: url.searchParams.get('sortBy') || undefined,
-      sortOrder: url.searchParams.get('sortOrder') || undefined,
+      startDate: url.searchParams.get("startDate") || undefined,
+      endDate: url.searchParams.get("endDate") || undefined,
+      page: url.searchParams.get("page") || undefined,
+      limit: url.searchParams.get("limit") || undefined,
+      sortBy: url.searchParams.get("sortBy") || undefined,
+      sortOrder: url.searchParams.get("sortOrder") || undefined,
     };
 
     const validationResult = AiStatsQuerySchema.safeParse(queryParams);
@@ -125,27 +145,20 @@ export const GET: APIRoute = async (context) => {
     }
 
     const query = validationResult.data;
-    const { startDate, endDate } = query.startDate && query.endDate
-      ? { startDate: query.startDate, endDate: query.endDate }
-      : getDefaultDateRange();
+    const { startDate, endDate } =
+      query.startDate && query.endDate ? { startDate: query.startDate, endDate: query.endDate } : getDefaultDateRange();
 
     // Fetch actual AI stats from database using the service
-    const stats = await AdminStatsService.getAiStats(
-      supabase,
-      startDate,
-      endDate,
-      {
-        page: query.page,
-        limit: query.limit,
-        sortBy: query.sortBy,
-        sortOrder: query.sortOrder,
-      }
-    );
+    const stats = await AdminStatsService.getAiStats(supabase, startDate, endDate, {
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+    });
 
     return createSuccessResponse(stats, 200);
   } catch (error) {
-    console.error('Error fetching AI stats:', error);
+    console.error("Error fetching AI stats:", error);
     return createErrorResponse(error, 500);
   }
 };
-

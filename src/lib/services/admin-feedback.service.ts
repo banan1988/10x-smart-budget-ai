@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '../../db/supabase.client';
-import type { FeedbackDto } from '../../types';
+import type { SupabaseClient } from "../../db/supabase.client";
+import type { FeedbackDto } from "../../types";
 
 /**
  * Service for managing admin feedback statistics and operations.
@@ -29,7 +29,7 @@ export class AdminFeedbackService {
     stats: {
       total: number;
       averageRating: number;
-      ratingDistribution: Array<{ rating: number; count: number }>;
+      ratingDistribution: { rating: number; count: number }[];
     };
     pagination: {
       page: number;
@@ -41,10 +41,11 @@ export class AdminFeedbackService {
     try {
       // Fetch all feedback with minimal filtering at DB level
       // Details filtering will be done locally for flexibility
-      const { data: allFeedbacks, error: fetchError, count } = await supabase
-        .from('feedback')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false });
+      const {
+        data: allFeedbacks,
+        error: fetchError,
+        count,
+      } = await supabase.from("feedback").select("*", { count: "exact" }).order("created_at", { ascending: false });
 
       if (fetchError) {
         throw new Error(`Failed to fetch feedbacks: ${fetchError.message}`);
@@ -78,14 +79,14 @@ export class AdminFeedbackService {
 
       if (filters?.startDate) {
         filteredFeedbacks = filteredFeedbacks.filter((f) => {
-          const feedbackDate = f.created_at.split('T')[0];
+          const feedbackDate = f.created_at.split("T")[0];
           return feedbackDate >= filters.startDate!;
         });
       }
 
       if (filters?.endDate) {
         filteredFeedbacks = filteredFeedbacks.filter((f) => {
-          const feedbackDate = f.created_at.split('T')[0];
+          const feedbackDate = f.created_at.split("T")[0];
           return feedbackDate <= filters.endDate!;
         });
       }
@@ -98,9 +99,7 @@ export class AdminFeedbackService {
       const totalFiltered = filteredFeedbacks.length;
       const averageRating =
         totalFiltered > 0
-          ? Math.round(
-              (filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFiltered) * 100
-            ) / 100
+          ? Math.round((filteredFeedbacks.reduce((sum, f) => sum + f.rating, 0) / totalFiltered) * 100) / 100
           : 0;
 
       const ratingDistribution = [5, 4, 3, 2, 1].map((rating) => ({
@@ -129,9 +128,7 @@ export class AdminFeedbackService {
         },
       };
     } catch (error) {
-      throw error instanceof Error
-        ? error
-        : new Error('Unknown error while fetching admin feedbacks');
+      throw error instanceof Error ? error : new Error("Unknown error while fetching admin feedbacks");
     }
   }
 
@@ -153,21 +150,21 @@ export class AdminFeedbackService {
     previousStartDate: string,
     previousEndDate: string
   ): Promise<{
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
     percentage: number;
   }> {
     try {
       const { data: currentFeedbacks } = await supabase
-        .from('feedback')
-        .select('rating')
-        .gte('created_at', currentStartDate)
-        .lte('created_at', currentEndDate);
+        .from("feedback")
+        .select("rating")
+        .gte("created_at", currentStartDate)
+        .lte("created_at", currentEndDate);
 
       const { data: previousFeedbacks } = await supabase
-        .from('feedback')
-        .select('rating')
-        .gte('created_at', previousStartDate)
-        .lte('created_at', previousEndDate);
+        .from("feedback")
+        .select("rating")
+        .gte("created_at", previousStartDate)
+        .lte("created_at", previousEndDate);
 
       const currentAvg =
         currentFeedbacks && currentFeedbacks.length > 0
@@ -180,21 +177,20 @@ export class AdminFeedbackService {
           : 0;
 
       if (previousAvg === 0) {
-        return { direction: 'neutral', percentage: 0 };
+        return { direction: "neutral", percentage: 0 };
       }
 
       const percentageChange = Math.round(((currentAvg - previousAvg) / previousAvg) * 100);
 
       if (percentageChange > 0) {
-        return { direction: 'up', percentage: percentageChange };
+        return { direction: "up", percentage: percentageChange };
       } else if (percentageChange < 0) {
-        return { direction: 'down', percentage: Math.abs(percentageChange) };
+        return { direction: "down", percentage: Math.abs(percentageChange) };
       } else {
-        return { direction: 'neutral', percentage: 0 };
+        return { direction: "neutral", percentage: 0 };
       }
     } catch {
-      return { direction: 'neutral', percentage: 0 };
+      return { direction: "neutral", percentage: 0 };
     }
   }
 }
-

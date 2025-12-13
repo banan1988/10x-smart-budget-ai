@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import type { DailyBreakdownVM } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import type { DailyBreakdownVM } from "@/types";
 
 interface DailyIncomeExpensesChartProps {
   data: DailyBreakdownVM[];
@@ -14,13 +14,14 @@ function CustomTooltip({ active, payload }: any) {
     return null;
   }
 
-  const incomeData = payload.find((p: any) => p.dataKey === 'income');
-  const expensesData = payload.find((p: any) => p.dataKey === 'expenses');
+  const incomeData = payload.find((p: any) => p.dataKey === "income");
+  const expensesData = payload.find((p: any) => p.dataKey === "expenses");
 
-  const formatCurrency = (value: number) => new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency: 'PLN',
-  }).format(value);
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pl-PL", {
+      style: "currency",
+      currency: "PLN",
+    }).format(value);
 
   return (
     <div className="rounded-lg border bg-card text-card-foreground p-3 shadow-lg">
@@ -49,7 +50,7 @@ export function DailyIncomeExpensesChart({ data }: DailyIncomeExpensesChartProps
   }
 
   // Filter out days with no transactions to make the chart cleaner
-  const filteredData = data.filter(day => day.income > 0 || day.expenses > 0);
+  const filteredData = data.filter((day) => day.income > 0 || day.expenses > 0);
 
   if (filteredData.length === 0) {
     return null;
@@ -70,43 +71,30 @@ export function DailyIncomeExpensesChart({ data }: DailyIncomeExpensesChartProps
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#888888' }}
+              tick={{ fill: "#888888" }}
             />
             <YAxis
               stroke="#888888"
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: '#888888' }}
+              tick={{ fill: "#888888" }}
               tickFormatter={(value) => `${value} zł`}
             />
             <Tooltip
               content={<CustomTooltip />}
-              cursor={{ fill: 'rgba(128, 128, 128, 0.1)' }}
-              contentStyle={{ backgroundColor: 'transparent', border: 'none' }}
+              cursor={{ fill: "rgba(128, 128, 128, 0.1)" }}
+              contentStyle={{ backgroundColor: "transparent", border: "none" }}
             />
             <Legend
-              wrapperStyle={{ paddingTop: '20px' }}
-              formatter={(value) => value === 'income' ? 'Przychody' : 'Wydatki'}
+              wrapperStyle={{ paddingTop: "20px" }}
+              formatter={(value) => (value === "income" ? "Przychody" : "Wydatki")}
             />
-            <Bar
-              dataKey="income"
-              fill="#10b981"
-              radius={[8, 8, 0, 0]}
-              maxBarSize={40}
-              name="income"
-            />
-            <Bar
-              dataKey="expenses"
-              fill="#ef4444"
-              radius={[8, 8, 0, 0]}
-              maxBarSize={40}
-              name="expenses"
-            />
+            <Bar dataKey="income" fill="#10b981" radius={[8, 8, 0, 0]} maxBarSize={40} name="income" />
+            <Bar dataKey="expenses" fill="#ef4444" radius={[8, 8, 0, 0]} maxBarSize={40} name="expenses" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
   );
 }
-

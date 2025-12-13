@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface AiSummaryProps {
   summary?: string;
@@ -20,9 +20,7 @@ export function AiSummary({ summary }: AiSummaryProps) {
           <span className="text-xl">🤖</span>
           <span>Podsumowanie AI</span>
         </CardTitle>
-        <CardDescription>
-          Analiza Twoich finansów wygenerowana przez sztuczną inteligencję
-        </CardDescription>
+        <CardDescription>Analiza Twoich finansów wygenerowana przez sztuczną inteligencję</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-sm leading-relaxed text-foreground/90">{summary}</p>
@@ -30,4 +28,3 @@ export function AiSummary({ summary }: AiSummaryProps) {
     </Card>
   );
 }
-

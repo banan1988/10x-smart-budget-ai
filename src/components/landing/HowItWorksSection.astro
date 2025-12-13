@@ -4,51 +4,53 @@ const steps = [
   {
     number: 1,
     title: "Dodaj transakcję",
-    description: "Wprowadź kwotę i opis wydatku lub przychodu w prosty sposób."
+    description: "Wprowadź kwotę i opis wydatku lub przychodu w prosty sposób.",
   },
   {
     number: 2,
     title: "AI kategoryzuje",
-    description: "Nasza sztuczna inteligencja automatycznie przypisuje kategorię do transakcji."
+    description: "Nasza sztuczna inteligencja automatycznie przypisuje kategorię do transakcji.",
   },
   {
     number: 3,
     title: "Analizuj raporty",
-    description: "Przeglądaj wykresy i statystyki, aby lepiej zrozumieć swoje finanse."
-  }
+    description: "Przeglądaj wykresy i statystyki, aby lepiej zrozumieć swoje finanse.",
+  },
 ];
 ---
 
 <section id="jak-dziala" class="py-20 sm:py-32 bg-muted/30">
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-        Jak to działa?
-      </h2>
+      <h2 class="text-3xl sm:text-4xl font-bold text-foreground mb-4">Jak to działa?</h2>
       <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
         Zacznij zarządzać swoimi finansami w 3 prostych krokach
       </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-      {steps.map((step) => (
-        <div class="relative">
-          <div class="bg-background p-8 rounded-lg shadow-sm border border-border text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold mb-6">
-              {step.number}
+      {
+        steps.map((step) => (
+          <div class="relative">
+            <div class="bg-background p-8 rounded-lg shadow-sm border border-border text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground text-2xl font-bold mb-6">
+                {step.number}
+              </div>
+              <h3 class="text-xl font-semibold text-foreground mb-3">{step.title}</h3>
+              <p class="text-muted-foreground">{step.description}</p>
             </div>
-            <h3 class="text-xl font-semibold text-foreground mb-3">{step.title}</h3>
-            <p class="text-muted-foreground">{step.description}</p>
-          </div>
 
-          {step.number < 3 && (
-            <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-3xl text-primary" aria-hidden="true">
-              →
-            </div>
-          )}
-        </div>
-      ))}
+            {step.number < 3 && (
+              <div
+                class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-3xl text-primary"
+                aria-hidden="true"
+              >
+                →
+              </div>
+            )}
+          </div>
+        ))
+      }
     </div>
   </div>
 </section>
-

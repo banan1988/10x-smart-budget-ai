@@ -1,19 +1,19 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import ProfileSettingsView from '../../components/ProfileSettingsView.tsx';
-import { AppHeader } from '../../components/AppHeader';
-import { AppFooter } from '../../components/AppFooter';
-import { AppSidebar } from '../../components/AppSidebar';
-import { MobileNav } from '../../components/MobileNav';
-import { Breadcrumbs } from '../../components/Breadcrumbs';
-import type { ProfileSettingsPageVM, UserProfileDto } from '../../types';
+import Layout from "../../layouts/Layout.astro";
+import ProfileSettingsView from "../../components/ProfileSettingsView.tsx";
+import { AppHeader } from "../../components/AppHeader";
+import { AppFooter } from "../../components/AppFooter";
+import { AppSidebar } from "../../components/AppSidebar";
+import { MobileNav } from "../../components/MobileNav";
+import { Breadcrumbs } from "../../components/Breadcrumbs";
+import type { ProfileSettingsPageVM, UserProfileDto } from "../../types";
 
 // Use authenticated user from middleware (already verified with getUser())
 const user = Astro.locals.user;
 
 // If not authenticated, middleware will redirect to login
 if (!user) {
-  return Astro.redirect('/login');
+  return Astro.redirect("/login");
 }
 
 // Fetch user profile from API
@@ -23,31 +23,31 @@ let errorMessage: string | null = null;
 try {
   const response = await fetch(`${Astro.url.origin}/api/user/profile`, {
     headers: {
-      'Cookie': Astro.request.headers.get('Cookie') || '',
+      Cookie: Astro.request.headers.get("Cookie") || "",
     },
   });
 
   if (response.ok) {
     profile = await response.json();
   } else if (response.status === 404) {
-    errorMessage = 'Profil nie znaleziony. Prosimy skontaktować się z supportem.';
+    errorMessage = "Profil nie znaleziony. Prosimy skontaktować się z supportem.";
   } else if (response.status === 401) {
     // Session expired or invalid
     // TODO: Uncomment when ready to enforce authentication
     // return Astro.redirect('/login');
-    errorMessage = 'Sesja wygasła. Zaloguj się ponownie.';
+    errorMessage = "Sesja wygasła. Zaloguj się ponownie.";
   } else {
-    errorMessage = 'Błąd serwera. Spróbuj ponownie później.';
+    errorMessage = "Błąd serwera. Spróbuj ponownie później.";
   }
 } catch (error) {
-  console.error('Error fetching user profile:', error);
-  errorMessage = 'Błąd serwera. Spróbuj ponownie później.';
+  console.error("Error fetching user profile:", error);
+  errorMessage = "Błąd serwera. Spróbuj ponownie później.";
 }
 
 // If there was an error, display error page
 if (errorMessage) {
   return new Response(errorMessage, {
-    status: profile === null && errorMessage.includes('404') ? 404 : 500,
+    status: profile === null && errorMessage.includes("404") ? 404 : 500,
   });
 }
 
@@ -61,9 +61,9 @@ const userProfile: ProfileSettingsPageVM = {
 
 // Breadcrumbs data
 const breadcrumbItems = [
-  { label: 'Strona główna', href: '/' },
-  { label: 'Profil', href: '/profile' },
-  { label: 'Ustawienia', href: '/profile/settings' },
+  { label: "Strona główna", href: "/" },
+  { label: "Profil", href: "/profile" },
+  { label: "Ustawienia", href: "/profile/settings" },
 ];
 ---
 
@@ -93,9 +93,7 @@ const breadcrumbItems = [
           <!-- Page header -->
           <div class="mb-8">
             <h1 class="text-3xl font-bold tracking-tight">Ustawienia profilu</h1>
-            <p class="mt-2 text-muted-foreground">
-              Zarządzaj swoimi danymi osobistymi i preferencjami konta
-            </p>
+            <p class="mt-2 text-muted-foreground">Zarządzaj swoimi danymi osobistymi i preferencjami konta</p>
           </div>
 
           <!-- Settings content -->
@@ -112,10 +110,10 @@ const breadcrumbItems = [
   <script>
     // Adjust main content padding based on sidebar state
     function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem('sidebar-expanded') === 'true';
-      const mainContent = document.getElementById('main-content');
+      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
+      const mainContent = document.getElementById("main-content");
       if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? '14rem' : '4rem';
+        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
       }
     }
 
@@ -123,12 +121,11 @@ const breadcrumbItems = [
     updateMainContentPadding();
 
     // Listen for sidebar toggle
-    window.addEventListener('toggle-sidebar', () => {
+    window.addEventListener("toggle-sidebar", () => {
       setTimeout(updateMainContentPadding, 50);
     });
 
     // Update on resize
-    window.addEventListener('resize', updateMainContentPadding);
+    window.addEventListener("resize", updateMainContentPadding);
   </script>
 </Layout>
-

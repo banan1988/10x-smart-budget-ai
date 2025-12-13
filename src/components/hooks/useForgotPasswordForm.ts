@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface FormState {
   email: string;
@@ -16,7 +16,7 @@ interface FormState {
 interface UseForgotPasswordFormReturn {
   state: FormState;
   handleEmailChange: (value: string) => void;
-  handleBlur: (field: 'email') => void;
+  handleBlur: (field: "email") => void;
   handleSubmit: () => Promise<void>;
   isFormValid: boolean;
 }
@@ -31,10 +31,10 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 function validateEmail(email: string): string | undefined {
   if (!email) {
-    return 'Email jest wymagany';
+    return "Email jest wymagany";
   }
   if (!EMAIL_REGEX.test(email)) {
-    return 'Wprowadź prawidłowy adres email';
+    return "Wprowadź prawidłowy adres email";
   }
   return undefined;
 }
@@ -44,7 +44,7 @@ function validateEmail(email: string): string | undefined {
  */
 export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
   const [state, setState] = useState<FormState>({
-    email: '',
+    email: "",
     isLoading: false,
     isSubmitted: false,
     generalError: null,
@@ -78,11 +78,11 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
   /**
    * Handle blur event for field validation
    */
-  const handleBlur = useCallback((field: 'email') => {
+  const handleBlur = useCallback((field: "email") => {
     setState((prev) => {
       const newState = { ...prev, touched: { ...prev.touched, [field]: true } };
 
-      if (field === 'email') {
+      if (field === "email") {
         const error = validateEmail(prev.email);
         if (error) {
           newState.fieldErrors = { ...prev.fieldErrors, email: error };
@@ -111,7 +111,7 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
       setState((prev) => ({
         ...prev,
         fieldErrors: { email: emailError },
-        generalError: 'Popraw błędy w formularzu',
+        generalError: "Popraw błędy w formularzu",
       }));
       return;
     }
@@ -123,10 +123,10 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
     }));
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: state.email,
@@ -134,7 +134,7 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
       });
 
       if (!response.ok) {
-        throw new Error('Nie udało się wysłać instrukcji resetowania hasła');
+        throw new Error("Nie udało się wysłać instrukcji resetowania hasła");
       }
 
       setState((prev) => ({
@@ -147,7 +147,7 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        generalError: error instanceof Error ? error.message : 'Something went wrong',
+        generalError: error instanceof Error ? error.message : "Something went wrong",
       }));
     }
   }, [state.email]);
@@ -162,4 +162,3 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
     isFormValid,
   };
 }
-

@@ -1,7 +1,7 @@
-import type { ProfilePageVM } from '../types';
-import ProfileCard from './ProfileCard';
-import ProfileActions from './ProfileActions';
-import { Breadcrumbs } from './Breadcrumbs';
+import type { ProfilePageVM } from "../types";
+import ProfileCard from "./ProfileCard";
+import ProfileActions from "./ProfileActions";
+import { Breadcrumbs } from "./Breadcrumbs";
 
 interface ProfileViewProps {
   userProfile: ProfilePageVM;
@@ -16,28 +16,18 @@ export default function ProfileView({ userProfile }: ProfileViewProps) {
     <div className="space-y-6">
       {/* Breadcrumbs */}
       <Breadcrumbs
-        items={[
-          { label: 'SmartBudgetAI', href: '/dashboard' },
-          { label: 'Profil' },
-        ]}
+        items={[{ label: "SmartBudgetAI", href: "/dashboard" }, { label: "Profil" }]}
         showSidebarToggle={true}
       />
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Profil użytkownika</h1>
-        <p className="text-muted-foreground mt-2">
-          Zarządzaj swoim kontem i ustawieniami
-        </p>
+        <p className="text-muted-foreground mt-2">Zarządzaj swoim kontem i ustawieniami</p>
       </div>
 
-      <ProfileCard
-        email={userProfile.email}
-        nickname={userProfile.nickname}
-        registeredAt={userProfile.registeredAt}
-      />
+      <ProfileCard email={userProfile.email} nickname={userProfile.nickname} registeredAt={userProfile.registeredAt} />
 
       <ProfileActions />
     </div>
   );
 }
-

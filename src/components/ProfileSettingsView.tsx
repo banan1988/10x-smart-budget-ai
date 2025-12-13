@@ -1,7 +1,7 @@
-import React from 'react';
-import type { ProfileSettingsPageVM } from '../types';
-import { EditProfileSection } from './EditProfileSection';
-import { DeleteAccountSection } from './DeleteAccountSection';
+import React from "react";
+import type { ProfileSettingsPageVM } from "../types";
+import { EditProfileSection } from "./EditProfileSection";
+import { DeleteAccountSection } from "./DeleteAccountSection";
 
 interface ProfileSettingsViewProps {
   userProfile: ProfileSettingsPageVM;
@@ -18,7 +18,7 @@ export default function ProfileSettingsView({ userProfile }: ProfileSettingsView
       <EditProfileSection
         initialNickname={userProfile.nickname}
         onProfileUpdated={(updatedNickname) => {
-          console.log('Profile updated:', updatedNickname);
+          console.log("Profile updated:", updatedNickname);
         }}
       />
 
@@ -30,4 +30,3 @@ export default function ProfileSettingsView({ userProfile }: ProfileSettingsView
     </div>
   );
 }
-

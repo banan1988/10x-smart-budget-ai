@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Loading skeleton that mimics the dashboard layout
@@ -45,4 +45,3 @@ export function DashboardSkeleton() {
     </div>
   );
 }
-

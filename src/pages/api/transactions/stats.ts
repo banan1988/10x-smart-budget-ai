@@ -1,7 +1,12 @@
-import type { APIRoute } from 'astro';
-import { TransactionService } from '../../../lib/services/transaction.service';
-import { GetTransactionStatsQuerySchema } from '../../../types';
-import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { TransactionService } from "../../../lib/services/transaction.service";
+import { GetTransactionStatsQuerySchema } from "../../../types";
+import {
+  checkAuthentication,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -32,8 +37,8 @@ export const GET: APIRoute = async (context) => {
 
     // Extract and validate query parameters
     const queryParams = {
-      month: url.searchParams.get('month') || undefined,
-      includeAiSummary: url.searchParams.get('includeAiSummary') || undefined,
+      month: url.searchParams.get("month") || undefined,
+      includeAiSummary: url.searchParams.get("includeAiSummary") || undefined,
     };
 
     const validationResult = GetTransactionStatsQuerySchema.safeParse(queryParams);
@@ -53,14 +58,13 @@ export const GET: APIRoute = async (context) => {
     // Return successful response with statistics
     // Cache for 60 seconds, allow stale content for up to 10 minutes while revalidating in background
     const response = createSuccessResponse(stats, 200);
-    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=600');
+    response.headers.set("Cache-Control", "private, max-age=60, stale-while-revalidate=600");
     return response;
   } catch (error) {
     // Log error for debugging
-    console.error('Error fetching transaction stats:', error);
+    console.error("Error fetching transaction stats:", error);
 
     // Return error response
     return createErrorResponse(error, 500);
   }
 };
-

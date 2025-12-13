@@ -4,7 +4,7 @@
  * Provides utilities for protecting API endpoints and checking user authentication
  */
 
-import type { APIContext } from 'astro';
+import type { APIContext } from "astro";
 
 /**
  * Response structure for API errors
@@ -28,9 +28,7 @@ interface ApiErrorResponse {
  *   // ... rest of the handler
  * }
  */
-export function checkAuthentication(
-  context: APIContext
-): [isAuthenticated: boolean, errorResponse?: Response] {
+export function checkAuthentication(context: APIContext): [isAuthenticated: boolean, errorResponse?: Response] {
   const { locals } = context;
 
   // Check if user is authenticated
@@ -39,13 +37,13 @@ export function checkAuthentication(
       false,
       new Response(
         JSON.stringify({
-          error: 'Unauthorized',
-          message: 'Authentication required',
+          error: "Unauthorized",
+          message: "Authentication required",
         } as ApiErrorResponse),
         {
           status: 401,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       ),
@@ -58,13 +56,13 @@ export function checkAuthentication(
       false,
       new Response(
         JSON.stringify({
-          error: 'Internal Server Error',
-          message: 'Supabase client not available',
+          error: "Internal Server Error",
+          message: "Supabase client not available",
         } as ApiErrorResponse),
         {
           status: 500,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       ),
@@ -93,7 +91,7 @@ export function checkAuthentication(
 export async function checkAdminRole(context: APIContext): Promise<[isAdmin: boolean, errorResponse?: Response]> {
   const { locals } = context;
 
-  console.log('[checkAdminRole] Checking admin role for user:', {
+  console.log("[checkAdminRole] Checking admin role for user:", {
     userId: locals.user?.id,
     userRole: locals.user?.role,
     hasSupabase: !!locals.supabase,
@@ -101,22 +99,22 @@ export async function checkAdminRole(context: APIContext): Promise<[isAdmin: boo
 
   // If role is already loaded in locals (from middleware cache), use it
   if (locals.user?.role) {
-    if (locals.user.role === 'admin') {
-      console.log('[checkAdminRole] User has admin role from locals');
+    if (locals.user.role === "admin") {
+      console.log("[checkAdminRole] User has admin role from locals");
       return [true];
     } else {
-      console.log('[checkAdminRole] User has non-admin role:', locals.user.role);
+      console.log("[checkAdminRole] User has non-admin role:", locals.user.role);
       return [
         false,
         new Response(
           JSON.stringify({
-            error: 'Forbidden',
-            message: 'Admin role required',
+            error: "Forbidden",
+            message: "Admin role required",
           } as ApiErrorResponse),
           {
             status: 403,
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
           }
         ),
@@ -126,32 +124,32 @@ export async function checkAdminRole(context: APIContext): Promise<[isAdmin: boo
 
   // If role is not in locals and we need to check it, fetch from database
   if (locals.user?.id && locals.supabase) {
-    console.log('[checkAdminRole] Fetching role from database for user:', locals.user.id);
+    console.log("[checkAdminRole] Fetching role from database for user:", locals.user.id);
     try {
       const { data, error } = await locals.supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', locals.user.id)
+        .from("user_profiles")
+        .select("role")
+        .eq("id", locals.user.id)
         .single();
 
       if (error) {
-        console.error('[checkAdminRole] Database error:', error.message);
+        console.error("[checkAdminRole] Database error:", error.message);
       }
 
       if (!data) {
-        console.log('[checkAdminRole] No profile found for user:', locals.user.id);
+        console.log("[checkAdminRole] No profile found for user:", locals.user.id);
         // Default to non-admin if profile not found
         return [
           false,
           new Response(
             JSON.stringify({
-              error: 'Forbidden',
-              message: 'Admin role required',
+              error: "Forbidden",
+              message: "Admin role required",
             } as ApiErrorResponse),
             {
               status: 403,
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
             }
           ),
@@ -159,44 +157,44 @@ export async function checkAdminRole(context: APIContext): Promise<[isAdmin: boo
       }
 
       // Check if role is admin
-      if (data.role === 'admin') {
-        console.log('[checkAdminRole] User has admin role from database');
+      if (data.role === "admin") {
+        console.log("[checkAdminRole] User has admin role from database");
         // Cache the role in locals for this request
         if (locals.user) {
-          locals.user.role = 'admin';
+          locals.user.role = "admin";
         }
         return [true];
       } else {
-        console.log('[checkAdminRole] User role from database:', data.role);
+        console.log("[checkAdminRole] User role from database:", data.role);
         return [
           false,
           new Response(
             JSON.stringify({
-              error: 'Forbidden',
-              message: 'Admin role required',
+              error: "Forbidden",
+              message: "Admin role required",
             } as ApiErrorResponse),
             {
               status: 403,
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
             }
           ),
         ];
       }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error("Error checking admin role:", error);
       return [
         false,
         new Response(
           JSON.stringify({
-            error: 'Forbidden',
-            message: 'Admin role required',
+            error: "Forbidden",
+            message: "Admin role required",
           } as ApiErrorResponse),
           {
             status: 403,
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
           }
         ),
@@ -208,13 +206,13 @@ export async function checkAdminRole(context: APIContext): Promise<[isAdmin: boo
     false,
     new Response(
       JSON.stringify({
-        error: 'Forbidden',
-        message: 'Admin role required',
+        error: "Forbidden",
+        message: "Admin role required",
       } as ApiErrorResponse),
       {
         status: 403,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     ),
@@ -235,13 +233,13 @@ export async function checkAdminRole(context: APIContext): Promise<[isAdmin: boo
 export function createValidationErrorResponse(details: unknown): Response {
   return new Response(
     JSON.stringify({
-      error: 'Validation failed',
+      error: "Validation failed",
       details,
     } as ApiErrorResponse & { details: unknown }),
     {
       status: 400,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     }
   );
@@ -262,8 +260,8 @@ export function createValidationErrorResponse(details: unknown): Response {
  * }
  */
 export function createErrorResponse(error: unknown, statusCode = 500): Response {
-  const message = error instanceof Error ? error.message : 'Unknown error';
-  const errorName = error instanceof Error ? error.name : 'Error';
+  const message = error instanceof Error ? error.message : "Unknown error";
+  const errorName = error instanceof Error ? error.name : "Error";
 
   return new Response(
     JSON.stringify({
@@ -273,7 +271,7 @@ export function createErrorResponse(error: unknown, statusCode = 500): Response 
     {
       status: statusCode,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     }
   );
@@ -294,8 +292,7 @@ export function createSuccessResponse(data: unknown, statusCode = 200): Response
   return new Response(JSON.stringify(data), {
     status: statusCode,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 }
-

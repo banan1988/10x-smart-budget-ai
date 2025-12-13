@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 /**
  * Custom hook to detect media query matches
@@ -10,7 +10,7 @@ export function useMediaQuery(query: string): boolean {
 
   useEffect(() => {
     // Check if we're in the browser
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
@@ -26,7 +26,7 @@ export function useMediaQuery(query: string): boolean {
 
     // Modern browsers
     if (media.addEventListener) {
-      media.addEventListener('change', listener);
+      media.addEventListener("change", listener);
     } else {
       // Legacy browsers
       media.addListener(listener);
@@ -35,7 +35,7 @@ export function useMediaQuery(query: string): boolean {
     // Cleanup
     return () => {
       if (media.removeEventListener) {
-        media.removeEventListener('change', listener);
+        media.removeEventListener("change", listener);
       } else {
         media.removeListener(listener);
       }
@@ -44,4 +44,3 @@ export function useMediaQuery(query: string): boolean {
 
   return matches;
 }
-

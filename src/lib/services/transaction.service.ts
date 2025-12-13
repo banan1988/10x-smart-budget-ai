@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '../../db/supabase.client';
+import type { SupabaseClient } from "../../db/supabase.client";
 import type {
   TransactionDto,
   CreateTransactionCommand,
@@ -6,12 +6,12 @@ import type {
   GetTransactionsQuery,
   PaginatedResponse,
   TransactionStatsDto,
-  BulkCreateTransactionsCommand
-} from '../../types';
-import { UNCATEGORIZED_CATEGORY_NAME } from '../../types';
-import { CategoryService } from './category.service';
-import { AiCategorizationService } from './ai-categorization.service';
-import { BackgroundCategorizationService } from './background-categorization.service';
+  BulkCreateTransactionsCommand,
+} from "../../types";
+import { UNCATEGORIZED_CATEGORY_NAME } from "../../types";
+import { CategoryService } from "./category.service";
+import { AiCategorizationService } from "./ai-categorization.service";
+import { BackgroundCategorizationService } from "./background-categorization.service";
 
 /**
  * Service for managing financial transactions.
@@ -36,12 +36,13 @@ export class TransactionService {
     const startDate = `${query.month}-01`;
     const endDate = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1, 0)
       .toISOString()
-      .split('T')[0];
+      .split("T")[0];
 
     // Build base query
     let queryBuilder = supabase
-      .from('transactions')
-      .select(`
+      .from("transactions")
+      .select(
+        `
         id,
         type,
         amount,
@@ -55,26 +56,28 @@ export class TransactionService {
           key,
           translations
         )
-      `, { count: 'exact' })
-      .eq('user_id', userId)
-      .gte('date', startDate)
-      .lte('date', endDate);
+      `,
+        { count: "exact" }
+      )
+      .eq("user_id", userId)
+      .gte("date", startDate)
+      .lte("date", endDate);
 
     // Apply filters
     if (query.categoryId && query.categoryId.length > 0) {
-      queryBuilder = queryBuilder.in('category_id', query.categoryId);
+      queryBuilder = queryBuilder.in("category_id", query.categoryId);
     }
 
     if (query.type) {
-      queryBuilder = queryBuilder.eq('type', query.type);
+      queryBuilder = queryBuilder.eq("type", query.type);
     }
 
     if (query.search) {
-      queryBuilder = queryBuilder.ilike('description', `%${query.search}%`);
+      queryBuilder = queryBuilder.ilike("description", `%${query.search}%`);
     }
 
     // Apply sorting
-    queryBuilder = queryBuilder.order('date', { ascending: false });
+    queryBuilder = queryBuilder.order("date", { ascending: false });
 
     // Apply pagination
     const page = query.page || 1;
@@ -111,9 +114,7 @@ export class TransactionService {
 
       // If transaction has a category, transform it to CategoryDto
       if (transaction.categories && transaction.category_id) {
-        const categoryData = Array.isArray(transaction.categories)
-          ? transaction.categories[0]
-          : transaction.categories;
+        const categoryData = Array.isArray(transaction.categories) ? transaction.categories[0] : transaction.categories;
 
         if (categoryData) {
           const translations = categoryData.translations as Record<string, string>;
@@ -129,12 +130,12 @@ export class TransactionService {
 
       return {
         id: transaction.id,
-        type: transaction.type as 'income' | 'expense',
+        type: transaction.type as "income" | "expense",
         amount: transaction.amount,
         description: transaction.description,
         date: transaction.date,
         is_ai_categorized: transaction.is_ai_categorized,
-        categorization_status: (transaction.categorization_status as 'pending' | 'completed') || 'completed',
+        categorization_status: (transaction.categorization_status as "pending" | "completed") || "completed",
         category,
       };
     });
@@ -176,19 +177,19 @@ export class TransactionService {
   ): Promise<TransactionDto> {
     // Handle input validation with early return
     if (!command || !command.description) {
-      throw new Error('Transaction description is required');
+      throw new Error("Transaction description is required");
     }
 
     const categoryId = command.categoryId ?? null;
 
     // Determine initial categorization status
     // Income transactions don't need categorization, or manual category provided
-    const requiresBackground = command.type === 'expense' && !categoryId;
-    const categorizationStatus = requiresBackground ? 'pending' : 'completed';
+    const requiresBackground = command.type === "expense" && !categoryId;
+    const categorizationStatus = requiresBackground ? "pending" : "completed";
 
     // Insert the transaction with proper categorization status
     const { data, error } = await supabase
-      .from('transactions')
+      .from("transactions")
       .insert({
         user_id: userId,
         type: command.type,
@@ -199,7 +200,8 @@ export class TransactionService {
         is_ai_categorized: false, // Will be set to true by background job if successful
         categorization_status: categorizationStatus,
       })
-      .select(`
+      .select(
+        `
         id,
         type,
         amount,
@@ -213,7 +215,8 @@ export class TransactionService {
           key,
           translations
         )
-      `)
+      `
+      )
       .single();
 
     // Handle database errors
@@ -223,25 +226,22 @@ export class TransactionService {
 
     // Handle missing data
     if (!data) {
-      throw new Error('Failed to create transaction: No data returned');
+      throw new Error("Failed to create transaction: No data returned");
     }
 
     // Queue background categorization if needed (fire-and-forget)
     if (requiresBackground) {
       const backgroundService = new BackgroundCategorizationService(supabase);
-      backgroundService.categorizeTransactionInBackground(data.id, command.description, userId)
-        .catch(err => {
-          // Error is already logged by background service
-          console.error(`Failed to queue background categorization for transaction ${data.id}`);
-        });
+      backgroundService.categorizeTransactionInBackground(data.id, command.description, userId).catch((err) => {
+        // Error is already logged by background service
+        console.error(`Failed to queue background categorization for transaction ${data.id}`);
+      });
     }
 
     // Transform to TransactionDto
     let category = null;
     if (data.categories && data.category_id) {
-      const categoryData = Array.isArray(data.categories)
-        ? data.categories[0]
-        : data.categories;
+      const categoryData = Array.isArray(data.categories) ? data.categories[0] : data.categories;
 
       if (categoryData) {
         const translations = categoryData.translations as Record<string, string>;
@@ -257,12 +257,12 @@ export class TransactionService {
 
     return {
       id: data.id,
-      type: data.type as 'income' | 'expense',
+      type: data.type as "income" | "expense",
       amount: data.amount,
       description: data.description,
       date: data.date,
       is_ai_categorized: data.is_ai_categorized,
-      categorization_status: data.categorization_status as 'pending' | 'completed',
+      categorization_status: data.categorization_status as "pending" | "completed",
       category,
     };
   }
@@ -285,15 +285,15 @@ export class TransactionService {
   ): Promise<TransactionDto> {
     // First verify the transaction exists and belongs to the user
     const { data: existing, error: checkError } = await supabase
-      .from('transactions')
-      .select('id')
-      .eq('id', transactionId)
-      .eq('user_id', userId)
+      .from("transactions")
+      .select("id")
+      .eq("id", transactionId)
+      .eq("user_id", userId)
       .single();
 
     // Handle not found or authorization errors
     if (checkError || !existing) {
-      throw new Error('Transaction not found or access denied');
+      throw new Error("Transaction not found or access denied");
     }
 
     // Build update object
@@ -312,11 +312,12 @@ export class TransactionService {
 
     // Update the transaction
     const { data, error } = await supabase
-      .from('transactions')
+      .from("transactions")
       .update(updateData)
-      .eq('id', transactionId)
-      .eq('user_id', userId)
-      .select(`
+      .eq("id", transactionId)
+      .eq("user_id", userId)
+      .select(
+        `
         id,
         type,
         amount,
@@ -330,7 +331,8 @@ export class TransactionService {
           key,
           translations
         )
-      `)
+      `
+      )
       .single();
 
     // Handle database errors
@@ -340,15 +342,13 @@ export class TransactionService {
 
     // Handle missing data
     if (!data) {
-      throw new Error('Failed to update transaction: No data returned');
+      throw new Error("Failed to update transaction: No data returned");
     }
 
     // Transform to TransactionDto
     let category = null;
     if (data.categories && data.category_id) {
-      const categoryData = Array.isArray(data.categories)
-        ? data.categories[0]
-        : data.categories;
+      const categoryData = Array.isArray(data.categories) ? data.categories[0] : data.categories;
 
       if (categoryData) {
         const translations = categoryData.translations as Record<string, string>;
@@ -364,12 +364,12 @@ export class TransactionService {
 
     return {
       id: data.id,
-      type: data.type as 'income' | 'expense',
+      type: data.type as "income" | "expense",
       amount: data.amount,
       description: data.description,
       date: data.date,
       is_ai_categorized: data.is_ai_categorized,
-      categorization_status: data.categorization_status as 'pending' | 'completed',
+      categorization_status: data.categorization_status as "pending" | "completed",
       category,
     };
   }
@@ -383,30 +383,22 @@ export class TransactionService {
    * @returns Promise resolving when deletion is complete
    * @throws Error if transaction doesn't exist, doesn't belong to user, or database operation fails
    */
-  static async deleteTransaction(
-    supabase: SupabaseClient,
-    userId: string,
-    transactionId: number
-  ): Promise<void> {
+  static async deleteTransaction(supabase: SupabaseClient, userId: string, transactionId: number): Promise<void> {
     // First verify the transaction exists and belongs to the user
     const { data: existing, error: checkError } = await supabase
-      .from('transactions')
-      .select('id')
-      .eq('id', transactionId)
-      .eq('user_id', userId)
+      .from("transactions")
+      .select("id")
+      .eq("id", transactionId)
+      .eq("user_id", userId)
       .single();
 
     // Handle not found or authorization errors
     if (checkError || !existing) {
-      throw new Error('Transaction not found or access denied');
+      throw new Error("Transaction not found or access denied");
     }
 
     // Delete the transaction
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', transactionId)
-      .eq('user_id', userId);
+    const { error } = await supabase.from("transactions").delete().eq("id", transactionId).eq("user_id", userId);
 
     // Handle database errors
     if (error) {
@@ -429,21 +421,21 @@ export class TransactionService {
     supabase: SupabaseClient,
     userId: string,
     month: string,
-    includeAiSummary: boolean = false
+    includeAiSummary = false
   ): Promise<TransactionStatsDto> {
     // Calculate date range for the month
     const startDate = `${month}-01`;
     const endDate = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1, 0)
       .toISOString()
-      .split('T')[0];
+      .split("T")[0];
 
     // Query 1: Get basic aggregations without joins (fast path)
     const { data: basicStats, error: basicError } = await supabase
-      .from('transactions')
-      .select('id, type, amount, date, is_ai_categorized, category_id, user_id')
-      .eq('user_id', userId)
-      .gte('date', startDate)
-      .lte('date', endDate);
+      .from("transactions")
+      .select("id, type, amount, date, is_ai_categorized, category_id, user_id")
+      .eq("user_id", userId)
+      .gte("date", startDate)
+      .lte("date", endDate);
 
     // Handle database errors
     if (basicError) {
@@ -466,56 +458,55 @@ export class TransactionService {
     }
 
     // Calculate totals using basic stats (no DB overhead)
-    const totalIncome = basicStats
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0);
+    const totalIncome = basicStats.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
 
-    const totalExpenses = basicStats
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+    const totalExpenses = basicStats.filter((t) => t.type === "expense").reduce((sum, t) => sum + t.amount, 0);
 
     // Calculate AI stats
-    const aiCategorizedCount = basicStats.filter(t => t.is_ai_categorized).length;
-    const manualCategorizedCount = basicStats.filter(t => !t.is_ai_categorized && t.category_id !== null).length;
+    const aiCategorizedCount = basicStats.filter((t) => t.is_ai_categorized).length;
+    const manualCategorizedCount = basicStats.filter((t) => !t.is_ai_categorized && t.category_id !== null).length;
 
     // Query 2: Get category data only for expense transactions with categories
-    const expenseWithCategories = basicStats.filter(
-      t => t.type === 'expense' && t.category_id !== null
-    );
+    const expenseWithCategories = basicStats.filter((t) => t.type === "expense" && t.category_id !== null);
 
-    const categoryMap = new Map<number | null, {
-      name: string;
-      total: number;
-      count: number;
-    }>();
+    const categoryMap = new Map<
+      number | null,
+      {
+        name: string;
+        total: number;
+        count: number;
+      }
+    >();
 
     // Get unique category IDs from filtered expenses
-    const uniqueCategoryIds = [...new Set(expenseWithCategories.map(t => t.category_id))];
+    const uniqueCategoryIds = [...new Set(expenseWithCategories.map((t) => t.category_id))];
 
     // Fetch category translations only if we have expense categories
     if (uniqueCategoryIds.length > 0) {
       const { data: categoryData, error: categoryError } = await supabase
-        .from('categories')
-        .select('id, key, translations')
-        .in('id', uniqueCategoryIds);
+        .from("categories")
+        .select("id, key, translations")
+        .in("id", uniqueCategoryIds);
 
       if (categoryError) {
         throw new Error(`Failed to fetch category data: ${categoryError.message}`);
       }
 
       // Create category lookup map
-      const categoryLookup = new Map(categoryData?.map(cat => [
-        cat.id,
-        {
-          name: (cat.translations as Record<string, string>)?.pl || cat.key,
-        },
-      ]) || []);
+      const categoryLookup = new Map(
+        categoryData?.map((cat) => [
+          cat.id,
+          {
+            name: (cat.translations as Record<string, string>)?.pl || cat.key,
+          },
+        ]) || []
+      );
 
       // Calculate category breakdown
-      expenseWithCategories.forEach(transaction => {
+      expenseWithCategories.forEach((transaction) => {
         const categoryId = transaction.category_id;
         const categoryInfo = categoryLookup.get(categoryId);
-        const categoryName = categoryInfo?.name || 'Bez kategorii';
+        const categoryName = categoryInfo?.name || "Bez kategorii";
 
         const existing = categoryMap.get(categoryId);
         if (existing) {
@@ -532,7 +523,7 @@ export class TransactionService {
     }
 
     // Add uncategorized expenses
-    const uncategorized = basicStats.filter(t => t.type === 'expense' && t.category_id === null);
+    const uncategorized = basicStats.filter((t) => t.type === "expense" && t.category_id === null);
     if (uncategorized.length > 0) {
       const total = uncategorized.reduce((sum, t) => sum + t.amount, 0);
       categoryMap.set(null, {
@@ -543,13 +534,15 @@ export class TransactionService {
     }
 
     // Convert to array and calculate percentages
-    const categoryBreakdown = Array.from(categoryMap.entries()).map(([categoryId, data]) => ({
-      categoryId,
-      categoryName: data.name,
-      total: data.total,
-      count: data.count,
-      percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
-    })).sort((a, b) => b.total - a.total);
+    const categoryBreakdown = Array.from(categoryMap.entries())
+      .map(([categoryId, data]) => ({
+        categoryId,
+        categoryName: data.name,
+        total: data.total,
+        count: data.count,
+        percentage: totalExpenses > 0 ? (data.total / totalExpenses) * 100 : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
 
     // Calculate daily breakdown
     const dailyMap = new Map<string, { income: number; expenses: number }>();
@@ -557,15 +550,15 @@ export class TransactionService {
     // Initialize all days in the month with 0 values
     const daysInMonth = new Date(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1, 0).getDate();
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${month}-${String(day).padStart(2, '0')}`;
+      const dateStr = `${month}-${String(day).padStart(2, "0")}`;
       dailyMap.set(dateStr, { income: 0, expenses: 0 });
     }
 
     // Aggregate transactions by date
-    basicStats.forEach(transaction => {
+    basicStats.forEach((transaction) => {
       const existing = dailyMap.get(transaction.date);
       if (existing) {
-        if (transaction.type === 'income') {
+        if (transaction.type === "income") {
           existing.income += transaction.amount;
         } else {
           existing.expenses += transaction.amount;
@@ -573,11 +566,13 @@ export class TransactionService {
       }
     });
 
-    const dailyBreakdown = Array.from(dailyMap.entries()).map(([date, totals]) => ({
-      date,
-      income: totals.income,
-      expenses: totals.expenses,
-    })).sort((a, b) => a.date.localeCompare(b.date));
+    const dailyBreakdown = Array.from(dailyMap.entries())
+      .map(([date, totals]) => ({
+        date,
+        income: totals.income,
+        expenses: totals.expenses,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     const stats: TransactionStatsDto = {
       month,
@@ -596,14 +591,15 @@ export class TransactionService {
       // TODO: Implement AI service integration
       // For now, return a mock summary
       const formatAmount = (amount: number) => `${(amount / 100).toFixed(2)} zł`;
-      const balanceInfo = stats.balance >= 0
-        ? `Twoje saldo jest pozytywne: ${formatAmount(stats.balance)}.`
-        : `Uwaga! Wydatki przekroczyły przychody o ${formatAmount(Math.abs(stats.balance))}.`;
+      const balanceInfo =
+        stats.balance >= 0
+          ? `Twoje saldo jest pozytywne: ${formatAmount(stats.balance)}.`
+          : `Uwaga! Wydatki przekroczyły przychody o ${formatAmount(Math.abs(stats.balance))}.`;
 
       const topCategory = categoryBreakdown[0];
       const categoryInfo = topCategory
         ? `Najwięcej wydałeś/aś na: ${topCategory.categoryName} (${topCategory.percentage.toFixed(1)}%).`
-        : '';
+        : "";
 
       stats.aiSummary = `W ${month} odnotowano ${stats.transactionCount} transakcji. ${balanceInfo} ${categoryInfo}`;
     }
@@ -626,7 +622,7 @@ export class TransactionService {
     command: BulkCreateTransactionsCommand
   ): Promise<TransactionDto[]> {
     // Prepare insert data
-    const insertData = command.transactions.map(transaction => ({
+    const insertData = command.transactions.map((transaction) => ({
       user_id: userId,
       type: transaction.type,
       amount: transaction.amount,
@@ -637,10 +633,7 @@ export class TransactionService {
     }));
 
     // Insert transactions
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert(insertData)
-      .select(`
+    const { data, error } = await supabase.from("transactions").insert(insertData).select(`
         id,
         type,
         amount,
@@ -662,16 +655,14 @@ export class TransactionService {
 
     // Handle missing data
     if (!data) {
-      throw new Error('Failed to bulk create transactions: No data returned');
+      throw new Error("Failed to bulk create transactions: No data returned");
     }
 
     // Transform to TransactionDto
     return data.map((transaction) => {
       let category = null;
       if (transaction.categories && transaction.category_id) {
-        const categoryData = Array.isArray(transaction.categories)
-          ? transaction.categories[0]
-          : transaction.categories;
+        const categoryData = Array.isArray(transaction.categories) ? transaction.categories[0] : transaction.categories;
 
         if (categoryData) {
           const translations = categoryData.translations as Record<string, string>;
@@ -687,7 +678,7 @@ export class TransactionService {
 
       return {
         id: transaction.id,
-        type: transaction.type as 'income' | 'expense',
+        type: transaction.type as "income" | "expense",
         amount: transaction.amount,
         description: transaction.description,
         date: transaction.date,
@@ -706,17 +697,13 @@ export class TransactionService {
    * @returns Promise resolving to number of deleted transactions
    * @throws Error if database operation fails
    */
-  static async bulkDeleteTransactions(
-    supabase: SupabaseClient,
-    userId: string,
-    ids: number[]
-  ): Promise<number> {
+  static async bulkDeleteTransactions(supabase: SupabaseClient, userId: string, ids: number[]): Promise<number> {
     // Delete transactions
     const { error, count } = await supabase
-      .from('transactions')
-      .delete({ count: 'exact' })
-      .in('id', ids)
-      .eq('user_id', userId);
+      .from("transactions")
+      .delete({ count: "exact" })
+      .in("id", ids)
+      .eq("user_id", userId);
 
     // Handle database errors
     if (error) {
@@ -726,4 +713,3 @@ export class TransactionService {
     return count || 0;
   }
 }
-

@@ -1,11 +1,11 @@
-import { useState, useId } from 'react';
-import { Eye, EyeOff, Check, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useResetPasswordForm, type PasswordStrengthLevel } from '@/components/hooks/useResetPasswordForm';
+import { useState, useId } from "react";
+import { Eye, EyeOff, Check, X } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useResetPasswordForm, type PasswordStrengthLevel } from "@/components/hooks/useResetPasswordForm";
 
 /**
  * Password Strength Indicator Component
@@ -26,10 +26,10 @@ function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStr
   const { requirements } = strength;
 
   const strengthColors: Record<PasswordStrengthLevel, { bg: string; text: string; label: string }> = {
-    'weak': { bg: 'bg-red-500', text: 'text-red-600 dark:text-red-400', label: 'Słabe' },
-    'medium': { bg: 'bg-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', label: 'Średnie' },
-    'strong': { bg: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', label: 'Silne' },
-    'very-strong': { bg: 'bg-green-500', text: 'text-green-600 dark:text-green-400', label: 'Bardzo silne' },
+    weak: { bg: "bg-red-500", text: "text-red-600 dark:text-red-400", label: "Słabe" },
+    medium: { bg: "bg-yellow-500", text: "text-yellow-600 dark:text-yellow-400", label: "Średnie" },
+    strong: { bg: "bg-blue-500", text: "text-blue-600 dark:text-blue-400", label: "Silne" },
+    "very-strong": { bg: "bg-green-500", text: "text-green-600 dark:text-green-400", label: "Bardzo silne" },
   };
 
   const colors = strengthColors[strength.level];
@@ -59,7 +59,11 @@ function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStr
               ) : (
                 <X className="w-4 h-4 text-slate-400" />
               )}
-              <span className={requirements.minLength ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
+              <span
+                className={
+                  requirements.minLength ? "text-green-600 dark:text-green-400" : "text-slate-600 dark:text-slate-400"
+                }
+              >
                 Minimum 8 znaków
               </span>
             </li>
@@ -69,7 +73,13 @@ function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStr
               ) : (
                 <X className="w-4 h-4 text-slate-400" />
               )}
-              <span className={requirements.hasUppercase ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
+              <span
+                className={
+                  requirements.hasUppercase
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-slate-600 dark:text-slate-400"
+                }
+              >
                 Wielka litera (A-Z)
               </span>
             </li>
@@ -79,7 +89,13 @@ function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStr
               ) : (
                 <X className="w-4 h-4 text-slate-400" />
               )}
-              <span className={requirements.hasLowercase ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
+              <span
+                className={
+                  requirements.hasLowercase
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-slate-600 dark:text-slate-400"
+                }
+              >
                 Mała litera (a-z)
               </span>
             </li>
@@ -89,7 +105,11 @@ function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStr
               ) : (
                 <X className="w-4 h-4 text-slate-400" />
               )}
-              <span className={requirements.hasDigit ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
+              <span
+                className={
+                  requirements.hasDigit ? "text-green-600 dark:text-green-400" : "text-slate-600 dark:text-slate-400"
+                }
+              >
                 Cyfra (0-9)
               </span>
             </li>
@@ -99,7 +119,13 @@ function PasswordStrengthIndicator({ password, showDetails = true }: PasswordStr
               ) : (
                 <X className="w-4 h-4 text-slate-400" />
               )}
-              <span className={requirements.hasSpecialChar ? 'text-green-600 dark:text-green-400' : 'text-slate-600 dark:text-slate-400'}>
+              <span
+                className={
+                  requirements.hasSpecialChar
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-slate-600 dark:text-slate-400"
+                }
+              >
                 Znak specjalny (!@#$...)
               </span>
             </li>
@@ -163,13 +189,13 @@ export default function ResetPasswordForm() {
             <div className="relative">
               <Input
                 id={passwordInputId}
-                type={state.showPassword ? 'text' : 'password'}
+                type={state.showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={state.newPassword}
                 onChange={(e) => handlePasswordChange(e.target.value)}
-                onBlur={() => handleBlur('newPassword')}
+                onBlur={() => handleBlur("newPassword")}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && isFormValid) {
+                  if (e.key === "Enter" && isFormValid) {
                     handleSubmit();
                   }
                 }}
@@ -185,15 +211,11 @@ export default function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                aria-label={state.showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                aria-label={state.showPassword ? "Ukryj hasło" : "Pokaż hasło"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
                 disabled={state.isLoading}
               >
-                {state.showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {state.showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
@@ -205,11 +227,7 @@ export default function ResetPasswordForm() {
             )}
 
             {state.touched.newPassword && state.fieldErrors.newPassword && (
-              <p
-                id={`${passwordInputId}-error`}
-                className="text-sm font-medium text-destructive"
-                role="alert"
-              >
+              <p id={`${passwordInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
                 {state.fieldErrors.newPassword}
               </p>
             )}
@@ -224,13 +242,13 @@ export default function ResetPasswordForm() {
             <div className="relative">
               <Input
                 id={confirmPasswordInputId}
-                type={state.showConfirmPassword ? 'text' : 'password'}
+                type={state.showConfirmPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={state.confirmPassword}
                 onChange={(e) => handleConfirmPasswordChange(e.target.value)}
-                onBlur={() => handleBlur('confirmPassword')}
+                onBlur={() => handleBlur("confirmPassword")}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && isFormValid) {
+                  if (e.key === "Enter" && isFormValid) {
                     handleSubmit();
                   }
                 }}
@@ -246,24 +264,16 @@ export default function ResetPasswordForm() {
               <button
                 type="button"
                 onClick={toggleConfirmPasswordVisibility}
-                aria-label={state.showConfirmPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                aria-label={state.showConfirmPassword ? "Ukryj hasło" : "Pokaż hasło"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
                 disabled={state.isLoading}
               >
-                {state.showConfirmPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
+                {state.showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
             {state.touched.confirmPassword && state.fieldErrors.confirmPassword && (
-              <p
-                id={`${confirmPasswordInputId}-error`}
-                className="text-sm font-medium text-destructive"
-                role="alert"
-              >
+              <p id={`${confirmPasswordInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
                 {state.fieldErrors.confirmPassword}
               </p>
             )}
@@ -282,7 +292,7 @@ export default function ResetPasswordForm() {
                 <span>Zmiana hasła...</span>
               </div>
             ) : (
-              'Zmień hasło'
+              "Zmień hasło"
             )}
           </Button>
         </form>
@@ -300,4 +310,3 @@ export default function ResetPasswordForm() {
     </Card>
   );
 }
-

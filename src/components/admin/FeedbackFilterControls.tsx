@@ -1,14 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
-import type { FeedbackFilters } from '../../types';
+import React, { useState, useCallback } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import type { FeedbackFilters } from "../../types";
 
 interface FeedbackFilterControlsProps {
   onFilterChange: (filters: FeedbackFilters) => void;
@@ -21,9 +15,9 @@ export default function FeedbackFilterControls({
   isLoading = false,
   defaultValues = {},
 }: FeedbackFilterControlsProps) {
-  const [startDate, setStartDate] = useState(defaultValues.startDate || '');
-  const [endDate, setEndDate] = useState(defaultValues.endDate || '');
-  const [rating, setRating] = useState(defaultValues.rating?.toString() || '');
+  const [startDate, setStartDate] = useState(defaultValues.startDate || "");
+  const [endDate, setEndDate] = useState(defaultValues.endDate || "");
+  const [rating, setRating] = useState(defaultValues.rating?.toString() || "");
 
   const handleApply = useCallback(() => {
     const filters: FeedbackFilters = {};
@@ -34,7 +28,7 @@ export default function FeedbackFilterControls({
     if (endDate) {
       filters.endDate = endDate;
     }
-    if (rating && rating !== '' && rating !== 'all') {
+    if (rating && rating !== "" && rating !== "all") {
       filters.rating = parseInt(rating, 10);
     }
 
@@ -42,9 +36,9 @@ export default function FeedbackFilterControls({
   }, [startDate, endDate, rating, onFilterChange]);
 
   const handleClear = useCallback(() => {
-    setStartDate('');
-    setEndDate('');
-    setRating('');
+    setStartDate("");
+    setEndDate("");
+    setRating("");
     onFilterChange({});
   }, [onFilterChange]);
 
@@ -56,9 +50,7 @@ export default function FeedbackFilterControls({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Start Date */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Od
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Od</label>
             <Input
               type="date"
               value={startDate}
@@ -70,9 +62,7 @@ export default function FeedbackFilterControls({
 
           {/* End Date */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Do
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Do</label>
             <Input
               type="date"
               value={endDate}
@@ -84,9 +74,7 @@ export default function FeedbackFilterControls({
 
           {/* Rating Filter */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Ocena
-            </label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Ocena</label>
             <Select value={rating} onValueChange={setRating} disabled={isLoading}>
               <SelectTrigger className="dark:bg-gray-900">
                 <SelectValue placeholder="Wszystkie oceny" />
@@ -105,20 +93,10 @@ export default function FeedbackFilterControls({
           {/* Action Buttons */}
           <div className="flex flex-col gap-2 justify-end">
             <div className="flex gap-2">
-              <Button
-                onClick={handleApply}
-                disabled={isLoading}
-                className="flex-1"
-                variant="default"
-              >
+              <Button onClick={handleApply} disabled={isLoading} className="flex-1" variant="default">
                 Zastosuj
               </Button>
-              <Button
-                onClick={handleClear}
-                disabled={isLoading}
-                className="flex-1"
-                variant="outline"
-              >
+              <Button onClick={handleClear} disabled={isLoading} className="flex-1" variant="outline">
                 Wyczyść
               </Button>
             </div>
@@ -128,4 +106,3 @@ export default function FeedbackFilterControls({
     </div>
   );
 }
-

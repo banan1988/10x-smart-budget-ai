@@ -1,6 +1,6 @@
-import React from 'react';
-import MetricCard from './MetricCard';
-import TrendBadge from './TrendBadge';
+import React from "react";
+import MetricCard from "./MetricCard";
+import TrendBadge from "./TrendBadge";
 
 interface AiCategorizationStatsDto {
   period: {
@@ -59,4 +59,3 @@ export default function MetricsGrid({ stats }: MetricsGridProps) {
     </div>
   );
 }
-

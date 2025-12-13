@@ -1,8 +1,13 @@
-import type { APIRoute } from 'astro';
-import { z } from 'zod';
-import { UserService } from '../../../lib/services/user.service';
-import type { UpdateProfileRequest, UpdateProfileResponse } from '../../../types';
-import { checkAuthentication, createValidationErrorResponse, createErrorResponse, createSuccessResponse } from '../../../lib/api-auth';
+import type { APIRoute } from "astro";
+import { z } from "zod";
+import { UserService } from "../../../lib/services/user.service";
+import type { UpdateProfileRequest, UpdateProfileResponse } from "../../../types";
+import {
+  checkAuthentication,
+  createValidationErrorResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../lib/api-auth";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -13,12 +18,9 @@ export const prerender = false;
 const UpdateProfileSchema = z.object({
   nickname: z
     .string()
-    .min(1, 'Nickname is required')
-    .max(50, 'Nickname must not exceed 50 characters')
-    .regex(
-      /^[a-zA-Z0-9\s\-_]+$/,
-      'Nickname can only contain letters, numbers, spaces, hyphens, and underscores'
-    ),
+    .min(1, "Nickname is required")
+    .max(50, "Nickname must not exceed 50 characters")
+    .regex(/^[a-zA-Z0-9\s\-_]+$/, "Nickname can only contain letters, numbers, spaces, hyphens, and underscores"),
 });
 
 /**
@@ -57,12 +59,12 @@ export const GET: APIRoute = async (context) => {
 
     // Cache the profile for the entire session (1 hour)
     // AppHeader fetches this once on app startup and caches in sessionStorage
-    response.headers.set('Cache-Control', 'private, max-age=3600');
+    response.headers.set("Cache-Control", "private, max-age=3600");
 
     return response;
   } catch (error) {
     // Log error for debugging
-    console.error('Error fetching user profile:', error);
+    console.error("Error fetching user profile:", error);
     return createErrorResponse(error, 500);
   }
 };
@@ -96,13 +98,13 @@ export const PUT: APIRoute = async (context) => {
     } catch (error) {
       return new Response(
         JSON.stringify({
-          error: 'Bad Request',
-          message: 'Invalid JSON in request body',
+          error: "Bad Request",
+          message: "Invalid JSON in request body",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
@@ -112,7 +114,7 @@ export const PUT: APIRoute = async (context) => {
     const validationResult = UpdateProfileSchema.safeParse(body);
     if (!validationResult.success) {
       const errors = validationResult.error.errors.map((err) => ({
-        field: err.path.join('.'),
+        field: err.path.join("."),
         message: err.message,
       }));
 
@@ -127,16 +129,16 @@ export const PUT: APIRoute = async (context) => {
     // Return successful response
     const response: UpdateProfileResponse = {
       success: true,
-      message: 'Profile updated successfully',
+      message: "Profile updated successfully",
       data: {
-        nickname: updatedProfile.nickname || '',
+        nickname: updatedProfile.nickname || "",
       },
     };
 
     return createSuccessResponse(response, 200);
   } catch (error) {
     // Log error for debugging
-    console.error('Error updating user profile:', error);
+    console.error("Error updating user profile:", error);
     return createErrorResponse(error, 500);
   }
 };
