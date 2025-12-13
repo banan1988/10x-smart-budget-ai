@@ -1,69 +1,97 @@
-import { Page, expect } from '@playwright/test';
-import { BasePage } from './basePage';
+import { Locator, Page } from "@playwright/test";
+import { BasePage } from "./basePage";
+import { EmailField, PasswordField, ErrorAlert, NavigationLinks } from "./loginFormCard";
 
+/**
+ * LoginPage - Page Object Model for Login functionality
+ * Uses dedicated component classes following POM pattern
+ * Maintains backward compatibility with Locator-based tests
+ */
 export class LoginPage extends BasePage {
-  readonly emailInput = this.page.locator('input[type="email"]');
-  readonly passwordInput = this.page.locator('input[type="password"]');
-  readonly submitButton = this.page.locator('button[type="submit"]');
-  readonly errorMessage = this.page.locator('[role="alert"]');
+  // Component classes
+  emailField: EmailField;
+  passwordField: PasswordField;
+  errorAlert: ErrorAlert;
+  navigationLinks: NavigationLinks;
+
+  // Locators
+  emailInput: Locator;
+  passwordInput: Locator;
+  submitButton: Locator;
+  passwordToggleButton: Locator;
+  forgotPasswordLink: Locator;
+  registerLink: Locator;
+  errorMessage: Locator;
+  generalErrorAlert: Locator;
 
   constructor(page: Page) {
     super(page);
+
+    // Initialize component classes
+    this.emailField = new EmailField(page);
+    this.passwordField = new PasswordField(page);
+    this.errorAlert = new ErrorAlert(page);
+    this.navigationLinks = new NavigationLinks(page);
+
+    // Initialize locators
+    this.emailInput = page.locator('[data-testid="login-email-input"]');
+    this.passwordInput = page.locator('[data-testid="login-password-input"]');
+    this.submitButton = page.locator('[data-testid="login-submit-button"]');
+    this.passwordToggleButton = page.locator('[data-testid="login-password-toggle"]');
+    this.forgotPasswordLink = page.locator('[data-testid="login-forgot-password-link"]');
+    this.registerLink = page.locator('[data-testid="login-register-link"]');
+    this.errorMessage = page.locator('[data-testid="login-error-alert"]').first();
+    this.generalErrorAlert = page.locator('[data-testid="login-error-alert"]').first();
   }
 
-  async goto() {
-    await super.goto('/login');
-    // Wait for page to be fully loaded
-    await this.page.waitForLoadState('networkidle');
+  async goto(): Promise<void> {
+    await super.goto("/login");
+    await this.page.waitForLoadState("networkidle").catch(() => {
+      return this.page.waitForLoadState("domcontentloaded");
+    });
   }
 
-  async fillEmail(email: string) {
-    await this.emailInput.waitFor({ state: 'visible' });
-    await this.emailInput.fill(email);
+  async fillEmail(email: string): Promise<void> {
+    await this.emailField.fill(email);
   }
 
-  async fillPassword(password: string) {
-    await this.passwordInput.waitFor({ state: 'visible' });
-    await this.passwordInput.fill(password);
+  async fillPassword(password: string): Promise<void> {
+    await this.passwordField.fill(password);
   }
 
-  async submit() {
-    await this.submitButton.waitFor({ state: 'visible', timeout: 5000 });
+  async submit(): Promise<void> {
+    await this.submitButton.waitFor({ state: "visible", timeout: 5000 });
     await this.submitButton.click();
-    // Wait a brief moment for async operations
     await this.page.waitForTimeout(500);
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<void> {
     await this.fillEmail(email);
     await this.fillPassword(password);
     await this.submit();
   }
 
   async getErrorMessage(): Promise<string | null> {
-    try {
-      await this.errorMessage.waitFor({ state: 'visible', timeout: 3000 });
-      return await this.errorMessage.textContent();
-    } catch {
-      return null;
-    }
+    return await this.errorAlert.getMessage();
   }
 
   async isErrorMessageVisible(): Promise<boolean> {
-    try {
-      await this.errorMessage.waitFor({ state: 'visible', timeout: 2000 });
-      return true;
-    } catch {
-      return false;
-    }
+    return await this.errorAlert.isVisible();
   }
 
-  async clearEmail() {
-    await this.emailInput.clear();
+  async clearEmail(): Promise<void> {
+    await this.emailField.clear();
   }
 
-  async clearPassword() {
-    await this.passwordInput.clear();
+  async clearPassword(): Promise<void> {
+    await this.passwordField.clear();
+  }
+
+  async getEmailErrorElement(): Locator {
+    return this.page.locator('[data-testid="login-email-error"]');
+  }
+
+  async getPasswordErrorElement(): Locator {
+    return this.page.locator('[data-testid="login-password-error"]');
   }
 }
-

@@ -23,7 +23,7 @@ export default function LoginForm() {
   const errorRegionId = useId();
 
   return (
-    <Card className="w-full shadow-lg border-slate-200 dark:border-slate-800">
+    <Card className="w-full shadow-lg border-slate-200 dark:border-slate-800" data-testid="login-form-card">
       <CardHeader className="space-y-2">
         <CardTitle className="text-2xl font-bold">Logowanie</CardTitle>
         <CardDescription>Zaloguj się do swojego konta SmartBudgetAI</CardDescription>
@@ -32,7 +32,13 @@ export default function LoginForm() {
       <CardContent className="space-y-6">
         {/* General error message - accessible with aria-live */}
         {state.generalError && (
-          <Alert variant="destructive" role="status" aria-live="polite" aria-atomic="true">
+          <Alert
+            variant="destructive"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            data-testid="login-error-alert"
+          >
             <AlertDescription>{state.generalError}</AlertDescription>
           </Alert>
         )}
@@ -43,6 +49,7 @@ export default function LoginForm() {
             handleSubmit();
           }}
           className="space-y-5"
+          data-testid="login-form"
         >
           {/* Email Field */}
           <div className="space-y-2">
@@ -60,9 +67,15 @@ export default function LoginForm() {
               aria-invalid={state.touched.email && !!state.emailError}
               aria-describedby={state.touched.email && state.emailError ? `${emailInputId}-error` : undefined}
               className="w-full"
+              data-testid="login-email-input"
             />
             {state.touched.email && state.emailError && (
-              <p id={`${emailInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
+              <p
+                id={`${emailInputId}-error`}
+                className="text-sm font-medium text-destructive"
+                role="alert"
+                data-testid="login-email-error"
+              >
                 {state.emailError}
               </p>
             )}
@@ -77,6 +90,7 @@ export default function LoginForm() {
               <a
                 href="/forgot-password"
                 className="text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded px-1"
+                data-testid="login-forgot-password-link"
               >
                 Zapomniałeś hasła?
               </a>
@@ -100,6 +114,7 @@ export default function LoginForm() {
                   state.touched.password && state.passwordError ? `${passwordInputId}-error` : undefined
                 }
                 className="w-full pr-10"
+                data-testid="login-password-input"
               />
               <button
                 type="button"
@@ -107,6 +122,7 @@ export default function LoginForm() {
                 aria-label={isPasswordVisible ? "Ukryj hasło" : "Pokaż hasło"}
                 aria-pressed={isPasswordVisible}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                data-testid="login-password-toggle"
               >
                 {isPasswordVisible ? (
                   <EyeOff className="w-4 h-4" aria-hidden="true" />
@@ -116,7 +132,12 @@ export default function LoginForm() {
               </button>
             </div>
             {state.touched.password && state.passwordError && (
-              <p id={`${passwordInputId}-error`} className="text-sm font-medium text-destructive" role="alert">
+              <p
+                id={`${passwordInputId}-error`}
+                className="text-sm font-medium text-destructive"
+                role="alert"
+                data-testid="login-password-error"
+              >
                 {state.passwordError}
               </p>
             )}
@@ -129,6 +150,7 @@ export default function LoginForm() {
             disabled={!isFormValid}
             className="w-full py-2 font-semibold"
             aria-busy={state.isLoading}
+            data-testid="login-submit-button"
           >
             {state.isLoading ? (
               <div className="flex items-center gap-2">
@@ -147,6 +169,7 @@ export default function LoginForm() {
           <a
             href="/register"
             className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded px-1"
+            data-testid="login-register-link"
           >
             Zarejestruj się
           </a>

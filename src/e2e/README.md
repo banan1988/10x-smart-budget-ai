@@ -25,8 +25,9 @@ npm install
 Create `.env.test` file in the project root:
 ```env
 BASE_URL=http://localhost:3000
-TEST_USER_EMAIL=test@example.com
-TEST_USER_PASSWORD=your-test-password
+E2E_USERNAME_ID=###
+E2E_USERNAME=###
+E2E_PASSWORD=###
 ```
 
 ### Run Tests
@@ -225,4 +226,3 @@ In CI environments:
 3. **Conditional Skipping**: `test.skip(condition, 'reason')`
 4. **Slow Motion**: `npx playwright test --slow-motion=1000`
 5. **Timeout Override**: Pass `timeout` option to specific expects
-

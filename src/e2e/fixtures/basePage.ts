@@ -1,11 +1,11 @@
-import { Page, expect } from '@playwright/test';
+import { Page } from "@playwright/test";
 
 /**
  * Base Page Object for common page interactions
  * Implements Page Object Model pattern for maintainable E2E tests
  */
 export class BasePage {
-  constructor(protected page: Page) {}
+  constructor(public page: Page) {}
 
   /**
    * Navigate to a path, waiting for page to be fully loaded
@@ -13,9 +13,9 @@ export class BasePage {
   async goto(path: string) {
     await this.page.goto(path);
     // Wait for page to reach idle state
-    await this.page.waitForLoadState('networkidle').catch(() => {
+    await this.page.waitForLoadState("networkidle").catch(() => {
       // Fallback if networkidle times out
-      return this.page.waitForLoadState('load');
+      return this.page.waitForLoadState("load");
     });
   }
 
@@ -23,10 +23,7 @@ export class BasePage {
    * Wait for navigation and perform an action simultaneously
    */
   async waitForNavigation(action: () => Promise<void>) {
-    await Promise.all([
-      this.page.waitForNavigation({ waitUntil: 'networkidle' }),
-      action(),
-    ]);
+    await Promise.all([this.page.waitForNavigation({ waitUntil: "networkidle" }), action()]);
   }
 
   /**
@@ -41,7 +38,7 @@ export class BasePage {
    */
   async waitForElement(selector: string, timeout = 5000) {
     const locator = this.page.locator(selector);
-    await locator.waitFor({ state: 'visible', timeout });
+    await locator.waitFor({ state: "visible", timeout });
     return locator;
   }
 
@@ -51,7 +48,7 @@ export class BasePage {
   async isElementVisible(selector: string): Promise<boolean> {
     try {
       const locator = this.page.locator(selector);
-      await locator.waitFor({ state: 'visible', timeout: 2000 });
+      await locator.waitFor({ state: "visible", timeout: 2000 });
       return true;
     } catch {
       return false;
@@ -72,4 +69,3 @@ export class BasePage {
     return this.page.title();
   }
 }
-
