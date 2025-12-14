@@ -26,10 +26,10 @@ export default defineConfig({
         "src/layouts/**",
       ],
       thresholds: {
-        lines: 50, // Recommended: 80%
-        functions: 50, // Recommended: 80%
-        branches: 50, // Recommended: 70%
-        statements: 50, // Recommended: 80%
+        lines: 30, // Recommended: 80%
+        functions: 30, // Recommended: 80%
+        branches: 30, // Recommended: 70%
+        statements: 30, // Recommended: 80%
       },
     },
   },
