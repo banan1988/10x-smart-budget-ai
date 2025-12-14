@@ -39,7 +39,23 @@ export const createSupabaseServerInstance = (context: { headers: Headers; cookie
         return parseCookieHeader(context.headers.get("Cookie") ?? "");
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => context.cookies.set(name, value, options));
+        cookiesToSet.forEach(({ name, value, options }) => {
+          try {
+            context.cookies.set(name, value, options);
+          } catch (error) {
+            // Silently ignore errors when cookies are already sent to browser
+            // This can happen when Supabase tries to set cookies after response is sent
+            // The cookies have already been set in the initial response anyway
+            if (error instanceof Error && error.message.includes("already been sent")) {
+              // eslint-disable-next-line no-console
+              console.debug("[Supabase] Ignoring cookie set after response sent (expected behavior):", name);
+            } else {
+              // Log unexpected errors but don't fail
+              // eslint-disable-next-line no-console
+              console.warn("[Supabase] Error setting cookie:", name, error);
+            }
+          }
+        });
       },
     },
   });

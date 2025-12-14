@@ -48,25 +48,37 @@ export function AppHeader({ userEmail, userNickname, userRole = "user" }: AppHea
           }
         }
 
-        // Fetch from API - middleware will wait up to 10s for profile
-        const response = await fetch("/api/user/profile", {
+        // Fetch from API with timeout - don't wait forever if server is slow
+        const fetchPromise = fetch("/api/user/profile", {
           credentials: "include",
         });
-        if (response.ok) {
-          const profileText = await response.text();
-          try {
-            const profile = JSON.parse(profileText);
-            // Cache the profile in sessionStorage for future use
-            sessionStorage.setItem("user_profile", profileText);
-            if (profile.role && profile.role !== userRole) {
-              setCurrentUserRole(profile.role);
+
+        const timeoutPromise = new Promise<Response>((_, reject) =>
+          setTimeout(() => reject(new Error("Profile fetch timeout")), 2000)
+        );
+
+        try {
+          const response = await Promise.race([fetchPromise, timeoutPromise]);
+          if (response.ok) {
+            const profileText = await response.text();
+            try {
+              const profile = JSON.parse(profileText);
+              // Cache the profile in sessionStorage for future use
+              sessionStorage.setItem("user_profile", profileText);
+              if (profile.role && profile.role !== userRole) {
+                setCurrentUserRole(profile.role);
+                // eslint-disable-next-line no-console
+                console.log("[AppHeader] User role from API:", profile.role);
+              }
+            } catch (parseError) {
               // eslint-disable-next-line no-console
-              console.log("[AppHeader] User role from API:", profile.role);
+              console.error("[AppHeader] Failed to parse API response:", parseError);
             }
-          } catch (parseError) {
-            // eslint-disable-next-line no-console
-            console.error("[AppHeader] Failed to parse API response:", parseError);
           }
+        } catch (fetchError) {
+          // Timeout or network error - just use cached/default role
+          // eslint-disable-next-line no-console
+          console.warn("[AppHeader] Profile fetch failed or timed out:", fetchError);
         }
       } catch (error) {
         // eslint-disable-next-line no-console
