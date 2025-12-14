@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { server } from "./mocks/server";
+import { createClient } from "@supabase/supabase-js";
 
 // Establish API mocking before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -34,3 +35,25 @@ afterEach(() => {
   // Restore globals after tests
   vi.unstubAllGlobals();
 });
+
+/**
+ * Helper function to create a test user in Supabase
+ */
+export async function setupTestUser() {
+  const supabaseAdmin = createClient(
+    process.env.VITE_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // Service key, obejdzie RLS
+  );
+
+  // Create test user
+  const {
+    data: { user },
+    error,
+  } = await supabaseAdmin.auth.admin.createUser({
+    email: process.env.E2E_USERNAME!,
+    password: process.env.E2E_PASSWORD!,
+    email_confirm: true,
+  });
+
+  return user;
+}
