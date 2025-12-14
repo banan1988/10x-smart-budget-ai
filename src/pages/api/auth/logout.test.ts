@@ -41,7 +41,7 @@ describe("POST /api/auth/logout", () => {
   });
 
   describe("Error handling", () => {
-    it("should return 500 on Supabase error", async () => {
+    it("should return 200 on Supabase error (graceful failure)", async () => {
       // Arrange
       const request = new Request("http://localhost:4321/api/auth/logout", { method: "POST" });
       const context = createMockAuthContext(request);
@@ -60,12 +60,13 @@ describe("POST /api/auth/logout", () => {
       const response = await POST(context as APIContext);
 
       // Assert
-      expect(response.status).toBe(500);
+      // Should return 200 because session is cleared locally even if Supabase fails
+      expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data.error).toBeDefined();
+      expect(data.message).toBe("Wylogowano pomyślnie");
     });
 
-    it("should return 500 on unexpected exception", async () => {
+    it("should return 200 on unexpected exception (graceful failure)", async () => {
       // Arrange
       const request = new Request("http://localhost:4321/api/auth/logout", { method: "POST" });
       const context = createMockAuthContext(request);
@@ -80,9 +81,10 @@ describe("POST /api/auth/logout", () => {
       const response = await POST(context as APIContext);
 
       // Assert
-      expect(response.status).toBe(500);
+      // Should return 200 because user is logged out locally
+      expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data.error).toBeDefined();
+      expect(data.message).toBe("Wylogowano pomyślnie");
     });
   });
 

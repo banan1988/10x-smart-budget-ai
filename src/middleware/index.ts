@@ -72,16 +72,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
       createdAt: user.created_at, // Registration date from Supabase auth
     };
 
-    // Fetch user profile
+    // Fetch user profile only when necessary
     const isAdminApiPath = url.pathname.startsWith("/api/admin");
     const isAdminPagePath = url.pathname.startsWith("/profile/admin");
     const isGetProfileApi = url.pathname === "/api/user/profile" && request.method === "GET";
 
-    // Always fetch profile for:
-    // 1. GET /api/user/profile (AppHeader needs this to display role)
-    // 2. Admin routes (must verify role)
-    // For other page requests: fetch with 300ms timeout for UI
-    const shouldFetchProfile = true;
+    // Only fetch profile for:
+    // 1. GET /api/user/profile (AppHeader needs this)
+    // 2. Admin routes (must verify role before rendering)
+    // Skip profile page requests - let AppHeader fetch profile instead
+    // This prevents cascading waits when redirecting from admin->profile pages
+    const shouldFetchProfile = isGetProfileApi || isAdminPagePath || isAdminApiPath;
 
     if (shouldFetchProfile) {
       // Create a promise that resolves when profile is actually loaded
@@ -106,14 +107,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
         // Add timeout - don't wait indefinitely
         // Priority order:
-        // 1. GET /api/user/profile: 10s (critical for AppHeader to get role on startup)
-        // 2. Admin page requests: 5s (must verify before rendering)
-        // 3. Admin API requests: 10s (must verify)
-        // 4. Regular page requests: 300ms (fast, for menu)
-        let timeoutMs = 300; // Default for page requests
-        if (isGetProfileApi) timeoutMs = 10000; // 10s for profile API (critical!)
-        if (isAdminPagePath) timeoutMs = 5000; // 5s for admin pages
-        if (isAdminApiPath) timeoutMs = 10000; // 10s for admin API
+        // 1. GET /api/user/profile: 1.5s (critical for AppHeader to get role on startup)
+        // 2. Admin page requests: 500ms (fast rejection for non-admin users)
+        // 3. Admin API requests: 1.5s (must verify)
+        let timeoutMs = 1500; // Default: 1.5s
+        if (isAdminPagePath) timeoutMs = 500; // 500ms for admin pages (fast rejection for non-admin users)
+        if (isAdminApiPath) timeoutMs = 1500; // 1.5s for admin API
         setTimeout(resolve, timeoutMs);
       });
 

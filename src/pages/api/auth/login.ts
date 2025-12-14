@@ -108,19 +108,38 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     // Fetch user profile to get role and nickname for immediate return to client
-    const supabaseForProfile = createSupabaseServerInstance({
-      headers: request.headers,
-      cookies,
-    });
+    // Use timeout to prevent slow Supabase queries from delaying the login response
+    let userRole = "user";
+    let userNickname = "";
 
-    const { data: profile } = await supabaseForProfile
-      .from("user_profiles")
-      .select("role, nickname")
-      .eq("id", data.user?.id)
-      .single();
+    // Attempt to fetch profile with 1 second timeout
+    // If it times out, client will fetch it later via AppHeader or middleware
+    try {
+      const profilePromise = createSupabaseServerInstance({
+        headers: request.headers,
+        cookies,
+      })
+        .from("user_profiles")
+        .select("role, nickname")
+        .eq("id", data.user?.id)
+        .single();
 
-    const userRole = profile?.role || "user";
-    const userNickname = profile?.nickname || "";
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 1000)
+      );
+
+      const { data: profile } = await Promise.race([profilePromise, timeoutPromise]);
+      if (profile) {
+        userRole = profile.role || "user";
+        userNickname = profile.nickname || "";
+      }
+    } catch (profileError) {
+      // Log but don't fail - profile will be loaded on next request
+      // eslint-disable-next-line no-console
+      console.warn("[Login] Profile fetch failed or timed out - will load on next request", {
+        error: profileError instanceof Error ? profileError.message : String(profileError),
+      });
+    }
 
     // eslint-disable-next-line no-console
     console.log("[Login] User logged in successfully:", {
@@ -130,7 +149,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       nickname: userNickname,
     });
 
-    // Success - return user data with role
+    // Success - return user data with role (or default role if profile fetch timed out)
     return successResponse(
       {
         user: {
