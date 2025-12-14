@@ -5,6 +5,7 @@ import type { UserProfileDto } from "../../types";
  * Service for managing user data.
  * Handles profile retrieval and user account deletion operations.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class UserService {
   /**
    * Retrieves the profile data for a specific user.

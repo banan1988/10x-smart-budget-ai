@@ -40,7 +40,6 @@ const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/profile/reset-p
  */
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, cookies, url, locals, redirect } = context;
-  const startTime = Date.now();
 
   // Check if route is public
   const isPublicPath = PUBLIC_PATHS.includes(url.pathname);
@@ -58,12 +57,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   locals.supabase = supabase;
 
   // Get current user session
-  const authStartTime = Date.now();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const authDuration = Date.now() - authStartTime;
-  console.log("[Middleware] Auth getUser time:", { authDuration, pathname: url.pathname });
 
   // Set basic user data in locals if authenticated
   if (user) {
@@ -77,7 +73,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     };
 
     // Fetch user profile
-    const isPageRequest = !url.pathname.startsWith("/api/");
     const isAdminApiPath = url.pathname.startsWith("/api/admin");
     const isAdminPagePath = url.pathname.startsWith("/profile/admin");
     const isGetProfileApi = url.pathname === "/api/user/profile" && request.method === "GET";
@@ -101,17 +96,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
               // Update locals with fetched profile data
               locals.user.role = profile.role || "user";
               locals.user.nickname = profile.nickname;
-              console.log("[Middleware] Admin profile fetched:", {
-                role: locals.user.role,
-                nickname: locals.user.nickname,
-              });
-            } else if (error) {
-              console.log("[Middleware] Profile fetch error:", error.message);
             }
+
             resolve(); // Resolve after profile update
           })
-          .catch((err) => {
-            console.log("[Middleware] Profile fetch failed:", (err as Error).message);
+          .catch(() => {
             resolve(); // Resolve even on error
           });
 
@@ -129,25 +118,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
 
       // WAIT for profile for admin routes only
-      const profileStartTime = Date.now();
       await profileLoadPromise;
-      const profileDuration = Date.now() - profileStartTime;
-      console.log("[Middleware] Profile fetch duration:", {
-        profileDuration,
-        pathname: url.pathname,
-        role: locals.user.role,
-      });
     }
-
-    // Debug log - show current state
-    console.log("[Middleware] User authenticated:", {
-      userId: user.id,
-      email: user.email,
-      role: locals.user.role,
-      pathname: url.pathname,
-    });
   } else {
-    console.log("[Middleware] No authenticated user");
+    // No authenticated user - continue to next middleware
   }
 
   // Redirect authenticated users from auth pages to dashboard
@@ -171,15 +145,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // Authenticated users without admin role should be redirected to profile
     if (user && locals.user?.role !== "admin") {
-      console.log("[Middleware] Non-admin user blocked from admin page:", {
-        pathname: url.pathname,
-        role: locals.user?.role,
-      });
       return redirect("/profile");
     }
   }
 
-  const totalDuration = Date.now() - startTime;
-  console.log("[Middleware] Total duration:", { totalDuration, pathname: url.pathname });
   return next();
 });

@@ -40,18 +40,23 @@ afterEach(() => {
  * Helper function to create a test user in Supabase
  */
 export async function setupTestUser() {
-  const supabaseAdmin = createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY! // Service key, obejdzie RLS
-  );
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const testEmail = process.env.E2E_USERNAME;
+  const testPassword = process.env.E2E_PASSWORD;
+
+  if (!supabaseUrl || !serviceRoleKey || !testEmail || !testPassword) {
+    throw new Error("Missing required environment variables for test setup");
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
   // Create test user
   const {
     data: { user },
-    error,
   } = await supabaseAdmin.auth.admin.createUser({
-    email: process.env.E2E_USERNAME!,
-    password: process.env.E2E_PASSWORD!,
+    email: testEmail,
+    password: testPassword,
     email_confirm: true,
   });
 

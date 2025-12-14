@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { Button } from "../ui/button";
 import { formatDate } from "../../lib/utils";
 import type { FeedbackDto } from "../../types";
 

@@ -61,8 +61,9 @@ export function DeleteAccountDialog({ isOpen, onOpenChange }: DeleteAccountDialo
       setTimeout(() => {
         window.location.href = "/";
       }, 1000);
-    } catch (err) {
-      console.error("Error deleting account:", err);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error deleting account:", error);
       const errorMessage = "Błąd połączenia. Sprawdź swoją sieć internetową i spróbuj ponownie.";
       setError(errorMessage);
       toast.error(errorMessage);

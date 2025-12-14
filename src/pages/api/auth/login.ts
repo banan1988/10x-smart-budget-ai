@@ -32,7 +32,7 @@ function errorResponse(message: string, status: number) {
 /**
  * Success response helper
  */
-function successResponse(data: any, status = 200) {
+function successResponse(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
@@ -48,10 +48,11 @@ function successResponse(data: any, status = 200) {
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     // Validate request body
-    let body: any;
+    let body: unknown;
     try {
       body = await request.json();
     } catch (parseError) {
+      // eslint-disable-next-line no-console
       console.error("[Login Exception] Failed to parse JSON body", {
         error: parseError instanceof Error ? parseError.message : String(parseError),
       });
@@ -81,6 +82,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Handle Supabase auth errors
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("[Login Error]", {
         email,
         code: error.code,
@@ -111,7 +113,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       cookies,
     });
 
-    const { data: profile, error: profileError } = await supabaseForProfile
+    const { data: profile } = await supabaseForProfile
       .from("user_profiles")
       .select("role, nickname")
       .eq("id", data.user?.id)
@@ -120,6 +122,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const userRole = profile?.role || "user";
     const userNickname = profile?.nickname || "";
 
+    // eslint-disable-next-line no-console
     console.log("[Login] User logged in successfully:", {
       userId: data.user?.id,
       email: data.user?.email,
@@ -140,6 +143,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       200
     );
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("[Login Exception] Unexpected error", {
       error: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,

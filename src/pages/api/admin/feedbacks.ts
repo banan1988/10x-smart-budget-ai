@@ -49,8 +49,6 @@ const AdminFeedbacksQuerySchema = z.object({
     }),
 });
 
-type AdminFeedbacksQuery = z.infer<typeof AdminFeedbacksQuerySchema>;
-
 /**
  * GET /api/admin/feedbacks
  *
@@ -72,14 +70,23 @@ export const GET: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) {
+      if (errorResponse) return errorResponse;
+      return createErrorResponse("Unauthorized", 401);
+    }
 
     // Check if user is admin
     const [isAdmin, adminError] = await checkAdminRole(context);
-    if (!isAdmin) return adminError!;
+    if (!isAdmin) {
+      if (adminError) return adminError;
+      return createErrorResponse("Forbidden", 403);
+    }
 
     const { locals, url } = context;
-    const supabase = locals.supabase!;
+    if (!locals.supabase) {
+      return createErrorResponse("Database connection error", 500);
+    }
+    const supabase = locals.supabase;
 
     // Parse and validate query parameters
     const startDate = url.searchParams.get("startDate");
@@ -166,6 +173,7 @@ export const GET: APIRoute = async (context) => {
     );
   } catch (error) {
     // Log error for debugging
+    // eslint-disable-next-line no-console
     console.error("Error fetching admin feedbacks:", error);
 
     // Return error response

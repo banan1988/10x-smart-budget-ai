@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { POST, DELETE } from "./bulk";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 
@@ -13,7 +14,7 @@ vi.mock("../../../lib/services/transaction.service", () => ({
 /**
  * Helper to create a mock request with JSON body
  */
-function createMockRequest(body: any) {
+function createMockRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:4321/api/transactions/bulk", {
     method: "POST",
     body: JSON.stringify(body),
@@ -24,7 +25,7 @@ function createMockRequest(body: any) {
 /**
  * Helper to create transaction data
  */
-function createTransaction(overrides = {}) {
+function createTransaction(overrides: Record<string, unknown> = {}) {
   return {
     type: "expense",
     amount: 100,
@@ -64,10 +65,10 @@ describe("POST /api/transactions/bulk", () => {
           description: "Test transaction",
           date: "2025-11-15",
         },
-      ]);
+      ] as Record<string, unknown>[]);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(201);
@@ -91,7 +92,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(201);
@@ -113,7 +114,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -133,7 +134,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -153,7 +154,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -180,7 +181,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -203,7 +204,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -224,7 +225,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -249,7 +250,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -273,7 +274,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(401);
@@ -298,7 +299,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -321,7 +322,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       const cacheControl = response.headers.get("Cache-Control");
@@ -349,7 +350,7 @@ describe("POST /api/transactions/bulk", () => {
       vi.mocked(TransactionService.bulkCreateTransactions).mockRejectedValue(new Error("Database error"));
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -376,7 +377,7 @@ describe("POST /api/transactions/bulk", () => {
       vi.mocked(TransactionService.bulkCreateTransactions).mockRejectedValue(new Error("Unexpected error"));
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -405,7 +406,7 @@ describe("POST /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -439,10 +440,10 @@ describe("DELETE /api/transactions/bulk", () => {
 
       // Mock service
       const { TransactionService } = await import("../../../lib/services/transaction.service");
-      vi.mocked(TransactionService.bulkDeleteTransactions).mockResolvedValue(3);
+      vi.mocked(TransactionService.bulkDeleteTransactions).mockResolvedValue(3 as number);
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -468,7 +469,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -494,7 +495,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -519,7 +520,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -544,7 +545,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -570,7 +571,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(401);
@@ -597,7 +598,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -624,7 +625,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -647,7 +648,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       const cacheControl = response.headers.get("Cache-Control");
@@ -677,7 +678,7 @@ describe("DELETE /api/transactions/bulk", () => {
       vi.mocked(TransactionService.bulkDeleteTransactions).mockRejectedValue(new Error("Database error"));
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -708,7 +709,7 @@ describe("DELETE /api/transactions/bulk", () => {
       });
 
       // Act
-      const response = await DELETE(context as any);
+      const response = await DELETE(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);

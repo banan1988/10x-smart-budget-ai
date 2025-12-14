@@ -13,9 +13,9 @@ interface AiCategorizationStatsDto {
     manuallyCategorized: number;
     aiPercentage: number;
   };
-  categoryBreakdown: any[];
-  trendData: any[];
-  pagination?: any;
+  categoryBreakdown: { categoryName: string; count: number; percentage: number }[];
+  trendData: { date: string; percentage: number }[];
+  pagination?: { page: number; pageSize: number; total: number };
 }
 
 interface MetricsGridProps {

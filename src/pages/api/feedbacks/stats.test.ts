@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { GET } from "./stats";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
@@ -36,10 +37,10 @@ describe("GET /api/feedbacks/stats", () => {
         4: 3,
         5: 4,
       },
-    } as any);
+    } as Record<string, unknown>);
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(200, "Should return 200 OK for public endpoint");
@@ -64,10 +65,10 @@ describe("GET /api/feedbacks/stats", () => {
       totalCount: 10,
       averageRating: 4.2,
       ratingDistribution: { 1: 1, 2: 0, 3: 2, 4: 3, 5: 4 },
-    } as any);
+    } as Record<string, unknown>);
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
     const data = await response.json();
 
     // Assert
@@ -93,10 +94,10 @@ describe("GET /api/feedbacks/stats", () => {
     };
 
     const { FeedbackService } = await import("../../../lib/services/feedback.service");
-    vi.mocked(FeedbackService.getFeedbackStats).mockResolvedValue(mockStats as any);
+    vi.mocked(FeedbackService.getFeedbackStats).mockResolvedValue(mockStats as Record<string, unknown>);
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
     const data = await response.json();
 
     // Assert
@@ -107,7 +108,9 @@ describe("GET /api/feedbacks/stats", () => {
 
   it("should return 500 on service error", async () => {
     // Arrange
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
       locals: {
@@ -120,11 +123,11 @@ describe("GET /api/feedbacks/stats", () => {
     vi.mocked(FeedbackService.getFeedbackStats).mockRejectedValue(new Error("Database connection failed"));
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(500, "Should return 500 on service error");
-    expect(consoleErrorSpy, "Error should be logged to console").toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
   });
@@ -139,7 +142,7 @@ describe("GET /api/feedbacks/stats", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(500, "Should return 500 when supabase client is not available");

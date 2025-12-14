@@ -1,23 +1,30 @@
 import { vi } from "vitest";
 import type { APIContext } from "astro";
 
+interface UserProfile {
+  id: string;
+  role: string;
+  nickname: string;
+  [key: string]: unknown;
+}
+
 /**
  * Mock user profile data factory
  */
-export function createMockUserProfile(overrides: Record<string, any> = {}) {
+export function createMockUserProfile(overrides: Record<string, unknown> = {}): UserProfile {
   return {
     id: "user-123",
     role: "user",
     nickname: "TestUser",
     ...overrides,
-  };
+  } as UserProfile;
 }
 
 /**
  * Creates a mock request with JSON body for auth endpoints
  */
 export function createMockAuthRequest(
-  body: any,
+  body: Record<string, unknown>,
   url = "http://localhost:4321/api/auth",
   headers: Record<string, string> = {}
 ): Request {
@@ -35,14 +42,14 @@ export function createMockAuthRequest(
  * Creates a generic mock request - alias for createMockAuthRequest
  * Use for requests without specific endpoint
  */
-export function createMockRequest(body: any, headers: Record<string, string> = {}): Request {
+export function createMockRequest(body: Record<string, unknown>, headers: Record<string, string> = {}): Request {
   return createMockAuthRequest(body, "http://localhost:4321/api/auth", headers);
 }
 
 /**
  * Creates a mock Astro API context for auth endpoints
  */
-export function createMockAuthContext(request?: Request, cookies?: Record<string, any>): Partial<APIContext> {
+export function createMockAuthContext(request?: Request, cookies?: Record<string, unknown>): Partial<APIContext> {
   const defaultRequest = new Request("http://localhost:4321/api/auth", {
     method: "POST",
   });

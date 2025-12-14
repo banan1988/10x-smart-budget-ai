@@ -72,6 +72,7 @@ export function checkAuthentication(context: APIContext): [isAuthenticated: bool
   return [true];
 }
 
+/* eslint-disable no-console */
 /**
  * Check if user has admin role
  *

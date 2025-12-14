@@ -9,7 +9,7 @@ interface MetricCardProps {
   variant?: "default" | "success" | "warning" | "danger";
 }
 
-export default function MetricCard({ title, value, description, badge, variant = "default" }: MetricCardProps) {
+export default function MetricCard({ title, value, description, badge }: MetricCardProps) {
   return (
     <Card>
       <CardHeader className="pb-3">

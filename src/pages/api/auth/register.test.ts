@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { POST } from "./register";
 import {
-  createMockAuthRequest,
   createMockRequest,
   createMockAuthContext,
   mockSupabaseAuthSuccess,
@@ -21,7 +21,7 @@ describe("POST /api/auth/register", () => {
   describe("Valid registration", () => {
     it("should return 201 on successful registration", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "newuser@example.com",
         password: "ValidPassword123",
       });
@@ -34,10 +34,10 @@ describe("POST /api/auth/register", () => {
         auth: {
           signUp: vi.fn().mockResolvedValue(mockSupabaseAuthSuccess("user-456", "newuser@example.com")),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(201);
@@ -51,7 +51,7 @@ describe("POST /api/auth/register", () => {
   describe("Invalid registration", () => {
     it("should return 409 when email already exists", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "existing@example.com",
         password: "ValidPassword123",
       });
@@ -66,10 +66,10 @@ describe("POST /api/auth/register", () => {
             .fn()
             .mockResolvedValue(mockSupabaseAuthError("user_already_exists", "User already registered", 409)),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(409);
@@ -87,7 +87,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -105,7 +105,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -126,7 +126,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       // NOTE: register.ts doesn't have try-catch for JSON parsing,
@@ -145,7 +145,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -162,7 +162,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -180,7 +180,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -198,7 +198,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -216,7 +216,7 @@ describe("POST /api/auth/register", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -228,7 +228,7 @@ describe("POST /api/auth/register", () => {
   describe("Content-Type", () => {
     it("should return application/json content-type", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "newuser@example.com",
         password: "ValidPassword123",
       });
@@ -241,10 +241,10 @@ describe("POST /api/auth/register", () => {
         auth: {
           signUp: vi.fn().mockResolvedValue(mockSupabaseAuthSuccess("user-456", "newuser@example.com")),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -254,7 +254,7 @@ describe("POST /api/auth/register", () => {
   describe("Error handling", () => {
     it("should return 500 on Supabase unexpected error", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "ValidPassword123",
       });
@@ -267,10 +267,10 @@ describe("POST /api/auth/register", () => {
         auth: {
           signUp: vi.fn().mockResolvedValue(mockSupabaseAuthError("unknown_error", "Unknown error", 500)),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -280,7 +280,7 @@ describe("POST /api/auth/register", () => {
 
     it("should return 500 on unexpected exception", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "ValidPassword123",
       });
@@ -294,7 +294,7 @@ describe("POST /api/auth/register", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);

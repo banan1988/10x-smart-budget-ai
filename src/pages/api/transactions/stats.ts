@@ -29,11 +29,19 @@ export const GET: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, url } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Extract and validate query parameters
     const queryParams = {
@@ -60,11 +68,12 @@ export const GET: APIRoute = async (context) => {
     const response = createSuccessResponse(stats, 200);
     response.headers.set("Cache-Control", "private, max-age=60, stale-while-revalidate=600");
     return response;
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error fetching transaction stats:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error fetching transaction stats:", err);
 
     // Return error response
-    return createErrorResponse(error, 500);
+    return createErrorResponse(err, 500);
   }
 };

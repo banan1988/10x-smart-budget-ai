@@ -5,18 +5,14 @@ import { AppHeader } from "@/components/AppHeader";
 import { AppFooter } from "@/components/AppFooter";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileNav } from "@/components/MobileNav";
-
-// This page requires authentication (handled by middleware)
 ---
 
 <Layout title="Transakcje - SmartBudgetAI">
   <div class="flex min-h-screen">
-    <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
       <AppSidebar currentPage="transactions" userRole={Astro.locals.user?.role} client:load />
     </div>
 
-    <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
       <AppHeader
         currentPage="transactions"
@@ -33,29 +29,6 @@ import { MobileNav } from "@/components/MobileNav";
       <AppFooter client:load />
     </div>
 
-    <!-- Mobile bottom navigation -->
     <MobileNav currentPage="transactions" client:load />
   </div>
-
-  <script>
-    // Adjust main content padding based on sidebar state
-    function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
-      const mainContent = document.getElementById("main-content");
-      if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
-      }
-    }
-
-    // Initial update
-    updateMainContentPadding();
-
-    // Listen for sidebar toggle
-    window.addEventListener("toggle-sidebar", () => {
-      setTimeout(updateMainContentPadding, 50);
-    });
-
-    // Listen for resize
-    window.addEventListener("resize", updateMainContentPadding);
-  </script>
 </Layout>

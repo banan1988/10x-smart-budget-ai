@@ -1,7 +1,6 @@
-// filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/openrouter.service.test.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, expectTypeOf } from "vitest";
 import { OpenRouterService } from "./openrouter.service";
-import { TEST_API_KEY } from "../../test/setup";
 
 describe("OpenRouterService", () => {
   describe("constructor", () => {

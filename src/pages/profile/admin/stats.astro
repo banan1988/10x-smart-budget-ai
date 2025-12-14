@@ -7,21 +7,16 @@ import { AppSidebar } from "../../../components/AppSidebar";
 import { MobileNav } from "../../../components/MobileNav";
 import { Breadcrumbs } from "../../../components/Breadcrumbs";
 
-// Middleware handles authentication and admin role check
-// If not authenticated or not admin, middleware will redirect to /login or /profile
-
 const pageTitle = "Statystyki AI Kategoryzacji";
 const pageDescription = "Panel administratora - Monitorowanie efektywności automatycznej kategoryzacji wydatków";
 ---
 
 <Layout title={pageTitle} description={pageDescription}>
   <div class="flex min-h-screen">
-    <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
       <AppSidebar currentPage="admin-stats" userRole={Astro.locals.user?.role} client:load />
     </div>
 
-    <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
       <AppHeader
         currentPage="dashboard"
@@ -33,7 +28,6 @@ const pageDescription = "Panel administratora - Monitorowanie efektywności auto
 
       <main class="flex-1 bg-background pb-16 lg:pb-0">
         <div class="container mx-auto px-4 py-8">
-          <!-- Breadcrumbs -->
           <div class="mb-6">
             <Breadcrumbs
               items={[
@@ -45,7 +39,6 @@ const pageDescription = "Panel administratora - Monitorowanie efektywności auto
             />
           </div>
 
-          <!-- Main view -->
           <AiStatsView client:load />
         </div>
       </main>
@@ -53,29 +46,6 @@ const pageDescription = "Panel administratora - Monitorowanie efektywności auto
       <AppFooter client:load />
     </div>
 
-    <!-- Mobile bottom navigation -->
     <MobileNav currentPage="profile" client:load />
   </div>
-
-  <script>
-    // Adjust main content padding based on sidebar state
-    function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
-      const mainContent = document.getElementById("main-content");
-      if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
-      }
-    }
-
-    // Initial update
-    updateMainContentPadding();
-
-    // Listen for sidebar toggle
-    window.addEventListener("toggle-sidebar", () => {
-      setTimeout(updateMainContentPadding, 50);
-    });
-
-    // Listen for resize
-    window.addEventListener("resize", updateMainContentPadding);
-  </script>
 </Layout>

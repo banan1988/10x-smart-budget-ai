@@ -40,7 +40,7 @@ export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>): S
  *   from: vi.fn(() => createMockSelectQuery(mockData))
  * });
  */
-export function createMockSelectQuery(data: any, error: any = null) {
+export function createMockSelectQuery(data: unknown, error: unknown = null) {
   return {
     select: vi.fn(() => Promise.resolve({ data, error })),
     eq: vi.fn(() => ({
@@ -70,7 +70,7 @@ export function createMockSelectQuery(data: any, error: any = null) {
  *   from: vi.fn(() => createMockTransactionQuery(mockData))
  * });
  */
-export function createMockTransactionQuery(data: any, error: any = null) {
+export function createMockTransactionQuery(data: unknown, error: unknown = null) {
   const chainableMethods = {
     eq: vi.fn(() => chainableMethods),
     in: vi.fn(() => chainableMethods),

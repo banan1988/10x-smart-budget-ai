@@ -1,5 +1,4 @@
-// filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/ai-categorization.service.test.ts
-import { describe, it, expect, vi, beforeEach, expectTypeOf } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AiCategorizationService } from "./ai-categorization.service";
 import { OpenRouterService } from "./openrouter.service";
 import { CategoryService } from "./category.service";
@@ -7,10 +6,14 @@ import { CategoryService } from "./category.service";
 // Create a mock getChatCompletion function that can be configured per test
 let mockGetChatCompletion = vi.fn();
 
-// Mock OpenRouter service
+interface OpenRouterServiceMock {
+  getChatCompletion: typeof mockGetChatCompletion;
+}
+
+// ...existing code...
 vi.mock("./openrouter.service", () => {
   return {
-    OpenRouterService: vi.fn().mockImplementation(function (this: any) {
+    OpenRouterService: vi.fn().mockImplementation(function (this: OpenRouterServiceMock) {
       this.getChatCompletion = mockGetChatCompletion;
     }),
   };
@@ -28,7 +31,7 @@ vi.mock("./category.service", () => {
 
 describe("AiCategorizationService", () => {
   let service: AiCategorizationService;
-  let mockSupabase: any;
+  let mockSupabase: Record<string, unknown>;
 
   // Mock categories from database
   const mockCategories = [
@@ -57,9 +60,9 @@ describe("AiCategorizationService", () => {
     // Reset the mock function
     mockGetChatCompletion = vi.fn();
     // Re-attach it to the mocked class
-    (OpenRouterService as any).mockImplementation(function (this: any) {
+    vi.mocked(OpenRouterService).mockImplementation(function (this: OpenRouterServiceMock) {
       this.getChatCompletion = mockGetChatCompletion;
-    });
+    } as never);
 
     // Mock CategoryService.getGlobalCategories to return test categories
     vi.mocked(CategoryService.getGlobalCategories).mockResolvedValue(mockCategories);

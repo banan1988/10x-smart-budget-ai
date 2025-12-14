@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Helper function to fetch user profile from database
  * Should be called only when needed (e.g., in API routes for admin checks)

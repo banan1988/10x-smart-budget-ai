@@ -54,10 +54,12 @@ export function AppSidebar({ currentPage, userRole = "user" }: AppSidebarProps) 
               const profile = JSON.parse(cachedProfile);
               if (profile.role && profile.role !== userRole) {
                 setCurrentUserRole(profile.role);
+                // eslint-disable-next-line no-console
                 console.log("[AppSidebar] User role updated from cache:", profile.role);
               }
               return; // Don't fetch if we have valid cache
             } catch (e) {
+              // eslint-disable-next-line no-console
               console.error("[AppSidebar] Failed to parse cached profile:", e);
             }
           }
@@ -74,13 +76,16 @@ export function AppSidebar({ currentPage, userRole = "user" }: AppSidebarProps) 
               sessionStorage.setItem("user_profile", profileText);
               if (profile.role && profile.role !== userRole) {
                 setCurrentUserRole(profile.role);
+                // eslint-disable-next-line no-console
                 console.log("[AppSidebar] User role updated from API:", profile.role);
               }
             } catch (parseError) {
+              // eslint-disable-next-line no-console
               console.error("[AppSidebar] Failed to parse API response:", parseError);
             }
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error("[AppSidebar] Failed to fetch user role:", error);
         }
       };

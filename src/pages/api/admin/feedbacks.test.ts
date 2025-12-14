@@ -8,6 +8,8 @@ import {
   SAMPLE_PAGINATION,
   SAMPLE_RATINGS,
 } from "../../../test/mocks/admin-api.mocks";
+import type { APIContext } from "astro";
+import type { AdminFeedbacksResponse } from "../../../types";
 
 // Mock dependencies - only mock authentication functions, keep response creators
 vi.mock("../../../lib/api-auth", async (importOriginal) => {
@@ -67,7 +69,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(401);
@@ -88,7 +90,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(403);
@@ -100,7 +102,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should return 200 for admin users with valid data", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(5) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(5) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -112,7 +116,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -125,7 +129,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should return paginated feedback list with correct structure", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -137,7 +143,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -152,7 +158,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should include feedback items with complete structure", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -164,7 +172,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -190,7 +198,7 @@ describe("GET /api/admin/feedbacks", () => {
         page: 1,
         limit: 20,
         total: 3,
-      } as any);
+      } as AdminFeedbacksResponse);
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -202,7 +210,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -223,7 +231,7 @@ describe("GET /api/admin/feedbacks", () => {
         page: 1,
         limit: 20,
         total: 0,
-      } as any);
+      } as AdminFeedbacksResponse);
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -235,7 +243,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -249,7 +257,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should accept valid page parameter (minimum 1)", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -261,7 +271,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -270,7 +280,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should accept valid limit parameter (between 1 and 100)", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -282,7 +294,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -291,7 +303,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should clamp limit to maximum 100", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -303,7 +317,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -312,7 +326,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should default page to 1 when not provided", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -324,7 +340,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -333,7 +349,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should default limit to 20 when not provided", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -345,7 +363,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -356,7 +374,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should filter by valid date range", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -370,7 +390,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -388,7 +408,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -399,7 +419,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should accept startDate without endDate", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -411,7 +433,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -420,7 +442,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should accept endDate without startDate", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -432,7 +456,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -443,7 +467,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should filter by rating parameter with valid value", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -455,7 +481,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -464,7 +490,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should accept all valid rating values (1-5)", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const validRatings = [1, 2, 3, 4, 5];
 
@@ -479,7 +507,7 @@ describe("GET /api/admin/feedbacks", () => {
         });
 
         // Act
-        const response = await GET(context as any);
+        const response = await GET(context as APIContext);
 
         // Assert
         expect(response.status).toBe(200);
@@ -491,7 +519,9 @@ describe("GET /api/admin/feedbacks", () => {
     it("should return application/json content type", async () => {
       // Arrange
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(createMockFeedbackResponse(2) as any);
+      vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue(
+        createMockFeedbackResponse(2) as AdminFeedbacksResponse
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -503,7 +533,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -513,7 +543,7 @@ describe("GET /api/admin/feedbacks", () => {
   describe("Error handling", () => {
     it("should handle database errors gracefully", async () => {
       // Arrange
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
       vi.mocked(FeedbackService.getAllFeedback).mockRejectedValue(new Error("Database connection failed"));
 
@@ -527,7 +557,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -550,7 +580,7 @@ describe("GET /api/admin/feedbacks", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect([500, 401]).toContain(response.status);

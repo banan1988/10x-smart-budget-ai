@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { POST, GET } from "./index";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
@@ -24,7 +25,7 @@ vi.mock("../../../lib/api-auth", async (importOriginal) => {
 /**
  * Mock feedback data
  */
-function mockFeedbackData(overrides = {}) {
+function mockFeedbackData(overrides: Record<string, unknown> = {}) {
   return {
     id: "feedback-123",
     user_id: "user-123",
@@ -35,7 +36,7 @@ function mockFeedbackData(overrides = {}) {
   };
 }
 
-function createMockRequest(body: any) {
+function createMockRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:4321/api/feedbacks", {
     method: "POST",
     body: JSON.stringify(body),
@@ -52,10 +53,10 @@ describe("POST /api/feedbacks", () => {
     it("should return 201 on valid feedback with rating", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as any);
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as Record<string, unknown>);
 
       const request = createMockRequest({
         rating: 5,
@@ -71,7 +72,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(201, "Should return 201 Created status on valid feedback");
@@ -83,10 +84,12 @@ describe("POST /api/feedbacks", () => {
     it("should return 201 with feedback only (no comment)", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData({ comment: undefined }) as any);
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(
+        mockFeedbackData({ comment: undefined }) as Record<string, unknown>
+      );
 
       const request = createMockRequest({
         rating: 4,
@@ -101,7 +104,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(201, "Should return 201 Created status without comment");
@@ -112,7 +115,7 @@ describe("POST /api/feedbacks", () => {
     it("should return 400 for rating 0 (out of range)", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const request = createMockRequest({
         rating: 0,
@@ -127,7 +130,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400, "Should return 400 for rating 0 (out of range)");
@@ -138,7 +141,7 @@ describe("POST /api/feedbacks", () => {
     it("should return 400 for rating 6 (out of range)", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const request = createMockRequest({
         rating: 6,
@@ -153,7 +156,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400, "Should return 400 for rating 6 (out of range)");
@@ -162,7 +165,7 @@ describe("POST /api/feedbacks", () => {
     it("should return 400 for non-integer rating", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const request = createMockRequest({
         rating: 4.5,
@@ -177,7 +180,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400, "Should return 400 for non-integer rating");
@@ -186,7 +189,7 @@ describe("POST /api/feedbacks", () => {
     it("should return 400 for missing rating", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const request = createMockRequest({
         comment: "Good app",
@@ -201,7 +204,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400, "Should return 400 for missing rating");
@@ -214,7 +217,7 @@ describe("POST /api/feedbacks", () => {
     it("should return 400 when comment exceeds 1000 chars", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const request = createMockRequest({
         rating: 5,
@@ -230,7 +233,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400, "Should return 400 for comment exceeding 1000 characters");
@@ -241,10 +244,10 @@ describe("POST /api/feedbacks", () => {
     it("should accept comment with exactly 1000 chars", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as any);
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as Record<string, unknown>);
 
       const request = createMockRequest({
         rating: 5,
@@ -260,7 +263,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(201, "Should accept comment with exactly 1000 characters");
@@ -271,7 +274,7 @@ describe("POST /api/feedbacks", () => {
     it("should return 400 on invalid JSON", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const request = new Request("http://localhost:4321/api/feedbacks", {
         method: "POST",
@@ -288,7 +291,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400, "Should return 400 for invalid JSON");
@@ -302,7 +305,7 @@ describe("POST /api/feedbacks", () => {
       vi.mocked(checkAuthentication).mockReturnValue([
         false,
         new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
-      ] as any);
+      ] as [boolean, Response | undefined]);
 
       const request = createMockRequest({
         rating: 5,
@@ -316,7 +319,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(401, "Should return 401 when not authenticated");
@@ -329,10 +332,10 @@ describe("POST /api/feedbacks", () => {
     it("should return application/json", async () => {
       // Arrange
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
-      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as any);
+      vi.mocked(FeedbackService.createFeedback).mockResolvedValue(mockFeedbackData() as Record<string, unknown>);
 
       const request = createMockRequest({
         rating: 5,
@@ -347,7 +350,7 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe(
@@ -360,9 +363,11 @@ describe("POST /api/feedbacks", () => {
   describe("Error handling", () => {
     it("should return 500 on service error", async () => {
       // Arrange
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        // no-op
+      });
       const { checkAuthentication } = await import("../../../lib/api-auth");
-      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+      vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
 
       const { FeedbackService } = await import("../../../lib/services/feedback.service");
       vi.mocked(FeedbackService.createFeedback).mockRejectedValue(new Error("Service error"));
@@ -380,11 +385,11 @@ describe("POST /api/feedbacks", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500, "Should return 500 on service error");
-      expect(consoleErrorSpy).toHaveBeenCalled("Error should be logged to console");
+      expect(consoleErrorSpy).toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
     });
@@ -402,7 +407,7 @@ describe("GET /api/feedbacks", () => {
     vi.mocked(checkAuthentication).mockReturnValue([
       false,
       new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
-    ] as any);
+    ] as [boolean, Response | undefined]);
 
     const context = createMockAPIContext({
       locals: {
@@ -412,7 +417,7 @@ describe("GET /api/feedbacks", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(401, "Should return 401 when not authenticated");
@@ -421,11 +426,11 @@ describe("GET /api/feedbacks", () => {
   it("should return 403 when not admin", async () => {
     // Arrange
     const { checkAuthentication, checkAdminRole } = await import("../../../lib/api-auth");
-    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
+    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
     vi.mocked(checkAdminRole).mockResolvedValue([
       false,
       new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 }),
-    ] as any);
+    ] as [boolean, Response | undefined]);
 
     const context = createMockAPIContext({
       locals: {
@@ -436,7 +441,7 @@ describe("GET /api/feedbacks", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(403, "Should return 403 when user is not admin");
@@ -445,8 +450,8 @@ describe("GET /api/feedbacks", () => {
   it("should return 200 for admin users with pagination", async () => {
     // Arrange
     const { checkAuthentication, checkAdminRole } = await import("../../../lib/api-auth");
-    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
-    vi.mocked(checkAdminRole).mockResolvedValue([true] as any);
+    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
+    vi.mocked(checkAdminRole).mockResolvedValue([true] as [boolean]);
 
     const { FeedbackService } = await import("../../../lib/services/feedback.service");
     vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue({
@@ -454,7 +459,7 @@ describe("GET /api/feedbacks", () => {
       page: 1,
       limit: 10,
       total: 1,
-    } as any);
+    } as Record<string, unknown>);
 
     const context = createMockAPIContext({
       locals: {
@@ -465,7 +470,7 @@ describe("GET /api/feedbacks", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(200, "Should return 200 for admin users with pagination");
@@ -474,8 +479,8 @@ describe("GET /api/feedbacks", () => {
   it("should validate pagination parameters", async () => {
     // Arrange
     const { checkAuthentication, checkAdminRole } = await import("../../../lib/api-auth");
-    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as any);
-    vi.mocked(checkAdminRole).mockResolvedValue([true] as any);
+    vi.mocked(checkAuthentication).mockReturnValue([true, undefined] as [boolean, Response | undefined]);
+    vi.mocked(checkAdminRole).mockResolvedValue([true] as [boolean]);
 
     const { FeedbackService } = await import("../../../lib/services/feedback.service");
     vi.mocked(FeedbackService.getAllFeedback).mockResolvedValue({
@@ -483,7 +488,7 @@ describe("GET /api/feedbacks", () => {
       page: 1,
       limit: 10,
       total: 0,
-    } as any);
+    } as Record<string, unknown>);
 
     const context = createMockAPIContext({
       locals: {
@@ -494,7 +499,7 @@ describe("GET /api/feedbacks", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(400, "Should return 400 for limit exceeding maximum (100)");

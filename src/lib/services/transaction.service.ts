@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { SupabaseClient } from "../../db/supabase.client";
 import type {
   TransactionDto,
@@ -9,14 +10,13 @@ import type {
   BulkCreateTransactionsCommand,
 } from "../../types";
 import { UNCATEGORIZED_CATEGORY_NAME } from "../../types";
-import { CategoryService } from "./category.service";
-import { AiCategorizationService } from "./ai-categorization.service";
 import { BackgroundCategorizationService } from "./background-categorization.service";
 
 /**
  * Service for managing financial transactions.
  * Handles CRUD operations for income and expense transactions with AI categorization.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class TransactionService {
   /**
    * Retrieves all transactions for a specific user and month with filtering and pagination.
@@ -232,7 +232,7 @@ export class TransactionService {
     // Queue background categorization if needed (fire-and-forget)
     if (requiresBackground) {
       const backgroundService = new BackgroundCategorizationService(supabase);
-      backgroundService.categorizeTransactionInBackground(data.id, command.description, userId).catch((err) => {
+      backgroundService.categorizeTransactionInBackground(data.id, command.description, userId).catch(() => {
         // Error is already logged by background service
         console.error(`Failed to queue background categorization for transaction ${data.id}`);
       });
@@ -297,7 +297,7 @@ export class TransactionService {
     }
 
     // Build update object
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, string | number | boolean | null> = {};
     if (command.type !== undefined) updateData.type = command.type;
     if (command.amount !== undefined) updateData.amount = command.amount;
     if (command.description !== undefined) updateData.description = command.description;

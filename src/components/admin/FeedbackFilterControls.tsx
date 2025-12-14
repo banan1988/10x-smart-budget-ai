@@ -50,8 +50,11 @@ export default function FeedbackFilterControls({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Start Date */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Od</label>
+            <label htmlFor="startDate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Od
+            </label>
             <Input
+              id="startDate"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -62,8 +65,11 @@ export default function FeedbackFilterControls({
 
           {/* End Date */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Do</label>
+            <label htmlFor="endDate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Do
+            </label>
             <Input
+              id="endDate"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
@@ -74,9 +80,11 @@ export default function FeedbackFilterControls({
 
           {/* Rating Filter */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Ocena</label>
+            <label htmlFor="rating" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Ocena
+            </label>
             <Select value={rating} onValueChange={setRating} disabled={isLoading}>
-              <SelectTrigger className="dark:bg-gray-900">
+              <SelectTrigger id="rating" className="dark:bg-gray-900">
                 <SelectValue placeholder="Wszystkie oceny" />
               </SelectTrigger>
               <SelectContent>

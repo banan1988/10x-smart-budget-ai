@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { POST } from "./login";
 import {
-  createMockAuthRequest,
   createMockRequest,
   createMockAuthContext,
   mockSupabaseAuthSuccess,
@@ -21,7 +21,7 @@ describe("POST /api/auth/login", () => {
   describe("Valid credentials", () => {
     it("should return 200 with user data on valid credentials", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "password123",
       });
@@ -44,10 +44,10 @@ describe("POST /api/auth/login", () => {
             })),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -63,7 +63,7 @@ describe("POST /api/auth/login", () => {
   describe("Invalid credentials", () => {
     it("should return 401 on invalid credentials", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "wrongpassword",
       });
@@ -78,10 +78,10 @@ describe("POST /api/auth/login", () => {
             .fn()
             .mockResolvedValue(mockSupabaseAuthError("invalid_credentials", "Invalid credentials")),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(401);
@@ -92,7 +92,7 @@ describe("POST /api/auth/login", () => {
 
     it("should return 403 on email not confirmed", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "unconfirmed@example.com",
         password: "password123",
       });
@@ -107,10 +107,10 @@ describe("POST /api/auth/login", () => {
             .fn()
             .mockResolvedValue(mockSupabaseAuthError("email_not_confirmed", "Email not confirmed")),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(403);
@@ -120,7 +120,7 @@ describe("POST /api/auth/login", () => {
 
     it("should return 404 on user not found", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "nonexistent@example.com",
         password: "password123",
       });
@@ -133,10 +133,10 @@ describe("POST /api/auth/login", () => {
         auth: {
           signInWithPassword: vi.fn().mockResolvedValue(mockSupabaseAuthError("user_not_found", "User not found")),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(404);
@@ -157,7 +157,7 @@ describe("POST /api/auth/login", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -174,7 +174,7 @@ describe("POST /api/auth/login", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -191,7 +191,7 @@ describe("POST /api/auth/login", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -209,7 +209,7 @@ describe("POST /api/auth/login", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -227,7 +227,7 @@ describe("POST /api/auth/login", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -239,7 +239,7 @@ describe("POST /api/auth/login", () => {
   describe("Content-Type", () => {
     it("should return application/json content-type", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "password123",
       });
@@ -262,10 +262,10 @@ describe("POST /api/auth/login", () => {
             })),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -275,7 +275,7 @@ describe("POST /api/auth/login", () => {
   describe("Error handling", () => {
     it("should return 500 on Supabase unexpected error", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "password123",
       });
@@ -288,10 +288,10 @@ describe("POST /api/auth/login", () => {
         auth: {
           signInWithPassword: vi.fn().mockResolvedValue(mockSupabaseAuthError("unknown_error", "Unknown error")),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -301,7 +301,7 @@ describe("POST /api/auth/login", () => {
 
     it("should return 500 on unexpected exception", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "password123",
       });
@@ -315,7 +315,7 @@ describe("POST /api/auth/login", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -325,7 +325,7 @@ describe("POST /api/auth/login", () => {
 
     it("should handle missing user profile gracefully", async () => {
       // Arrange
-      const request = createMockAuthRequest({
+      const request = createMockRequest({
         email: "test@example.com",
         password: "password123",
       });
@@ -348,10 +348,10 @@ describe("POST /api/auth/login", () => {
             })),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);

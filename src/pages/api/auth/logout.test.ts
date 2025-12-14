@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { POST } from "./logout";
-import { createMockAuthRequest, createMockAuthContext } from "../../../test/mocks/auth.mock";
+import { createMockAuthContext } from "../../../test/mocks/auth.mock";
 
 // Mock Supabase client at top level
 vi.mock("../../../db/supabase.client", () => ({
@@ -26,10 +27,10 @@ describe("POST /api/auth/logout", () => {
             error: null,
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -53,10 +54,10 @@ describe("POST /api/auth/logout", () => {
             error: new Error("Logout failed"),
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -76,7 +77,7 @@ describe("POST /api/auth/logout", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -99,10 +100,10 @@ describe("POST /api/auth/logout", () => {
             error: null,
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");

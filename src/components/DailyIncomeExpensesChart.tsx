@@ -9,13 +9,17 @@ interface DailyIncomeExpensesChartProps {
 /**
  * Custom tooltip for the bar chart
  */
-function CustomTooltip({ active, payload }: any) {
-  if (!active || !payload || payload.length === 0) {
+function CustomTooltip({ active, payload }: unknown) {
+  if (!active || !payload || (payload as unknown[]).length === 0) {
     return null;
   }
 
-  const incomeData = payload.find((p: any) => p.dataKey === "income");
-  const expensesData = payload.find((p: any) => p.dataKey === "expenses");
+  const incomeData = (payload as { dataKey: string }[]).find(
+    (p: unknown) => (p as { dataKey: string }).dataKey === "income"
+  );
+  const expensesData = (payload as { dataKey: string }[]).find(
+    (p: unknown) => (p as { dataKey: string }).dataKey === "expenses"
+  );
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pl-PL", {

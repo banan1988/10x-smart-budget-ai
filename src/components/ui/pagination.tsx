@@ -31,7 +31,7 @@ type PaginationLinkProps = {
 } & React.HTMLAttributes<HTMLAnchorElement>;
 
 const PaginationLink = React.forwardRef<HTMLAnchorElement, PaginationLinkProps>(
-  ({ className, isActive, isDisabled, ...props }, ref) => (
+  ({ className, isActive, isDisabled, children, ...props }, ref) => (
     <a
       ref={ref}
       aria-current={isActive ? "page" : undefined}
@@ -44,7 +44,9 @@ const PaginationLink = React.forwardRef<HTMLAnchorElement, PaginationLinkProps>(
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </a>
   )
 );
 PaginationLink.displayName = "PaginationLink";

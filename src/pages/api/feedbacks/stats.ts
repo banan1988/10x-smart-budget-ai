@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ locals }) => {
     // Return successful response with statistics
     return createSuccessResponse(stats, 200);
   } catch (error) {
-    // Log error for debugging
+    // eslint-disable-next-line no-console
     console.error("Error fetching feedback stats:", error);
     return createErrorResponse(error, 500);
   }

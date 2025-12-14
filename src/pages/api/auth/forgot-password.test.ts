@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { POST } from "./forgot-password";
-import { createMockAuthRequest, createMockRequest, createMockAuthContext } from "../../../test/mocks/auth.mock";
+import { createMockRequest, createMockAuthContext } from "../../../test/mocks/auth.mock";
 
 // Mock Supabase client at top level
 vi.mock("../../../db/supabase.client", () => ({
@@ -30,10 +31,10 @@ describe("POST /api/auth/forgot-password", () => {
             error: null,
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -55,7 +56,7 @@ describe("POST /api/auth/forgot-password", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -70,7 +71,7 @@ describe("POST /api/auth/forgot-password", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -87,7 +88,7 @@ describe("POST /api/auth/forgot-password", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -116,10 +117,10 @@ describe("POST /api/auth/forgot-password", () => {
             error: null,
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert - Should return 200 regardless of whether email exists
       expect(response.status).toBe(200);
@@ -144,10 +145,10 @@ describe("POST /api/auth/forgot-password", () => {
             error: new Error("Supabase error"),
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert - Should still return 200 to prevent user enumeration
       expect(response.status).toBe(200);
@@ -176,10 +177,10 @@ describe("POST /api/auth/forgot-password", () => {
             error: null,
           }),
         },
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -202,7 +203,7 @@ describe("POST /api/auth/forgot-password", () => {
       });
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert - Even on error, return 200 to prevent user enumeration
       expect(response.status).toBe(200);
@@ -225,7 +226,7 @@ describe("POST /api/auth/forgot-password", () => {
       const context = createMockAuthContext(request);
 
       // Act
-      const response = await POST(context as any);
+      const response = await POST(context as APIContext);
 
       // Assert
       // NOTE: forgot-password.ts always returns 200 even on errors

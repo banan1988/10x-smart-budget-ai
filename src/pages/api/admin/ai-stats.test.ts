@@ -3,6 +3,43 @@ import { GET } from "./ai-stats";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
 import { createMockAiStatsResponse, SAMPLE_DATES, SAMPLE_PAGINATION } from "../../../test/mocks/admin-api.mocks";
+import type { APIContext } from "astro";
+
+interface AiCategorizationStatsDto {
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  overall: {
+    totalTransactions: number;
+    aiCategorized: number;
+    manuallyCategorized: number;
+    aiPercentage: number;
+  };
+  categoryBreakdown: {
+    categoryId: number;
+    categoryName: string;
+    categoryKey: string;
+    aiCount: number;
+    manualCount: number;
+    total: number;
+    aiPercentage: number;
+    trend?: {
+      direction: "up" | "down" | "neutral";
+      percentage?: number;
+    };
+  }[];
+  trendData: {
+    date: string;
+    percentage: number;
+  }[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
 
 // Mock dependencies - only mock authentication functions, keep response creators
 vi.mock("../../../lib/api-auth", async (importOriginal) => {
@@ -62,7 +99,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(401);
@@ -83,7 +120,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(403);
@@ -95,7 +132,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should return 200 for admin users with valid data", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -107,7 +146,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -121,7 +160,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should accept valid date range in YYYY-MM-DD format", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -135,7 +176,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -158,7 +199,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(400);
@@ -169,7 +210,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should use default date range when dates are not provided", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -181,7 +224,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -192,7 +235,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should return complete AI stats data structure", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -206,7 +251,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -219,7 +264,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should include overall AI categorization metrics", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -233,7 +280,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -249,7 +296,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should include category breakdown array with valid structure", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -263,7 +312,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -283,7 +332,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should include trend data array with date and percentage", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -297,7 +348,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
       const data = await response.json();
 
       // Assert
@@ -315,7 +366,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should accept valid page parameter (minimum 1)", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -327,7 +380,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -336,7 +389,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should accept valid limit parameter (between 1 and 100)", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -348,7 +403,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -357,7 +412,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should clamp limit to maximum 100", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -369,7 +426,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -378,7 +435,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should default page to 1 when not provided", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -390,7 +449,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -399,7 +458,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should default limit to 20 when not provided", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -411,7 +472,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200);
@@ -422,7 +483,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should accept valid sortBy parameter values", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const sortByValues = ["category", "ai", "manual", "aiPercentage"];
 
@@ -437,7 +500,7 @@ describe("GET /api/admin/ai-stats", () => {
         });
 
         // Act
-        const response = await GET(context as any);
+        const response = await GET(context as APIContext);
 
         // Assert
         expect(response.status).toBe(200);
@@ -447,7 +510,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should accept valid sortOrder parameter values", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const sortOrderValues = ["asc", "desc"];
 
@@ -462,7 +527,7 @@ describe("GET /api/admin/ai-stats", () => {
         });
 
         // Act
-        const response = await GET(context as any);
+        const response = await GET(context as APIContext);
 
         // Assert
         expect(response.status).toBe(200);
@@ -474,7 +539,9 @@ describe("GET /api/admin/ai-stats", () => {
     it("should return application/json content type", async () => {
       // Arrange
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
-      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(createMockAiStatsResponse() as any);
+      vi.mocked(AdminStatsService.getAiStats).mockResolvedValue(
+        createMockAiStatsResponse() as AiCategorizationStatsDto
+      );
 
       const mockSupabase = createMockSupabaseClient();
       const context = createMockAPIContext({
@@ -488,7 +555,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.headers.get("Content-Type")).toBe("application/json");
@@ -498,7 +565,7 @@ describe("GET /api/admin/ai-stats", () => {
   describe("Error handling", () => {
     it("should return 500 on service error with error message", async () => {
       // Arrange
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
       const { AdminStatsService } = await import("../../../lib/services/admin-stats.service");
       vi.mocked(AdminStatsService.getAiStats).mockRejectedValue(new Error("Database connection failed"));
 
@@ -514,7 +581,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect(response.status).toBe(500);
@@ -537,7 +604,7 @@ describe("GET /api/admin/ai-stats", () => {
       });
 
       // Act
-      const response = await GET(context as any);
+      const response = await GET(context as APIContext);
 
       // Assert
       expect([500, 401]).toContain(response.status);

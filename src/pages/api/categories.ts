@@ -19,21 +19,26 @@ export const GET: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals } = context;
-    const supabase = locals.supabase!;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
 
     // Fetch categories using the service
     const categories = await CategoryService.getGlobalCategories(supabase);
 
     // Return successful response with categories
     return createSuccessResponse(categories, 200);
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error fetching categories:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error fetching categories:", err);
 
     // Return error response
-    return createErrorResponse(error, 500);
+    return createErrorResponse(err, 500);
   }
 };

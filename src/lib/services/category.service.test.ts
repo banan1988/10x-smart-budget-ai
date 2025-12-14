@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, expectTypeOf } from "vitest";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, expect, vi } from "vitest";
 import { CategoryService } from "./category.service";
 import { createMockSupabaseClient, createMockCategoryData } from "../../test/mocks/supabase.mock";
 
@@ -11,7 +12,7 @@ describe("CategoryService", () => {
         from: vi.fn(() => ({
           select: vi.fn(() => Promise.resolve({ data: mockData, error: null })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
       const result = await CategoryService.getGlobalCategories(mockSupabase);

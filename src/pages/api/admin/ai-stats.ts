@@ -8,6 +8,8 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "../../../lib/api-auth";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { AiCategorizationStatsDto } from "../../../types";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -42,46 +44,6 @@ const AiStatsQuerySchema = z.object({
   sortBy: z.enum(["category", "ai", "manual", "aiPercentage"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
 });
-
-type AiStatsQuery = z.infer<typeof AiStatsQuerySchema>;
-
-interface CategoryStats {
-  categoryId: number;
-  categoryName: string;
-  categoryKey: string;
-  aiCount: number;
-  manualCount: number;
-  total: number;
-  aiPercentage: number;
-  trend?: {
-    direction: "up" | "down" | "neutral";
-    percentage?: number;
-  };
-}
-
-interface AiCategorizationStatsDto {
-  period: {
-    startDate: string;
-    endDate: string;
-  };
-  overall: {
-    totalTransactions: number;
-    aiCategorized: number;
-    manuallyCategorized: number;
-    aiPercentage: number;
-  };
-  categoryBreakdown: CategoryStats[];
-  trendData: {
-    date: string;
-    percentage: number;
-  }[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
 
 /**
  * Helper function to get default date range (last 30 days)
@@ -119,14 +81,23 @@ export const GET: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) {
+      if (errorResponse) return errorResponse;
+      return createErrorResponse("Unauthorized", 401);
+    }
 
     // Check if user is admin
     const [isAdmin, adminError] = await checkAdminRole(context);
-    if (!isAdmin) return adminError!;
+    if (!isAdmin) {
+      if (adminError) return adminError;
+      return createErrorResponse("Forbidden", 403);
+    }
 
     const { locals, url } = context;
-    const supabase = locals.supabase!;
+    if (!locals.supabase) {
+      return createErrorResponse("Database connection error", 500);
+    }
+    const supabase = locals.supabase;
 
     // Extract and validate query parameters
     const queryParams = {
@@ -158,6 +129,7 @@ export const GET: APIRoute = async (context) => {
 
     return createSuccessResponse(stats, 200);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error fetching AI stats:", error);
     return createErrorResponse(error, 500);
   }

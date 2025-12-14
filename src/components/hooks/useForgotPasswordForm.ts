@@ -55,27 +55,6 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
   });
 
   /**
-   * Handle email change
-   */
-  const handleEmailChange = useCallback((value: string) => {
-    setState((prev) => {
-      const newState = { ...prev, email: value };
-
-      if (prev.touched.email) {
-        const error = validateEmail(value);
-        if (error) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: error };
-        } else {
-          const { email: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
-        }
-      }
-
-      return newState;
-    });
-  }, []);
-
-  /**
    * Handle blur event for field validation
    */
   const handleBlur = useCallback((field: "email") => {
@@ -86,14 +65,24 @@ export function useForgotPasswordForm(): UseForgotPasswordFormReturn {
         const error = validateEmail(prev.email);
         if (error) {
           newState.fieldErrors = { ...prev.fieldErrors, email: error };
-        } else {
-          const { email: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
+        } else if (prev.fieldErrors.email) {
+          delete newState.fieldErrors.email;
         }
       }
 
       return newState;
     });
+  }, []);
+
+  /**
+   * Handle email input change
+   */
+  const handleEmailChange = useCallback((value: string) => {
+    setState((prev) => ({
+      ...prev,
+      email: value,
+      generalError: null,
+    }));
   }, []);
 
   /**

@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { TransactionService } from "../../lib/services/transaction.service";
 import { GetTransactionsQuerySchema, CreateTransactionCommandSchema } from "../../types";
-import { DEFAULT_USER_ID } from "../../db/constants";
 
 // Disable prerendering to ensure SSR for this API route
 export const prerender = false;
@@ -25,6 +24,7 @@ export const prerender = false;
  */
 export const GET: APIRoute = async ({ locals, url }) => {
   try {
+    // eslint-disable-next-line no-console
     console.log("[GET /api/transactions] Request received", {
       pathname: url.pathname,
       query: url.search,
@@ -34,6 +34,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
     // Check if user is authenticated
     if (!locals.user) {
+      // eslint-disable-next-line no-console
       console.log("[GET /api/transactions] Unauthorized - no user in locals");
       return new Response(
         JSON.stringify({
@@ -125,15 +126,16 @@ export const GET: APIRoute = async ({ locals, url }) => {
         "Content-Type": "application/json",
       },
     });
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error fetching transactions:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error fetching transactions:", err);
 
     // Return error response
     return new Response(
       JSON.stringify({
         error: "Failed to fetch transactions",
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: err instanceof Error ? err.message : "Unknown error",
       }),
       {
         status: 500,
@@ -201,7 +203,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return new Response(
         JSON.stringify({
           error: "Invalid JSON",
@@ -243,15 +245,16 @@ export const POST: APIRoute = async ({ locals, request }) => {
         "Content-Type": "application/json",
       },
     });
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error creating transaction:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error creating transaction:", err);
 
     // Return error response
     return new Response(
       JSON.stringify({
         error: "Failed to create transaction",
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: err instanceof Error ? err.message : "Unknown error",
       }),
       {
         status: 500,

@@ -26,7 +26,7 @@ function errorResponse(message: string, status: number) {
 /**
  * Success response helper
  */
-function successResponse(data: any = {}, status = 200) {
+function successResponse(data: Record<string, unknown> = {}, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
@@ -65,6 +65,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
+      // eslint-disable-next-line no-console
       console.error("[Reset Password Auth Error]", userError);
       return errorResponse("Sesja resetowania hasła wygasła. Spróbuj ponownie.", 401);
     }
@@ -75,6 +76,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
 
     if (updateError) {
+      // eslint-disable-next-line no-console
       console.error("[Reset Password Error]", {
         userId: user.id,
         code: updateError.code,
@@ -97,6 +99,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       message: "Hasło zostało zmienione. Zaloguj się nowym hasłem.",
     });
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("[Reset Password Exception]", err);
     return errorResponse("Wewnętrzny błąd serwera", 500);
   }

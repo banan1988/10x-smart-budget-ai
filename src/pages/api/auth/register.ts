@@ -32,7 +32,7 @@ function errorResponse(message: string, status: number) {
 /**
  * Success response helper
  */
-function successResponse(data: any, status = 201) {
+function successResponse(data: Record<string, unknown>, status = 201) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
@@ -73,6 +73,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Handle Supabase auth errors
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("[Register Error]", {
         email,
         code: error.code,
@@ -106,6 +107,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       201
     );
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("[Register Exception]", err);
     return errorResponse("Wewnętrzny błąd serwera", 500);
   }

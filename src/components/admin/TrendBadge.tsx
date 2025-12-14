@@ -7,7 +7,7 @@ interface TrendBadgeProps {
   variant?: "success" | "danger" | "neutral";
 }
 
-export default function TrendBadge({ direction, percentage = 0, variant = "neutral" }: TrendBadgeProps) {
+export default function TrendBadge({ direction, percentage = 0 }: TrendBadgeProps) {
   let icon;
   let bgColor;
   let textColor;

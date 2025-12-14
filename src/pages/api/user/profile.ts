@@ -38,10 +38,14 @@ export const GET: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals } = context;
-    const user = locals.user!;
+    const user =
+      locals.user ??
+      (() => {
+        throw new Error("User not available");
+      })();
 
     // Return user profile from locals
     // Profile was already fetched in middleware for page requests
@@ -62,10 +66,11 @@ export const GET: APIRoute = async (context) => {
     response.headers.set("Cache-Control", "private, max-age=3600");
 
     return response;
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error fetching user profile:", error);
-    return createErrorResponse(error, 500);
+    // eslint-disable-next-line no-console
+    console.error("Error fetching user profile:", err);
+    return createErrorResponse(err, 500);
   }
 };
 
@@ -85,17 +90,25 @@ export const PUT: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, request } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Parse request body
     let body: UpdateProfileRequest;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return new Response(
         JSON.stringify({
           error: "Bad Request",
@@ -136,9 +149,10 @@ export const PUT: APIRoute = async (context) => {
     };
 
     return createSuccessResponse(response, 200);
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error updating user profile:", error);
-    return createErrorResponse(error, 500);
+    // eslint-disable-next-line no-console
+    console.error("Error updating user profile:", err);
+    return createErrorResponse(err, 500);
   }
 };

@@ -5,6 +5,7 @@ import type { FeedbackDto } from "../../types";
  * Service for managing admin feedback statistics and operations.
  * Handles data retrieval, filtering, and statistical aggregation for admin feedback panel.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AdminFeedbackService {
   /**
    * Retrieves all feedback entries with optional filtering and pagination.
@@ -41,11 +42,10 @@ export class AdminFeedbackService {
     try {
       // Fetch all feedback with minimal filtering at DB level
       // Details filtering will be done locally for flexibility
-      const {
-        data: allFeedbacks,
-        error: fetchError,
-        count,
-      } = await supabase.from("feedback").select("*", { count: "exact" }).order("created_at", { ascending: false });
+      const { data: allFeedbacks, error: fetchError } = await supabase
+        .from("feedback")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false });
 
       if (fetchError) {
         throw new Error(`Failed to fetch feedbacks: ${fetchError.message}`);
@@ -78,16 +78,18 @@ export class AdminFeedbackService {
       let filteredFeedbacks = allFeedbacks;
 
       if (filters?.startDate) {
+        const startDate = filters.startDate;
         filteredFeedbacks = filteredFeedbacks.filter((f) => {
           const feedbackDate = f.created_at.split("T")[0];
-          return feedbackDate >= filters.startDate!;
+          return feedbackDate >= startDate;
         });
       }
 
       if (filters?.endDate) {
+        const endDate = filters.endDate;
         filteredFeedbacks = filteredFeedbacks.filter((f) => {
           const feedbackDate = f.created_at.split("T")[0];
-          return feedbackDate <= filters.endDate!;
+          return feedbackDate <= endDate;
         });
       }
 

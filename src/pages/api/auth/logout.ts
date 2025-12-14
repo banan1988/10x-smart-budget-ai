@@ -16,7 +16,7 @@ function errorResponse(message: string, status: number) {
 /**
  * Success response helper
  */
-function successResponse(data: any = {}, status = 200) {
+function successResponse(data: Record<string, unknown> = {}, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
@@ -39,6 +39,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("[Logout Error]", error);
       return errorResponse("Nie udało się wylogować", 500);
     }
@@ -46,6 +47,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Return success
     return successResponse({ message: "Wylogowano pomyślnie" });
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("[Logout Exception]", err);
     return errorResponse("Wewnętrzny błąd serwera", 500);
   }

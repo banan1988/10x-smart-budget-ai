@@ -18,6 +18,7 @@ export default function ProfileSettingsView({ userProfile }: ProfileSettingsView
       <EditProfileSection
         initialNickname={userProfile.nickname}
         onProfileUpdated={(updatedNickname) => {
+          // eslint-disable-next-line no-console
           console.log("Profile updated:", updatedNickname);
         }}
       />

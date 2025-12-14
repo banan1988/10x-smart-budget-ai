@@ -20,7 +20,6 @@ export default function LoginForm() {
   // Generate unique IDs for accessibility
   const emailInputId = useId();
   const passwordInputId = useId();
-  const errorRegionId = useId();
 
   return (
     <Card className="w-full shadow-lg border-slate-200 dark:border-slate-800" data-testid="login-form-card">

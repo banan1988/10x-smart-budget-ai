@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface CategoryStats {
@@ -41,6 +42,7 @@ interface AiCategorizationStatsDto {
 /**
  * Service for fetching and aggregating AI categorization statistics from Supabase
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class AdminStatsService {
   /**
    * Get overall AI categorization statistics for a date range
@@ -107,11 +109,13 @@ export class AdminStatsService {
           categoryStats.set(catId, { ai: 0, manual: 0 });
         }
 
-        const stats = categoryStats.get(catId)!;
-        if (tx.is_ai_categorized) {
-          stats.ai++;
-        } else {
-          stats.manual++;
+        const stats = categoryStats.get(catId);
+        if (stats) {
+          if (tx.is_ai_categorized) {
+            stats.ai++;
+          } else {
+            stats.manual++;
+          }
         }
       });
 
@@ -220,7 +224,7 @@ export class AdminStatsService {
    * Generate daily trend data for the given date range
    */
   private static generateTrendData(
-    transactions: any[],
+    transactions: { date: string; is_ai_categorized: boolean }[],
     startDate: string,
     endDate: string
   ): { date: string; percentage: number }[] {
@@ -233,10 +237,12 @@ export class AdminStatsService {
         dailyStats.set(date, { ai: 0, total: 0 });
       }
 
-      const stats = dailyStats.get(date)!;
-      stats.total++;
-      if (tx.is_ai_categorized) {
-        stats.ai++;
+      const stats = dailyStats.get(date);
+      if (stats) {
+        stats.total++;
+        if (tx.is_ai_categorized) {
+          stats.ai++;
+        }
       }
     });
 

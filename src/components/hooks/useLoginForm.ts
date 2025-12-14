@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 interface LoginFormState {
@@ -195,12 +195,11 @@ export function useLoginForm(): UseLoginFormReturn {
       setState((prev) => ({ ...prev, isLoading: false }));
 
       // Redirect after showing success message
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 500);
+      setState((prev) => ({ ...prev, isLoading: false, generalError: undefined }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Błąd połączenia. Spróbuj jeszcze raz.";
       toast.error(errorMessage);
+      // eslint-disable-next-line no-console
       console.error("Login error:", error);
 
       setState((prev) => ({
@@ -210,6 +209,16 @@ export function useLoginForm(): UseLoginFormReturn {
       }));
     }
   }, [state.email, state.password]);
+
+  // Handle redirect after successful login
+  useEffect(() => {
+    if (state.generalError === undefined && !state.isLoading && state.email && state.password) {
+      const timer = setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.generalError, state.isLoading, state.email, state.password]);
 
   /**
    * Check if form is valid

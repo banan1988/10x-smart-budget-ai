@@ -45,7 +45,7 @@ function evaluatePasswordStrength(password: string): PasswordStrengthResult {
     hasUppercase: /[A-Z]/.test(password),
     hasLowercase: /[a-z]/.test(password),
     hasDigit: /\d/.test(password),
-    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
   };
 
   const metRequirements = Object.values(requirements).filter(Boolean).length;
@@ -103,9 +103,8 @@ export function useResetPasswordForm() {
           newState.fieldErrors = { ...prev.fieldErrors, newPassword: "Hasło jest wymagane" };
         } else if (!allRequirementsMet) {
           newState.fieldErrors = { ...prev.fieldErrors, newPassword: "Hasło nie spełnia wszystkich wymagań" };
-        } else {
-          const { newPassword: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
+        } else if (prev.fieldErrors.newPassword) {
+          delete newState.fieldErrors.newPassword;
         }
       }
 
@@ -130,8 +129,7 @@ export function useResetPasswordForm() {
         } else if (confirmPassword !== prev.newPassword) {
           newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
-          const { confirmPassword: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
+          delete newState.fieldErrors.confirmPassword;
         }
       }
 

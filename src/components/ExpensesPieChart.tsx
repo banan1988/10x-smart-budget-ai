@@ -35,12 +35,12 @@ function getCategoryColor(index: number): string {
 /**
  * Custom tooltip for the donut chart
  */
-function CustomTooltip({ active, payload }: any) {
-  if (!active || !payload || payload.length === 0) {
+function CustomTooltip({ active, payload }: unknown) {
+  if (!active || !payload || (payload as unknown[]).length === 0) {
     return null;
   }
 
-  const data = payload[0];
+  const data = (payload as unknown[])[0] as unknown;
   const value = data.value as number;
   const percentage = data.payload.percentage as number;
   const formattedValue = new Intl.NumberFormat("pl-PL", {
@@ -60,8 +60,8 @@ function CustomTooltip({ active, payload }: any) {
 /**
  * Custom label for donut chart segments
  */
-function renderCustomLabel(entry: any) {
-  const percentage = entry.percentage || 0;
+function renderCustomLabel(entry: unknown) {
+  const percentage = (entry as { percentage: number }).percentage || 0;
   // Only show label if percentage is >= 5%
   if (percentage >= 5) {
     return `${percentage.toFixed(0)}%`;

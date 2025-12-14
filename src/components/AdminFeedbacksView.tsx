@@ -67,8 +67,8 @@ export default function AdminFeedbacksView({ initialPage = 1 }: AdminFeedbacksVi
     const sorted = [...feedbacks];
 
     sorted.sort((a, b) => {
-      let aVal: any = a[sortField as keyof typeof a];
-      let bVal: any = b[sortField as keyof typeof b];
+      let aVal: unknown = a[sortField as keyof typeof a];
+      let bVal: unknown = b[sortField as keyof typeof b];
 
       if (typeof aVal === "string") {
         aVal = aVal.toLowerCase();

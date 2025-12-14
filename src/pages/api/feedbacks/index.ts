@@ -34,14 +34,18 @@ export const GET: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     // Check if user is admin
     const [isAdmin, adminError] = await checkAdminRole(context);
-    if (!isAdmin) return adminError!;
+    if (!isAdmin) return adminError ?? new Response("Forbidden", { status: 403 });
 
     const { locals, url } = context;
-    const supabase = locals.supabase!;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
 
     // Parse and validate pagination parameters
     const pageParam = url.searchParams.get("page");
@@ -75,6 +79,7 @@ export const GET: APIRoute = async (context) => {
       200
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error in GET /api/feedbacks:", error);
     return createErrorResponse(error, 500);
   }
@@ -97,11 +102,19 @@ export const POST: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, request } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Parse request body
     let body;
@@ -135,6 +148,7 @@ export const POST: APIRoute = async (context) => {
     // Return success response with created feedback
     return createSuccessResponse(feedback, 201);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error in POST /api/feedbacks:", error);
     return createErrorResponse(error, 500);
   }

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import type { APIContext } from "astro";
 import { DELETE } from "./index";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
@@ -50,7 +51,7 @@ describe("DELETE /api/user", () => {
     });
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     expect(response.status).toBe(401, "Should return 401 Unauthorized when user is not authenticated");
@@ -70,7 +71,7 @@ describe("DELETE /api/user", () => {
     vi.mocked(UserService.deleteUser).mockResolvedValue(undefined);
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     expect(response.status).toBe(204, "Should return 204 No Content on successful deletion");
@@ -91,7 +92,7 @@ describe("DELETE /api/user", () => {
     deleteUserMock.mockResolvedValue(undefined);
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     expect(response.status).toBe(204, "Should return 204 No Content");
@@ -117,7 +118,7 @@ describe("DELETE /api/user", () => {
     deleteUserMock.mockResolvedValue(undefined);
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     expect(response.status).toBe(204, "Should return 204 No Content for successful deletion");
@@ -140,7 +141,7 @@ describe("DELETE /api/user", () => {
     vi.mocked(UserService.deleteUser).mockResolvedValue(undefined);
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     // If key is missing, should return 204 (from mock) or 500 (from actual implementation)
@@ -152,7 +153,9 @@ describe("DELETE /api/user", () => {
 
   it("should return 500 on service error", async () => {
     // Arrange
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const context = createMockAPIContext({
       locals: {
         user: { id: "user-123" },
@@ -165,11 +168,11 @@ describe("DELETE /api/user", () => {
     vi.mocked(UserService.deleteUser).mockRejectedValue(new Error("Service error"));
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     expect(response.status).toBe(500, "Should return 500 Internal Server Error when service fails");
-    expect(consoleErrorSpy).toHaveBeenCalled("Should log error to console");
+    expect(consoleErrorSpy).toHaveBeenCalled();
     // Verify the error was logged with correct prefix
     const callArgs = consoleErrorSpy.mock.calls[0];
     expect(callArgs[0]).toContain("Error deleting user", "Should log with correct error prefix");
@@ -192,7 +195,7 @@ describe("DELETE /api/user", () => {
     vi.mocked(UserService.deleteUser).mockResolvedValue(undefined);
 
     // Act
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     // Assert
     expect(response.status).toBe(204, "Should return 204 No Content");

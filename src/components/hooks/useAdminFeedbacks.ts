@@ -80,6 +80,7 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
           }
         } else {
           // Log non-JSON response for debugging
+          // eslint-disable-next-line no-console
           console.error("Non-JSON response from /api/admin/feedbacks:", bodyText.substring(0, 200));
         }
 
@@ -87,15 +88,18 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
       }
 
       const contentType = response.headers.get("content-type");
+      // eslint-disable-next-line no-console
       console.log("[useAdminFeedbacks] Response status:", response.status, "Content-Type:", contentType);
 
       // Try to parse JSON
       let data: AdminFeedbacksResponse;
       try {
         const responseText = await response.text();
+        // eslint-disable-next-line no-console
         console.log("[useAdminFeedbacks] Response body (first 500 chars):", responseText.substring(0, 500));
         data = JSON.parse(responseText);
       } catch (parseErr) {
+        // eslint-disable-next-line no-console
         console.error("[useAdminFeedbacks] Failed to parse response as JSON:", parseErr);
         throw new Error("Invalid response format: server did not return valid JSON");
       }
@@ -110,6 +114,7 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
       }));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      // eslint-disable-next-line no-console
       console.error("Error fetching feedbacks:", errorMessage);
       setState((prev) => ({
         ...prev,
@@ -137,11 +142,13 @@ export function useAdminFeedbacks(initialFilters?: FeedbackFilters) {
     params.append("limit", "20");
 
     const queryString = params.toString();
+    // eslint-disable-next-line no-console
     console.log("[useAdminFeedbacks] Query params changed:", queryString);
 
     // Only fetch if query params have actually changed
     if (queryString !== prevParamsRef.current) {
       prevParamsRef.current = queryString;
+      // eslint-disable-next-line no-console
       console.log("[useAdminFeedbacks] Fetching feedbacks with params:", queryString);
       fetchFeedbacks(queryString);
     }

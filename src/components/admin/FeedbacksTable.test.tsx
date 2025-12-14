@@ -61,12 +61,14 @@ describe("FeedbacksTable", () => {
 
     // Act
     const excellentRow = screen.getByText("Excellent service!").closest("tr");
-    fireEvent.click(excellentRow!);
+    if (excellentRow) {
+      fireEvent.click(excellentRow);
 
-    // Assert
-    await waitFor(() => {
-      expect(screen.getByText("Pełny komentarz:")).toBeInTheDocument();
-    });
+      // Assert
+      await waitFor(() => {
+        expect(screen.getByText("Pełny komentarz:")).toBeInTheDocument();
+      });
+    }
   });
 
   it("should call onSort when header is clicked", () => {

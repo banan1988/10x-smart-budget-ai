@@ -22,10 +22,14 @@ export const DELETE: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals } = context;
-    const userId = locals.user!.id;
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Create admin Supabase client with service_role key
     const supabaseUrl = import.meta.env.SUPABASE_URL;
@@ -49,11 +53,12 @@ export const DELETE: APIRoute = async (context) => {
     return new Response(null, {
       status: 204,
     });
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error deleting user:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error deleting user:", err);
 
     // Return error response
-    return createErrorResponse(error, 500);
+    return createErrorResponse(err, 500);
   }
 };

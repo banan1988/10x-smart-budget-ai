@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach, expectTypeOf } from "vitest";
 import { BackgroundCategorizationService } from "./background-categorization.service";
 import { createMockSupabaseClient } from "../../test/mocks/supabase.mock";
@@ -26,7 +27,7 @@ import { CategoryService } from "./category.service";
 
 describe("BackgroundCategorizationService", () => {
   let service: BackgroundCategorizationService;
-  let mockSupabase: SupabaseClient;
+  let mockSupabase: Record<string, unknown>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -38,7 +39,7 @@ describe("BackgroundCategorizationService", () => {
     // Reset fake timers if any test used them
     try {
       vi.useRealTimers();
-    } catch (e) {
+    } catch {
       // Timers may not be fake, that's ok
     }
   });
@@ -52,7 +53,7 @@ describe("BackgroundCategorizationService", () => {
       const userId = "test-user";
 
       // Mock AI categorization
-      const mockAiService = AiCategorizationService as any;
+      const mockAiService = vi.mocked(AiCategorizationService);
       const aiInstance = new mockAiService();
       aiInstance.categorizeTransaction.mockResolvedValue({
         categoryKey: "dining",
@@ -61,11 +62,11 @@ describe("BackgroundCategorizationService", () => {
       });
 
       // Mock category lookup
-      (CategoryService.getCategoryByKey as any).mockResolvedValue({
+      vi.mocked(CategoryService.getCategoryByKey).mockResolvedValue({
         id: 5,
         key: "dining",
         name: "Dining",
-      });
+      } as never);
 
       // Mock Supabase update
       const updateSpy = vi.fn(() => ({
@@ -73,7 +74,7 @@ describe("BackgroundCategorizationService", () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
       }));
-      mockSupabase.from = vi.fn(() => ({ update: updateSpy })) as any;
+      mockSupabase.from = vi.fn(() => ({ update: updateSpy }));
 
       // Act - Method should return immediately (non-blocking)
       const result = service.categorizeTransactionInBackground(transactionId, description, userId);
@@ -97,7 +98,7 @@ describe("BackgroundCategorizationService", () => {
 
     it("should log categorization start", async () => {
       // Arrange
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
       const transactionId = 42;
       const description = "Test expense";
       const userId = "test-user";
@@ -191,10 +192,10 @@ describe("BackgroundCategorizationService", () => {
       mockSupabase.from = vi.fn(() => ({ update: updateSpy })) as any;
       service = new BackgroundCategorizationService(mockSupabase);
 
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
       // Act
-      const result = service.categorizeTransactionInBackground(transactionId, description, userId);
+      void service.categorizeTransactionInBackground(transactionId, description, userId);
 
       vi.advanceTimersByTime(100);
       await vi.runAllTimersAsync();
@@ -203,7 +204,7 @@ describe("BackgroundCategorizationService", () => {
       expect(consoleSpy).toHaveBeenCalled();
       expect(
         consoleSpy.mock.calls.some(
-          (call) => (call[0] as string)?.includes("[Background]") || (call[0] as string)?.includes("Error")
+          (call) => (call[0] as string)?.includes?.("[Background]") || (call[0] as string)?.includes("Error")
         )
       ).toBe(true);
 
@@ -352,7 +353,7 @@ describe("BackgroundCategorizationService", () => {
 
     it("should handle AI categorization failures gracefully", async () => {
       // Arrange
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
       const transactionId = 42;
       const description = "Error causing item";
       const userId = "test-user";
@@ -391,7 +392,7 @@ describe("BackgroundCategorizationService", () => {
 
     it("should handle database update failures gracefully", async () => {
       // Arrange
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
       const transactionId = 42;
       const description = "Database error item";
       const userId = "test-user";

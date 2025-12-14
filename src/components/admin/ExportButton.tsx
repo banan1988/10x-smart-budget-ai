@@ -28,13 +28,7 @@ interface ExportButtonProps {
   onExport?: () => void;
 }
 
-export default function ExportButton({
-  data,
-  trendData,
-  fileName = "ai-stats",
-  isLoading = false,
-  onExport,
-}: ExportButtonProps) {
+export default function ExportButton({ data, fileName = "ai-stats", isLoading = false, onExport }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportToCSV = async () => {
@@ -80,6 +74,7 @@ export default function ExportButton({
 
       onExport?.();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error exporting CSV:", error);
     } finally {
       setIsExporting(false);

@@ -71,6 +71,7 @@ export function TransactionsView() {
       refetch();
       toast.success("Transakcja została usunięta");
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("Error deleting transaction:", err);
       toast.error("Nie udało się usunąć transakcji");
     } finally {

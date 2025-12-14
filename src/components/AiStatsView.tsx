@@ -170,7 +170,7 @@ export default function AiStatsView() {
                 Strona {currentPage} z {stats.pagination.totalPages}
               </span>
               <button
-                onClick={() => handlePageChange(Math.min(stats.pagination!.totalPages, currentPage + 1))}
+                onClick={() => handlePageChange(Math.min(stats.pagination.totalPages, currentPage + 1))}
                 disabled={currentPage === stats.pagination.totalPages}
                 className="rounded-md px-3 py-2 text-sm font-medium disabled:opacity-50"
               >

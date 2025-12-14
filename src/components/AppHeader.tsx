@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface AppHeaderProps {
-  currentPage?: "dashboard" | "transactions" | "profile";
   userEmail?: string;
   userNickname?: string;
   userRole?: "user" | "admin";
@@ -21,7 +20,7 @@ interface AppHeaderProps {
  * Minimal header with logo, theme toggle and user menu
  * Navigation is handled by AppSidebar
  */
-export function AppHeader({ currentPage, userEmail, userNickname, userRole = "user" }: AppHeaderProps) {
+export function AppHeader({ userEmail, userNickname, userRole = "user" }: AppHeaderProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<"user" | "admin">(userRole);
 
@@ -39,10 +38,12 @@ export function AppHeader({ currentPage, userEmail, userNickname, userRole = "us
             const profile = JSON.parse(cachedProfile);
             if (profile.role && profile.role !== userRole) {
               setCurrentUserRole(profile.role);
+              // eslint-disable-next-line no-console
               console.log("[AppHeader] User role from cache:", profile.role);
             }
             return; // Don't fetch if we have valid cache
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.error("[AppHeader] Failed to parse cached profile:", e);
           }
         }
@@ -59,13 +60,16 @@ export function AppHeader({ currentPage, userEmail, userNickname, userRole = "us
             sessionStorage.setItem("user_profile", profileText);
             if (profile.role && profile.role !== userRole) {
               setCurrentUserRole(profile.role);
+              // eslint-disable-next-line no-console
               console.log("[AppHeader] User role from API:", profile.role);
             }
           } catch (parseError) {
+            // eslint-disable-next-line no-console
             console.error("[AppHeader] Failed to parse API response:", parseError);
           }
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("[AppHeader] Failed to fetch user role:", error);
       }
     };
@@ -99,6 +103,7 @@ export function AppHeader({ currentPage, userEmail, userNickname, userRole = "us
         window.location.href = "/";
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Logout failed:", error);
     } finally {
       setIsLoggingOut(false);

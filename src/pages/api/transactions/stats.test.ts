@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { GET } from "./stats";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
@@ -21,7 +22,7 @@ describe("GET /api/transactions/stats", () => {
       url: new URL("http://localhost:4321/api/transactions/stats?month=2025-11"),
     });
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     expect(response.status).toBe(401);
   });
@@ -46,9 +47,9 @@ describe("GET /api/transactions/stats", () => {
         { category: "Food", amount: 500, percentage: 33 },
         { category: "Transport", amount: 400, percentage: 27 },
       ],
-    } as any);
+    } as Record<string, unknown>);
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -67,7 +68,7 @@ describe("GET /api/transactions/stats", () => {
       url: new URL("http://localhost:4321/api/transactions/stats?month=2025-11"),
     });
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     expect(response.status).toBe(200);
   });
@@ -81,7 +82,7 @@ describe("GET /api/transactions/stats", () => {
       url: new URL("http://localhost:4321/api/transactions/stats?month=11-2025"),
     });
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     expect(response.status).toBe(400);
   });
@@ -96,7 +97,7 @@ describe("GET /api/transactions/stats", () => {
       url: new URL("http://localhost:4321/api/transactions/stats?month=2025-11&categoryId=1,2,3"),
     });
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     expect(response.status).toBe(200);
   });
@@ -111,7 +112,7 @@ describe("GET /api/transactions/stats", () => {
       url: new URL("http://localhost:4321/api/transactions/stats?month=2025-11"),
     });
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
     const data = await response.json();
 
     expect(data).toHaveProperty("byCategory");
@@ -119,7 +120,9 @@ describe("GET /api/transactions/stats", () => {
   });
 
   it("should return 500 on service error", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const mockSupabase = createMockSupabaseClient();
     const context = createMockAPIContext({
       locals: {
@@ -132,7 +135,7 @@ describe("GET /api/transactions/stats", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.getStats).mockRejectedValue(new Error("Service error"));
 
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     expect(response.status).toBe(500);
     expect(consoleErrorSpy).toHaveBeenCalled();

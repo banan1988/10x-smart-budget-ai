@@ -1,4 +1,4 @@
-// filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/ai-categorization.service.ts
+/* eslint-disable no-console */
 import { OpenRouterService } from "./openrouter.service";
 import { CategoryService } from "./category.service";
 import type { SupabaseClient } from "../../db/supabase.client";
@@ -377,7 +377,10 @@ Provide:
    * @returns Validated and normalized CategorizationResult
    * @throws {Error} If the result is invalid
    */
-  private validateAndNormalizeResult(result: any, validCategoryKeys: string[]): CategorizationResult {
+  private validateAndNormalizeResult(
+    result: Record<string, unknown>,
+    validCategoryKeys: string[]
+  ): CategorizationResult {
     // Validate basic structure
     if (!result || typeof result !== "object") {
       throw new Error("Invalid response: not an object");

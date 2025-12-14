@@ -5,36 +5,28 @@ import { AppHeader } from "../components/AppHeader";
 import { AppFooter } from "../components/AppFooter";
 import { AppSidebar } from "../components/AppSidebar";
 import { MobileNav } from "../components/MobileNav";
-import type { ProfilePageVM, UserProfileDto } from "../types";
+import type { ProfilePageVM } from "../types";
 
-// Use authenticated user from middleware (already verified with getUser())
 const user = Astro.locals.user;
 
-// If not authenticated, middleware will redirect to login
-// This is a defensive check
 if (!user) {
   return Astro.redirect("/login");
 }
 
-// Use user data from middleware instead of making API call
-// Middleware already fetched user profile asynchronously in background
-// This avoids blocking the page render on network request
 const userProfile: ProfilePageVM = {
   email: user.email,
   nickname: user.nickname || null,
   registeredAt: user.createdAt || new Date().toISOString(),
-  preferences: null, // Preferences are not fetched in middleware yet
+  preferences: null,
 };
 ---
 
 <Layout title="Profil - SmartBudgetAI">
   <div class="flex min-h-screen">
-    <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
       <AppSidebar currentPage="profile" userRole={Astro.locals.user?.role} client:load />
     </div>
 
-    <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
       <AppHeader
         currentPage="profile"
@@ -51,29 +43,6 @@ const userProfile: ProfilePageVM = {
       <AppFooter client:load />
     </div>
 
-    <!-- Mobile bottom navigation -->
     <MobileNav currentPage="profile" client:load />
   </div>
-
-  <script>
-    // Adjust main content padding based on sidebar state
-    function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
-      const mainContent = document.getElementById("main-content");
-      if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
-      }
-    }
-
-    // Initial update
-    updateMainContentPadding();
-
-    // Listen for sidebar toggle
-    window.addEventListener("toggle-sidebar", () => {
-      setTimeout(updateMainContentPadding, 50);
-    });
-
-    // Update on resize
-    window.addEventListener("resize", updateMainContentPadding);
-  </script>
 </Layout>

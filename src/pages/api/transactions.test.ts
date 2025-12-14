@@ -172,7 +172,9 @@ describe("GET /api/transactions", () => {
 
   it("should return 500 when database query fails", async () => {
     // Arrange
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const context = setupGetTransactionsTest(null, { message: "Database error" });
 
     // Act
@@ -523,7 +525,9 @@ describe("POST /api/transactions", () => {
       date: "2025-11-15",
     };
 
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const mockSupabase = createMockSupabaseClient({
       from: vi.fn(() => createMockTransactionQuery(null, { message: "Insert failed" })),
     });

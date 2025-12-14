@@ -5,6 +5,7 @@ import type { CategoryDto } from "../../types";
  * Service for managing categories.
  * Handles data retrieval and transformation for category-related operations.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class CategoryService {
   /**
    * Retrieves all global categories from the database.

@@ -97,7 +97,9 @@ describe("GET /api/categories", () => {
   it("should return 500 when database query fails", async () => {
     // Arrange
     const mockError = { message: "Database connection failed" };
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const context = setupCategoriesTest(null, mockError);
 
     // Act
@@ -116,7 +118,9 @@ describe("GET /api/categories", () => {
 
   it("should return 500 when service throws unexpected error", async () => {
     // Arrange
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const mockSupabase = createMockSupabaseClient({
       from: vi.fn(() => {
         throw new Error("Unexpected error");

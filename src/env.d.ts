@@ -15,7 +15,7 @@ declare global {
   namespace App {
     interface Locals {
       user?: User;
-      supabase?: any; // SupabaseClient type
+      supabase?: import("@supabase/supabase-js").SupabaseClient;
     }
   }
 }

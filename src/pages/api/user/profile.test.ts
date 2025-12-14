@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { GET, PUT } from "./profile";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
@@ -17,7 +18,7 @@ vi.mock("../../../lib/services/user.service", async (importOriginal) => {
   };
 });
 
-function createMockRequest(body: any = null, method = "GET") {
+function createMockRequest(body: Record<string, unknown> | null = null, method = "GET"): Request {
   return new Request("http://localhost:4321/api/user/profile", {
     method,
     body: body ? JSON.stringify(body) : undefined,
@@ -38,7 +39,7 @@ describe("GET /api/user/profile", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(401, "Should return 401 Unauthorized when user is not authenticated");
@@ -61,7 +62,7 @@ describe("GET /api/user/profile", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.status).toBe(200, "Should return 200 OK for authenticated user");
@@ -83,7 +84,7 @@ describe("GET /api/user/profile", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     const cacheControl = response.headers.get("Cache-Control");
@@ -103,7 +104,7 @@ describe("GET /api/user/profile", () => {
     });
 
     // Act
-    const response = await GET(context as any);
+    const response = await GET(context as APIContext);
 
     // Assert
     expect(response.headers.get("Content-Type")).toBe(
@@ -126,7 +127,7 @@ describe("PUT /api/user/profile", () => {
     });
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(401, "Should return 401 Unauthorized when user is not authenticated");
@@ -146,10 +147,10 @@ describe("PUT /api/user/profile", () => {
     vi.mocked(UserService.updateUserProfile).mockResolvedValue({
       id: "user-123",
       nickname: "NewNickname",
-    } as any);
+    } as Record<string, unknown>);
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(200, "Should return 200 OK on successful update");
@@ -169,7 +170,7 @@ describe("PUT /api/user/profile", () => {
     });
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(400, "Should return 400 Bad Request for empty nickname");
@@ -188,7 +189,7 @@ describe("PUT /api/user/profile", () => {
     });
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(400, "Should return 400 Bad Request for nickname > 50 characters");
@@ -209,10 +210,10 @@ describe("PUT /api/user/profile", () => {
     vi.mocked(UserService.updateUserProfile).mockResolvedValue({
       id: "user-123",
       nickname: exactlyFiftyChars,
-    } as any);
+    } as Record<string, unknown>);
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(200, "Should accept nickname with exactly 50 characters");
@@ -229,7 +230,7 @@ describe("PUT /api/user/profile", () => {
     });
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(400, "Should return 400 for nickname with invalid special characters");
@@ -252,10 +253,10 @@ describe("PUT /api/user/profile", () => {
       vi.mocked(UserService.updateUserProfile).mockResolvedValue({
         id: "user-123",
         nickname,
-      } as any);
+      } as Record<string, unknown>);
 
       // Act
-      const response = await PUT(context as any);
+      const response = await PUT(context as APIContext);
 
       // Assert
       expect(response.status).toBe(200, `Should accept valid nickname format: "${nickname}"`);
@@ -279,7 +280,7 @@ describe("PUT /api/user/profile", () => {
     });
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(400, "Should return 400 for malformed JSON request body");
@@ -287,7 +288,9 @@ describe("PUT /api/user/profile", () => {
 
   it("should return 500 on service error", async () => {
     // Arrange
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const context = createMockAPIContext({
       locals: {
         user: { id: "user-123" },
@@ -300,11 +303,11 @@ describe("PUT /api/user/profile", () => {
     vi.mocked(UserService.updateUserProfile).mockRejectedValue(new Error("Service error"));
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(500, "Should return 500 Internal Server Error when service fails");
-    expect(consoleErrorSpy).toHaveBeenCalled("Should log error to console");
+    expect(consoleErrorSpy).toHaveBeenCalled();
     // Verify the error was logged with correct prefix
     const callArgs = consoleErrorSpy.mock.calls[0];
     expect(callArgs[0]).toContain("Error updating user profile", "Should log with correct error prefix");
@@ -327,10 +330,10 @@ describe("PUT /api/user/profile", () => {
     vi.mocked(UserService.updateUserProfile).mockResolvedValue({
       id: "user-123",
       nickname: "NewNickname",
-    } as any);
+    } as Record<string, unknown>);
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.headers.get("Content-Type")).toBe(
@@ -354,14 +357,14 @@ describe("PUT /api/user/profile", () => {
     updateMock.mockResolvedValue({
       id: "user-123",
       nickname: "NewNickname",
-    } as any);
+    } as Record<string, unknown>);
 
     // Act
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     // Assert
     expect(response.status).toBe(200, "Should return 200 OK after trimming whitespace");
-    expect(updateMock).toHaveBeenCalled("updateUserProfile should be called to update trimmed nickname");
+    expect(updateMock).toHaveBeenCalled();
     // Verify the trimmed value was passed
     const callArgs = updateMock.mock.calls[0];
     expect(callArgs[2], "Should pass trimmed nickname to service").toEqual({ nickname: "NewNickname" });

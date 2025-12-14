@@ -6,20 +6,15 @@ import { AppFooter } from "@/components/AppFooter";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileNav } from "@/components/MobileNav";
 
-// This page requires authentication - middleware will handle redirect
-
-// Set cache headers - don't cache HTML page on client, but API will handle data caching
 Astro.response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 ---
 
 <Layout title="Pulpit - SmartBudgetAI">
   <div class="flex min-h-screen">
-    <!-- Sidebar - hidden on mobile, visible on desktop -->
     <div class="hidden lg:block">
       <AppSidebar currentPage="dashboard" userRole={Astro.locals.user?.role} client:load />
     </div>
 
-    <!-- Main content area -->
     <div class="flex flex-1 flex-col transition-all duration-300" id="main-content">
       <AppHeader
         currentPage="dashboard"
@@ -36,29 +31,6 @@ Astro.response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate
       <AppFooter client:load />
     </div>
 
-    <!-- Mobile bottom navigation -->
     <MobileNav currentPage="dashboard" client:load />
   </div>
-
-  <script>
-    // Adjust main content padding based on sidebar state
-    function updateMainContentPadding() {
-      const sidebarExpanded = localStorage.getItem("sidebar-expanded") === "true";
-      const mainContent = document.getElementById("main-content");
-      if (mainContent && window.innerWidth >= 1024) {
-        mainContent.style.paddingLeft = sidebarExpanded ? "14rem" : "4rem";
-      }
-    }
-
-    // Initial update
-    updateMainContentPadding();
-
-    // Listen for sidebar toggle
-    window.addEventListener("toggle-sidebar", () => {
-      setTimeout(updateMainContentPadding, 50);
-    });
-
-    // Listen for resize
-    window.addEventListener("resize", updateMainContentPadding);
-  </script>
 </Layout>

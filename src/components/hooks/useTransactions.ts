@@ -89,6 +89,7 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
         credentials: "include",
       });
 
+      // eslint-disable-next-line no-console
       console.log("Fetch response:", {
         status: response.status,
         ok: response.ok,
@@ -97,12 +98,14 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
 
       if (!response.ok) {
         const errorText = await response.text();
+        // eslint-disable-next-line no-console
         console.error("Error response body:", errorText);
         throw new Error(`Failed to fetch transactions: ${response.statusText}`);
       }
 
       const data: PaginatedResponse<TransactionDto> = await response.json();
 
+      // eslint-disable-next-line no-console
       console.log("Fetched transactions:", data);
 
       // Map DTOs to ViewModels
@@ -111,6 +114,7 @@ export function useTransactions(initialMonth?: string): UseTransactionsReturn {
       setTransactions(viewModels);
       setPagination(data.pagination);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error("useTransactions error:", err);
       setError(err instanceof Error ? err : new Error("Unknown error occurred"));
     } finally {

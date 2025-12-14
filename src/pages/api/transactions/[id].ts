@@ -29,11 +29,19 @@ export const PUT: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, params, request } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Extract and validate transaction ID from URL params
     const transactionId = parseInt(params.id || "", 10);
@@ -56,7 +64,7 @@ export const PUT: APIRoute = async (context) => {
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return new Response(
         JSON.stringify({
           error: "Invalid JSON",
@@ -92,16 +100,17 @@ export const PUT: APIRoute = async (context) => {
     updateResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return updateResponse;
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error updating transaction:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error updating transaction:", err);
 
     // Check if it's a not found error
-    if (error instanceof Error && error.message.includes("not found")) {
+    if (err instanceof Error && err.message.includes("not found")) {
       return new Response(
         JSON.stringify({
           error: "Not found",
-          message: error.message,
+          message: err.message,
         }),
         {
           status: 404,
@@ -113,7 +122,7 @@ export const PUT: APIRoute = async (context) => {
     }
 
     // Return generic error response
-    return createErrorResponse(error, 500);
+    return createErrorResponse(err, 500);
   }
 };
 
@@ -134,11 +143,19 @@ export const DELETE: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, params } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Extract and validate transaction ID from URL params
     const transactionId = parseInt(params.id || "", 10);
@@ -169,16 +186,17 @@ export const DELETE: APIRoute = async (context) => {
     });
 
     return deleteResponse;
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error deleting transaction:", error);
+    // eslint-disable-next-line no-console
+    console.error("Error deleting transaction:", err);
 
     // Check if it's a not found error
-    if (error instanceof Error && error.message.includes("not found")) {
+    if (err instanceof Error && err.message.includes("not found")) {
       return new Response(
         JSON.stringify({
           error: "Not found",
-          message: error.message,
+          message: err.message,
         }),
         {
           status: 404,
@@ -190,6 +208,6 @@ export const DELETE: APIRoute = async (context) => {
     }
 
     // Return generic error response
-    return createErrorResponse(error, 500);
+    return createErrorResponse(err, 500);
   }
 };

@@ -1,5 +1,8 @@
 ---
 import "../styles/global.css";
+import Header from "../components/landing/Header.astro";
+import Footer from "../components/landing/Footer.astro";
+import { FeedbackButton } from "../components/FeedbackButton";
 
 interface Props {
   title?: string;
@@ -15,10 +18,6 @@ const {
   showFooter = false,
 } = Astro.props;
 
-import Header from "../components/landing/Header.astro";
-import Footer from "../components/landing/Footer.astro";
-import { FeedbackButton } from "../components/FeedbackButton";
-
 // Check if user is authenticated from middleware
 const isAuthenticated = !!Astro.locals.user;
 ---
@@ -32,22 +31,15 @@ const isAuthenticated = !!Astro.locals.user;
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <script is:inline>
-      // Initialize theme before page renders to prevent FOUC
-      (function () {
-        const theme =
-          localStorage.getItem("theme") ||
-          (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        document.documentElement.classList.toggle("dark", theme === "dark");
-      })();
-    </script>
+    <script is:inline src="/theme-switch.js"></script>
+    <script is:inline src="/toggle-sidebar.js"></script>
   </head>
   <body>
     {showHeader && <Header />}
     <slot />
     {showFooter && <Footer />}
 
-    {/* Feedback button - only visible to authenticated users */}
+    <!-- Feedback button - only visible to authenticated users -->
     <FeedbackButton isAuthenticated={isAuthenticated} client:load />
   </body>
 </html>

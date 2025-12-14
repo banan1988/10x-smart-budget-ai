@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { SupabaseClient } from "../../db/supabase.client";
 import { AiCategorizationService } from "./ai-categorization.service";
 import { CategoryService } from "./category.service";

@@ -50,28 +50,6 @@ export function FeedbackForm({ onSubmitSuccess, onCancel }: FeedbackFormProps) {
     }
   }, []);
 
-  // Validate form data
-  const validateForm = (): boolean => {
-    const newErrors: FormError[] = [];
-
-    if (formData.rating === null) {
-      newErrors.push({
-        field: "rating",
-        message: "Ocena jest wymagana",
-      });
-    }
-
-    if (formData.comment.trim().length > 0 && formData.comment.length > MAX_COMMENT_LENGTH) {
-      newErrors.push({
-        field: "comment",
-        message: `Komentarz nie może przekraczać ${MAX_COMMENT_LENGTH} znaków`,
-      });
-    }
-
-    setErrors(newErrors);
-    return newErrors.length === 0;
-  };
-
   // Handle form submission
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -81,6 +59,27 @@ export function FeedbackForm({ onSubmitSuccess, onCancel }: FeedbackFormProps) {
       setSuccessMessage(null);
 
       // Validate form
+      const validateForm = (): boolean => {
+        const newErrors: FormError[] = [];
+
+        if (formData.rating === null) {
+          newErrors.push({
+            field: "rating",
+            message: "Ocena jest wymagana",
+          });
+        }
+
+        if (formData.comment.trim().length > 0 && formData.comment.length > MAX_COMMENT_LENGTH) {
+          newErrors.push({
+            field: "comment",
+            message: `Komentarz nie może przekraczać ${MAX_COMMENT_LENGTH} znaków`,
+          });
+        }
+
+        setErrors(newErrors);
+        return newErrors.length === 0;
+      };
+
       if (!validateForm()) {
         return;
       }
@@ -128,6 +127,7 @@ export function FeedbackForm({ onSubmitSuccess, onCancel }: FeedbackFormProps) {
           onSubmitSuccess?.();
         }, 1500);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("Error submitting feedback:", error);
         setErrors([
           {

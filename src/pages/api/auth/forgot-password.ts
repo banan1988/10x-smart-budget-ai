@@ -26,7 +26,7 @@ function errorResponse(message: string, status: number) {
 /**
  * Success response helper
  */
-function successResponse(data: any = {}, status = 200) {
+function successResponse(data: Record<string, unknown> = {}, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
@@ -70,6 +70,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Always return success to prevent user enumeration
     // Even if user doesn't exist, we say we sent the email
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("[Forgot Password Error]", {
         email,
         code: error.code,
@@ -82,6 +83,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       message: "Jeśli istnieje konto z tym adresem email, wysłaliśmy instrukcje do resetowania hasła",
     });
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("[Forgot Password Exception]", err);
     // Even on error, don't reveal if user exists
     return successResponse({

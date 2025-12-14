@@ -118,8 +118,9 @@ export function EditProfileSection({ initialNickname, onProfileUpdated }: EditPr
           onProfileUpdated(result.data.nickname);
         }
       }
-    } catch (err) {
-      console.error("Error updating profile:", err);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Error updating profile:", error);
       toast.error("Błąd połączenia. Sprawdź swoją sieć internetową i spróbuj ponownie.");
     } finally {
       setIsLoading(false);

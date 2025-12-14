@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, expectTypeOf } from "vitest";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { describe, it, expect, vi } from "vitest";
 import { UserService } from "./user.service";
 import { createMockSupabaseClient } from "../../test/mocks/supabase.mock";
 

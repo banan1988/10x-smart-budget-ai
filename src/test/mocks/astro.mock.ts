@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { APIContext } from "astro";
+import type { APIContext, AstroCookies } from "astro";
 import type { SupabaseClient } from "../../db/supabase.client";
 
 /**
@@ -22,7 +22,7 @@ export function createMockAPIContext(overrides?: Partial<APIContext>): APIContex
       set: vi.fn(),
       delete: vi.fn(),
       has: vi.fn(),
-    } as any,
+    } as unknown as AstroCookies,
     ...overrides,
   } as unknown as APIContext;
 }

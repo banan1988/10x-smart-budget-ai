@@ -1,5 +1,6 @@
 // filepath: /Users/kucharsk/workspace/banan1988/10x-smart-budget-ai/src/lib/services/openrouter.service.ts
-import { z } from "zod";
+/* eslint-disable no-console */
+import z from "zod";
 
 /**
  * Zod schema for validating OpenRouter API response structure.
@@ -17,26 +18,30 @@ const OpenRouterResponseSchema = z.object({
 
 /**
  * Zod schema for JSON schema definition used in response format.
+ * Currently unused - kept for reference in case strict mode validation is needed.
  */
-const JsonSchemaDefinition = z.object({
-  name: z.string(),
-  strict: z.boolean().optional(),
-  schema: z.record(z.any()),
-});
+// const JsonSchemaDefinition = z.object({
+//   name: z.string(),
+//   strict: z.boolean().optional(),
+//   schema: z.record(z.any()),
+// });
+
+// ...existing code...
 
 /**
  * Zod schema for response format configuration.
  * Supports both json_schema (structured) and json_object (flexible) formats.
  */
-const ResponseFormatSchema = z.union([
-  z.object({
-    type: z.literal("json_schema"),
-    json_schema: JsonSchemaDefinition,
-  }),
-  z.object({
-    type: z.literal("json_object"),
-  }),
-]);
+// Note: ResponseFormatSchema is defined but currently unused. Keep for future use or remove if not needed.
+// const ResponseFormatSchema = z.union([
+//   z.object({
+//     type: z.literal("json_schema"),
+//     json_schema: JsonSchemaDefinition,
+//   }),
+//   z.object({
+//     type: z.literal("json_object"),
+//   }),
+// ]);
 
 /**
  * Response format configuration - can be either json_schema or json_object.

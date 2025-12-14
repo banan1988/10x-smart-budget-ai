@@ -5,6 +5,7 @@ import type { FeedbackRequest, FeedbackStatsDto, FeedbackDto } from "../../types
  * Service for managing user feedback.
  * Handles data submission, retrieval, and statistical aggregation for feedback operations.
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class FeedbackService {
   /**
    * Creates a new feedback entry for a user.

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { APIContext } from "astro";
 import { PUT, DELETE } from "./[id]";
 import { createMockAPIContext } from "../../../test/mocks/astro.mock";
 import { createMockSupabaseClient } from "../../../test/mocks/supabase.mock";
@@ -11,7 +12,7 @@ vi.mock("../../../lib/services/transaction.service", () => ({
   },
 }));
 
-function createMockRequest(body: any) {
+function createMockRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:4321/api/transactions/123", {
     method: "PUT",
     body: JSON.stringify(body),
@@ -46,9 +47,9 @@ describe("PUT /api/transactions/[id]", () => {
       type: "expense",
       amount: 200,
       description: "Updated transaction",
-    } as any);
+    } as Record<string, unknown>);
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -64,7 +65,7 @@ describe("PUT /api/transactions/[id]", () => {
       request,
     });
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(401);
   });
@@ -81,7 +82,7 @@ describe("PUT /api/transactions/[id]", () => {
       request,
     });
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(400);
     const data = await response.json();
@@ -104,7 +105,7 @@ describe("PUT /api/transactions/[id]", () => {
       request,
     });
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(400);
   });
@@ -124,7 +125,7 @@ describe("PUT /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.updateTransaction).mockRejectedValue(new Error("not found"));
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(404);
   });
@@ -144,7 +145,7 @@ describe("PUT /api/transactions/[id]", () => {
       request,
     });
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(400);
   });
@@ -168,9 +169,9 @@ describe("PUT /api/transactions/[id]", () => {
       id: 123,
       type: "expense",
       description: "New description only",
-    } as any);
+    } as Record<string, unknown>);
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(200);
     const data = await response.json();
@@ -193,7 +194,7 @@ describe("PUT /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.updateTransaction).mockRejectedValue(new Error("not found"));
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(404);
     const data = await response.json();
@@ -201,7 +202,9 @@ describe("PUT /api/transactions/[id]", () => {
   });
 
   it("should return 500 on service error", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const request = createMockRequest({ amount: 200 });
 
     const context = createMockAPIContext({
@@ -216,7 +219,7 @@ describe("PUT /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.updateTransaction).mockRejectedValue(new Error("Database error"));
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     expect(response.status).toBe(500);
     const data = await response.json();
@@ -243,36 +246,12 @@ describe("PUT /api/transactions/[id]", () => {
       id: 123,
       type: "expense",
       amount: 200,
-    } as any);
+    } as Record<string, unknown>);
 
-    const response = await PUT(context as any);
+    const response = await PUT(context as APIContext);
 
     const cacheControl = response.headers.get("Cache-Control");
     expect(cacheControl).toContain("no-cache");
-  });
-
-  it("should return 500 on service error", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const request = createMockRequest({ amount: 200 });
-
-    const context = createMockAPIContext({
-      locals: {
-        user: { id: "user-123" },
-        supabase: createMockSupabaseClient(),
-      },
-      params: { id: "123" },
-      request,
-    });
-
-    const { TransactionService } = await import("../../../lib/services/transaction.service");
-    vi.mocked(TransactionService.updateTransaction).mockRejectedValue(new Error("Service error"));
-
-    const response = await PUT(context as any);
-
-    expect(response.status).toBe(500);
-    expect(consoleErrorSpy).toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
   });
 });
 
@@ -293,7 +272,7 @@ describe("DELETE /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.deleteTransaction).mockResolvedValue(undefined);
 
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     expect(response.status).toBe(204);
   });
@@ -304,7 +283,7 @@ describe("DELETE /api/transactions/[id]", () => {
       params: { id: "123" },
     });
 
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     expect(response.status).toBe(401);
     const data = await response.json();
@@ -320,7 +299,7 @@ describe("DELETE /api/transactions/[id]", () => {
       params: { id: "invalid-id" },
     });
 
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     expect(response.status).toBe(400);
     const data = await response.json();
@@ -339,13 +318,15 @@ describe("DELETE /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.deleteTransaction).mockRejectedValue(new Error("not found"));
 
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     expect(response.status).toBe(404);
   });
 
   it("should return 500 on service error", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // no-op
+    });
     const context = createMockAPIContext({
       locals: {
         user: { id: "user-123" },
@@ -357,7 +338,7 @@ describe("DELETE /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.deleteTransaction).mockRejectedValue(new Error("Database error"));
 
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     expect(response.status).toBe(500);
     const data = await response.json();
@@ -380,7 +361,7 @@ describe("DELETE /api/transactions/[id]", () => {
     const { TransactionService } = await import("../../../lib/services/transaction.service");
     vi.mocked(TransactionService.deleteTransaction).mockRejectedValue(new Error("not found"));
 
-    const response = await DELETE(context as any);
+    const response = await DELETE(context as APIContext);
 
     expect(response.status).toBe(404);
     expect(TransactionService.deleteTransaction).toHaveBeenCalledWith(expect.anything(), "user-123", 999);

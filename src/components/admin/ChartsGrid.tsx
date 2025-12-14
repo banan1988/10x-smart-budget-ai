@@ -14,12 +14,12 @@ interface AiCategorizationStatsDto {
     manuallyCategorized: number;
     aiPercentage: number;
   };
-  categoryBreakdown: any[];
+  categoryBreakdown: { categoryName: string; count: number; percentage: number }[];
   trendData: {
     date: string;
     percentage: number;
   }[];
-  pagination?: any;
+  pagination?: { page: number; pageSize: number; total: number };
 }
 
 interface ChartsGridProps {

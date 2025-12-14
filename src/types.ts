@@ -66,7 +66,7 @@ export const GetTransactionsQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
     .refine(
       (val) => {
-        const [year, month] = val.split("-").map(Number);
+        const [, month] = val.split("-").map(Number);
         return month >= 1 && month <= 12;
       },
       {
@@ -211,7 +211,7 @@ export const GetTransactionStatsQuerySchema = z.object({
     .regex(/^\d{4}-\d{2}$/, "Month must be in YYYY-MM format")
     .refine(
       (val) => {
-        const [year, month] = val.split("-").map(Number);
+        const [, month] = val.split("-").map(Number);
         return month >= 1 && month <= 12;
       },
       {
@@ -239,7 +239,7 @@ export interface ProfilePageVM {
   email: string;
   nickname: string | null;
   registeredAt: string; // ISO format: "2025-01-15T10:30:00.000Z"
-  preferences: Record<string, any> | null;
+  preferences: Record<string, unknown> | null;
 }
 
 /**
@@ -329,12 +329,7 @@ export interface ProfileCardData {
  * ViewModel for the Profile Settings page.
  * Used to pass data from server (Astro) to React components.
  */
-export interface ProfileSettingsPageVM {
-  email: string;
-  nickname: string | null;
-  registeredAt: string; // ISO format: "2025-01-15T10:30:00.000Z"
-  preferences: Record<string, any> | null;
-}
+export type ProfileSettingsPageVM = ProfilePageVM;
 
 /**
  * Request body for submitting user feedback.
@@ -480,14 +475,14 @@ export interface ProfilePageVM {
   email: string;
   nickname: string | null;
   registeredAt: string; // ISO format: "2025-01-15T10:30:00.000Z"
-  preferences: Record<string, any> | null;
+  preferences: Record<string, unknown> | null;
 }
 
 /**
  * ViewModel for the profile settings page (/profile/settings)
  * Same as ProfilePageVM but used in settings context
  */
-export interface ProfileSettingsPageVM extends ProfilePageVM {}
+export type ProfileSettingsPageVM = ProfilePageVM;
 
 /**
  * ViewModel for the ProfileCard component
@@ -552,3 +547,47 @@ export const UpdateProfileCommandSchema = z.object({
 });
 
 export type UpdateProfileCommand = z.infer<typeof UpdateProfileCommandSchema>;
+
+/**
+ * Category statistics for AI categorization breakdown
+ */
+export interface CategoryStats {
+  categoryId: number;
+  categoryName: string;
+  categoryKey: string;
+  aiCount: number;
+  manualCount: number;
+  total: number;
+  aiPercentage: number;
+  trend?: {
+    direction: "up" | "down" | "neutral";
+    percentage?: number;
+  };
+}
+
+/**
+ * Response DTO for AI categorization statistics
+ */
+export interface AiCategorizationStatsDto {
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  overall: {
+    totalTransactions: number;
+    aiCategorized: number;
+    manuallyCategorized: number;
+    aiPercentage: number;
+  };
+  categoryBreakdown: CategoryStats[];
+  trendData: {
+    date: string;
+    percentage: number;
+  }[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}

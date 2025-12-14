@@ -110,6 +110,7 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
           }
         } else {
           // Log non-JSON response for debugging
+          // eslint-disable-next-line no-console
           console.error("Non-JSON response from /api/admin/ai-stats:", bodyText.substring(0, 200));
         }
 
@@ -117,15 +118,18 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
       }
 
       const contentType = response.headers.get("content-type");
+      // eslint-disable-next-line no-console
       console.log("[useAiStatsAdmin] Response status:", response.status, "Content-Type:", contentType);
 
       // Try to parse JSON
       let data: AiCategorizationStatsDto;
       try {
         const responseText = await response.text();
+        // eslint-disable-next-line no-console
         console.log("[useAiStatsAdmin] Response body (first 500 chars):", responseText.substring(0, 500));
         data = JSON.parse(responseText) as AiCategorizationStatsDto;
       } catch (parseErr) {
+        // eslint-disable-next-line no-console
         console.error("[useAiStatsAdmin] Failed to parse response as JSON:", parseErr);
         throw new Error("Invalid response format: server did not return valid JSON");
       }
@@ -134,6 +138,7 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Unknown error");
       setError(error);
+      // eslint-disable-next-line no-console
       console.error("Error fetching AI stats:", error);
     } finally {
       setIsLoading(false);
@@ -145,7 +150,7 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
    */
   useEffect(() => {
     fetchStats(dateRange);
-  }, [dateRange]);
+  }, [dateRange, fetchStats]);
 
   /**
    * Handle date range change
@@ -171,6 +176,7 @@ export function useAiStatsAdmin(initialDateRange?: DateRange): UseAiStatsAdminRe
   const exportToCSV = useCallback(
     (filename = "ai-stats.csv") => {
       if (!stats) {
+        // eslint-disable-next-line no-console
         console.warn("No stats data to export");
         return;
       }

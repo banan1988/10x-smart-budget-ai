@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 /**
@@ -57,7 +57,7 @@ function evaluatePasswordStrength(password: string): PasswordStrengthResult {
     hasUppercase: /[A-Z]/.test(password),
     hasLowercase: /[a-z]/.test(password),
     hasDigit: /\d/.test(password),
-    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
   };
 
   // Calculate score (0-100)
@@ -112,13 +112,17 @@ export function useRegisterForm() {
       const newState = { ...prev, email };
 
       if (prev.touched.email) {
+        let error: string | undefined;
         if (!email) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: "Email jest wymagany" };
+          error = "Email jest wymagany";
         } else if (!isValidEmail(email)) {
-          newState.fieldErrors = { ...prev.fieldErrors, email: "Wprowadź prawidłowy adres email" };
-        } else {
-          const { email: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
+          error = "Wprowadź prawidłowy adres email";
+        }
+
+        if (error) {
+          newState.fieldErrors = { ...prev.fieldErrors, email: error };
+        } else if (prev.fieldErrors.email) {
+          delete newState.fieldErrors.email;
         }
       }
 
@@ -129,32 +133,30 @@ export function useRegisterForm() {
   /**
    * Validates password and updates state
    */
-  const handlePasswordChange = useCallback((password: string) => {
+  const handlePasswordChange = useCallback((passwordValue: string) => {
     setState((prev) => {
-      const newState = { ...prev, password };
+      const newState = { ...prev, password: passwordValue };
 
       if (prev.touched.password) {
-        const strength = evaluatePasswordStrength(password);
+        const strength = evaluatePasswordStrength(passwordValue);
         const allRequirementsMet = Object.values(strength.requirements).every(Boolean);
 
-        if (!password) {
+        if (!passwordValue) {
           newState.fieldErrors = { ...prev.fieldErrors, password: "Hasło jest wymagane" };
         } else if (!allRequirementsMet) {
           newState.fieldErrors = { ...prev.fieldErrors, password: "Hasło nie spełnia wszystkich wymagań" };
-        } else {
-          const { password: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
+        } else if (prev.fieldErrors.password) {
+          delete newState.fieldErrors.password;
         }
       }
 
       // Re-validate confirmPassword if it's touched
       if (prev.touched.confirmPassword && prev.confirmPassword) {
-        if (password !== prev.confirmPassword) {
+        if (passwordValue !== prev.confirmPassword) {
           newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
           // Passwords now match - clear the error
-          const { confirmPassword, ...rest } = newState.fieldErrors;
-          newState.fieldErrors = rest;
+          delete newState.fieldErrors.confirmPassword;
         }
       }
 
@@ -176,8 +178,7 @@ export function useRegisterForm() {
           newState.fieldErrors = { ...prev.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
           // Passwords match - clear the error
-          const { confirmPassword: _, ...rest } = prev.fieldErrors;
-          newState.fieldErrors = rest;
+          delete newState.fieldErrors.confirmPassword;
         }
       }
 
@@ -235,9 +236,17 @@ export function useRegisterForm() {
   }, []);
 
   /**
-   * Validates form before submission
+   * Gets password strength information
    */
-  const validateForm = (): boolean => {
+  const getPasswordStrength = useCallback((): PasswordStrengthResult => {
+    return evaluatePasswordStrength(state.password);
+  }, [state.password]);
+
+  /**
+   * Handles form submission
+   */
+  const handleSubmit = useCallback(async () => {
+    // Validate form first
     const errors: typeof state.fieldErrors = {};
     let isValid = true;
 
@@ -277,24 +286,6 @@ export function useRegisterForm() {
         fieldErrors: errors,
         touched: { email: true, password: true, confirmPassword: true },
       }));
-    }
-
-    return isValid;
-  };
-
-  /**
-   * Gets password strength information
-   */
-  const getPasswordStrength = useCallback((): PasswordStrengthResult => {
-    return evaluatePasswordStrength(state.password);
-  }, [state.password]);
-
-  /**
-   * Handles form submission
-   */
-  const handleSubmit = useCallback(async () => {
-    // Validate form first
-    if (!validateForm()) {
       return;
     }
 
@@ -353,11 +344,11 @@ export function useRegisterForm() {
       // Show success notification
       toast.success(data.message || "Konto zostało utworzone pomyślnie!");
 
-      // Redirect to dashboard since user is already authenticated after signup
-      // Supabase automatically creates session on signup
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 500);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        generalError: null,
+      }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Nieznany błąd podczas rejestracji";
 
@@ -368,9 +359,20 @@ export function useRegisterForm() {
       }));
 
       toast.error(`Błąd: ${errorMessage}`);
+      // eslint-disable-next-line no-console
       console.error("Register error:", error);
     }
-  }, [state.email, state.password]);
+  }, [state]);
+
+  // Handle redirect after successful registration
+  useEffect(() => {
+    if (state.generalError === null && !state.isLoading && state.email && state.password && state.confirmPassword) {
+      const timer = setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.generalError, state.isLoading, state.email, state.password, state.confirmPassword]);
 
   /**
    * Checks if form is valid for submission

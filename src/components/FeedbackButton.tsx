@@ -3,7 +3,6 @@ import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeedbackDialog } from "./FeedbackDialog";
 import { FeedbackForm } from "./FeedbackForm";
-import type { FeedbackButtonVM } from "@/types";
 
 interface FeedbackButtonProps {
   isAuthenticated: boolean;

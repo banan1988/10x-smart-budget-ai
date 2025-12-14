@@ -27,17 +27,25 @@ export const POST: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, request } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Parse and validate request body
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return new Response(
         JSON.stringify({
           error: "Invalid JSON",
@@ -75,10 +83,11 @@ export const POST: APIRoute = async (context) => {
     successResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return successResponse;
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error bulk creating transactions:", error);
-    return createErrorResponse(error, 500);
+    // eslint-disable-next-line no-console
+    console.error("Error bulk creating transactions:", err);
+    return createErrorResponse(err, 500);
   }
 };
 
@@ -98,17 +107,25 @@ export const DELETE: APIRoute = async (context) => {
   try {
     // Check if user is authenticated
     const [isAuth, errorResponse] = checkAuthentication(context);
-    if (!isAuth) return errorResponse!;
+    if (!isAuth) return errorResponse ?? new Response("Unauthorized", { status: 401 });
 
     const { locals, request } = context;
-    const supabase = locals.supabase!;
-    const userId = locals.user!.id;
+    const supabase =
+      locals.supabase ??
+      (() => {
+        throw new Error("Supabase client not available");
+      })();
+    const userId =
+      locals.user?.id ??
+      (() => {
+        throw new Error("User ID not available");
+      })();
 
     // Parse and validate request body
     let body;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return new Response(
         JSON.stringify({
           error: "Invalid JSON",
@@ -144,9 +161,10 @@ export const DELETE: APIRoute = async (context) => {
     deleteResponse.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
 
     return deleteResponse;
-  } catch (error) {
+  } catch (err) {
     // Log error for debugging
-    console.error("Error bulk deleting transactions:", error);
-    return createErrorResponse(error, 500);
+    // eslint-disable-next-line no-console
+    console.error("Error bulk deleting transactions:", err);
+    return createErrorResponse(err, 500);
   }
 };
