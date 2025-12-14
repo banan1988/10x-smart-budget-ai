@@ -17,11 +17,10 @@ export function AppSidebar({ currentPage, userRole = "user" }: AppSidebarProps) 
   const isAdmin = currentUserRole === "admin";
 
   useEffect(() => {
-    // Load saved state from localStorage
-    const saved = localStorage.getItem("sidebar-expanded");
-    if (saved !== null) {
-      setIsExpanded(saved === "true");
-    }
+    // Always start with collapsed sidebar on first mount
+    // This ensures sidebar is hidden by default after login
+    localStorage.setItem("sidebar-expanded", "false");
+    setIsExpanded(false);
 
     // Listen for toggle events
     const handleToggle = () => {
