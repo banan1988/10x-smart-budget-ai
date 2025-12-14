@@ -8,6 +8,7 @@ interface LoginFormState {
   passwordError?: string;
   generalError?: string;
   isLoading: boolean;
+  isSuccess: boolean;
   touched: {
     email: boolean;
     password: boolean;
@@ -62,6 +63,7 @@ export function useLoginForm(): UseLoginFormReturn {
     email: "",
     password: "",
     isLoading: false,
+    isSuccess: false,
     touched: {
       email: false,
       password: false,
@@ -77,6 +79,7 @@ export function useLoginForm(): UseLoginFormReturn {
       email: value,
       emailError: undefined,
       generalError: undefined,
+      isSuccess: false,
     }));
   }, []);
 
@@ -89,6 +92,7 @@ export function useLoginForm(): UseLoginFormReturn {
       password: value,
       passwordError: undefined,
       generalError: undefined,
+      isSuccess: false,
     }));
   }, []);
 
@@ -192,10 +196,8 @@ export function useLoginForm(): UseLoginFormReturn {
       // Success - show success message and redirect
       toast.success("Pomyślnie zalogowano");
 
-      setState((prev) => ({ ...prev, isLoading: false }));
-
-      // Redirect after showing success message
-      setState((prev) => ({ ...prev, isLoading: false, generalError: undefined }));
+      // Set success flag to trigger redirect
+      setState((prev) => ({ ...prev, isLoading: false, isSuccess: true }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Błąd połączenia. Spróbuj jeszcze raz.";
       toast.error(errorMessage);
@@ -212,13 +214,13 @@ export function useLoginForm(): UseLoginFormReturn {
 
   // Handle redirect after successful login
   useEffect(() => {
-    if (state.generalError === undefined && !state.isLoading && state.email && state.password) {
+    if (state.isSuccess) {
       const timer = setTimeout(() => {
         window.location.href = "/dashboard";
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [state.generalError, state.isLoading, state.email, state.password]);
+  }, [state.isSuccess]);
 
   /**
    * Check if form is valid

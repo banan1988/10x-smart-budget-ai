@@ -95,6 +95,7 @@ export function useRegisterForm() {
     showPassword: false,
     showConfirmPassword: false,
     isLoading: false,
+    isSuccess: false,
     generalError: null,
     touched: {
       email: false,
@@ -109,7 +110,7 @@ export function useRegisterForm() {
    */
   const handleEmailChange = useCallback((email: string) => {
     setState((prev) => {
-      const newState = { ...prev, email };
+      const newState = { ...prev, email, isSuccess: false };
 
       if (prev.touched.email) {
         let error: string | undefined;
@@ -135,7 +136,7 @@ export function useRegisterForm() {
    */
   const handlePasswordChange = useCallback((passwordValue: string) => {
     setState((prev) => {
-      const newState = { ...prev, password: passwordValue };
+      const newState = { ...prev, password: passwordValue, isSuccess: false };
 
       if (prev.touched.password) {
         const strength = evaluatePasswordStrength(passwordValue);
@@ -150,12 +151,11 @@ export function useRegisterForm() {
         }
       }
 
-      // Re-validate confirmPassword if it's touched
+      // If confirm password was already entered, validate it against new password
       if (prev.touched.confirmPassword && prev.confirmPassword) {
-        if (passwordValue !== prev.confirmPassword) {
+        if (prev.confirmPassword !== passwordValue) {
           newState.fieldErrors = { ...newState.fieldErrors, confirmPassword: "Hasła nie są identyczne" };
         } else {
-          // Passwords now match - clear the error
           delete newState.fieldErrors.confirmPassword;
         }
       }
@@ -169,7 +169,7 @@ export function useRegisterForm() {
    */
   const handleConfirmPasswordChange = useCallback((confirmPassword: string) => {
     setState((prev) => {
-      const newState = { ...prev, confirmPassword };
+      const newState = { ...prev, confirmPassword, isSuccess: false };
 
       if (prev.touched.confirmPassword) {
         if (!confirmPassword) {
@@ -332,21 +332,14 @@ export function useRegisterForm() {
       // Success - show success message
       const data = await response.json();
 
-      // Show success message about email verification
-      // NOTE: In production with email sending enabled, user would receive email verification link
-      // For local Supabase setup without email sending, the account is created and ready to use
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        generalError: null,
-      }));
-
       // Show success notification
       toast.success(data.message || "Konto zostało utworzone pomyślnie!");
 
+      // Set success flag to trigger redirect
       setState((prev) => ({
         ...prev,
         isLoading: false,
+        isSuccess: true,
         generalError: null,
       }));
     } catch (error) {
@@ -366,13 +359,13 @@ export function useRegisterForm() {
 
   // Handle redirect after successful registration
   useEffect(() => {
-    if (state.generalError === null && !state.isLoading && state.email && state.password && state.confirmPassword) {
+    if (state.isSuccess) {
       const timer = setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = "/login";
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [state.generalError, state.isLoading, state.email, state.password, state.confirmPassword]);
+  }, [state.isSuccess]);
 
   /**
    * Checks if form is valid for submission
