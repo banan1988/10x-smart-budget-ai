@@ -159,6 +159,31 @@ test('should show error on invalid email', async () => {
 });
 ```
 
+## Global Setup and Teardown
+
+The E2E tests use Playwright's project dependencies feature for global database setup and cleanup. This ensures a clean test environment for each test run.
+
+### Setup Process
+- **global.setup.ts**: Verifies that the test user exists and can authenticate using `E2E_USERNAME` and `E2E_PASSWORD`
+- Uses environment variables: `SUPABASE_URL`, `SUPABASE_KEY`, `E2E_USERNAME`, `E2E_PASSWORD`
+
+### Teardown Process
+- **global.teardown.ts**: Cleans up test data (transactions and feedback) for the authenticated test user
+- Uses authenticated session with `E2E_USERNAME` and `E2E_PASSWORD` to delete user-owned data
+- Preserves the test user account for reuse across test runs
+
+### Reusable Helpers
+- **src/test/mocks/e2e-helpers.ts**: Contains `verifyTestUser()` and `cleanupTestData()` functions
+- Can be reused in other test setups or scripts
+
+### Project Configuration
+The `playwright.config.ts` defines three projects:
+- `setup db`: Runs global setup before tests
+- `cleanup db`: Runs global teardown after tests
+- `chromium`: Main test project that depends on setup
+
+This approach provides full trace recording, HTML reports, and proper test isolation.
+
 ## Files Description
 
 ### fixtures/basePage.ts
