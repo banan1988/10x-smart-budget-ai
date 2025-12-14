@@ -10,6 +10,7 @@
 ## 📋 Przegląd
 
 Zaimplementowano kompletny widok rejestracji dla aplikacji **SmartBudgetAI** (`/register`). Widok zawiera:
+
 - Intuicyjny formularz z walidacją po stronie klienta
 - Wskaźnik siły hasła z wymaganiami
 - Pełną dostępność (ARIA)
@@ -24,6 +25,7 @@ Zaimplementowano kompletny widok rejestracji dla aplikacji **SmartBudgetAI** (`/
 ### **Krok 1: Struktura komponentów**
 
 #### Pliki utworzone:
+
 1. **`src/pages/register.astro`** - Strona rejestracji
    - Layout Astro z gradient background
    - Dekoracyjne elementy (blur circles, animowane ikony)
@@ -45,6 +47,7 @@ Zaimplementowano kompletny widok rejestracji dla aplikacji **SmartBudgetAI** (`/
    - Integracja z API (`POST /api/auth/register`)
 
 #### Hierarchia komponentów:
+
 ```
 RegisterPage (register.astro)
 ├── RegisterForm (React)
@@ -61,6 +64,7 @@ RegisterPage (register.astro)
 ### **Krok 2: Zarządzanie stanem i integracja API**
 
 #### State Management (Hook):
+
 ```typescript
 interface FormState {
   email: string;
@@ -70,24 +74,27 @@ interface FormState {
   showConfirmPassword: boolean;
   isLoading: boolean;
   generalError: string | null;
-  touched: { email, password, confirmPassword };
-  fieldErrors: { email?, password?, confirmPassword? };
+  touched: { email; password; confirmPassword };
+  fieldErrors: { email?; password?; confirmPassword? };
 }
 ```
 
 #### Walidacja:
+
 - **Email:** Format válid + max 255 znaków
 - **Hasło:** 8+ znaków, wielkie litery, małe litery, cyfry, znaki specjalne
 - **Potwierdzenie:** Musi pasować do hasła
 - Walidacja po stronie klienta (real-time) i serwera
 
 #### Password Strength Levels:
+
 - **Weak** (< 40 punktów): Brakuje wielu wymagań
 - **Medium** (40-60 punktów): Większość wymagań spełnionych
 - **Strong** (60-80 punktów): Wszystkie wymagania spełnione
 - **Very Strong** (80+ punktów): Maksymalna siła
 
 #### API Integration:
+
 - **Endpoint:** `POST /api/auth/register`
 - **Request:**
   ```json
@@ -106,6 +113,7 @@ interface FormState {
 ### **Krok 3: Interakcje użytkownika i obsługa błędów**
 
 #### Interakcje:
+
 1. **Wpisywanie emaila** → Real-time walidacja formatu
 2. **Wpisywanie hasła** → Dynamiczny wskaźnik siły + walidacja wymagań
 3. **Toggle widoczności haseł** → Zmiana type input z "password" na "text"
@@ -115,6 +123,7 @@ interface FormState {
 7. **Enter na polach hasła** → Submit jeśli formularz jest válid
 
 #### Obsługa Błędów:
+
 - ✅ Walidacja po stronie klienta z feedback'iem w real-time
 - ✅ Toast notifications dla błędów globalnych
 - ✅ Field-level error messages
@@ -128,6 +137,7 @@ interface FormState {
 ## 🧪 Testy
 
 ### **useRegisterForm.test.ts** - 37 testów ✅
+
 - Stan inicjalny
 - Walidacja emaila (format, długość, błędy)
 - Walidacja hasła (wszystkie wymagania)
@@ -138,6 +148,7 @@ interface FormState {
 - Blur event handling
 
 ### **RegisterForm.test.tsx** - 30 testów ✅
+
 - Rendering (pola, przyciski, linki)
 - Interakcje użytkownika (typing, toggle visibility)
 - Wskaźnik siły hasła
@@ -154,6 +165,7 @@ interface FormState {
 ## 🎨 UI/UX Features
 
 ### Stylowanie:
+
 - ✅ Gradient background (blue → slate)
 - ✅ Dark mode support
 - ✅ Responsive design (mobile-friendly)
@@ -161,6 +173,7 @@ interface FormState {
 - ✅ Shadow effects i border radius
 
 ### Dekoracyjne elementy:
+
 - ✅ Floating blur circles (background)
 - ✅ 4 animowane ikony (trending, pie chart, smile, brain)
 - ✅ Losowe pozycjonowanie ikon
@@ -168,6 +181,7 @@ interface FormState {
 - ✅ Ikony dookoła formularza (z-index management)
 
 ### Dostępność:
+
 - ✅ Proper semantic HTML
 - ✅ ARIA landmarks
 - ✅ aria-label, aria-describedby, aria-invalid
@@ -229,9 +243,11 @@ src/
 ## 🔄 Integracja z systemem
 
 ### Middleware:
+
 Zalogowani użytkownicy powinni być automatycznie przekierowani z `/register` na `/dashboard` (wymaga implementacji w middleware).
 
 ### Auth Flow:
+
 1. Użytkownik wpisuje dane
 2. Walidacja po stronie klienta
 3. POST do `/api/auth/register`
@@ -279,5 +295,3 @@ Widok rejestracji jest w pełni zaimplementowany, przetestowany i gotowy do inte
 - Handle redirect na `/dashboard` wykorzystuje `window.location.href` - można później zmienić na `useNavigate()` jeśli będzie potrzebny routing
 - Dekoracyjne ikony są pozycjonowane randomowo za każdym załadowaniem strony
 - Password strength calculation jest dokładnie zgodna z wymaganiami (min 8 znaków + 4 typy znaków)
-
-

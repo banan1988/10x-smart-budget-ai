@@ -34,6 +34,7 @@ Dodano następujące typy potrzebne do widoku ustawień profilu:
 #### Aktualizacja UserService (src/lib/services/user.service.ts)
 
 Dodano metodę `updateUserProfile`:
+
 - Przyjmuje `SupabaseClient`, `userId`, oraz obiekt `updates` typu `Partial<UserProfileDto>`
 - Aktualizuje rekord w tabeli `user_profiles`
 - Zwraca zaktualizowany profil lub rzuca błąd
@@ -41,6 +42,7 @@ Dodano metodę `updateUserProfile`:
 #### Implementacja endpointu PUT (src/pages/api/user/profile.ts)
 
 Utworzono handler PUT z następującymi funkcjonalnościami:
+
 - **Walidacja Zod**: Schema `UpdateProfileSchema` walidujący nickname:
   - Min. 1 znak (wymagany)
   - Maks. 50 znaków
@@ -56,9 +58,10 @@ Utworzono handler PUT z następującymi funkcjonalnościami:
 #### Utworzenie src/pages/profile/settings.astro
 
 Strona Astro z następującymi elementami:
+
 - **Layout**: Wykorzystuje Layout.astro, AppHeader, AppSidebar, AppFooter, MobileNav
 - **Breadcrumbs**: Nawigacja okruszkowa (Strona główna > Profil > Ustawienia)
-- **Pobieranie danych**: 
+- **Pobieranie danych**:
   - Sesja użytkownika z Supabase
   - Profil użytkownika z API `/api/user/profile`
   - Mapowanie na `ProfileSettingsPageVM`
@@ -72,6 +75,7 @@ Strona Astro z następującymi elementami:
 #### Utworzenie src/components/ProfileSettingsView.tsx
 
 Główny komponent React organizujący widok:
+
 - Przyjmuje props: `userProfile: ProfileSettingsPageVM`
 - Renderuje dwie sekcje:
   - `<EditProfileSection />` - edycja profilu
@@ -84,6 +88,7 @@ Główny komponent React organizujący widok:
 Komponent formularza edycji profilu z pełną funkcjonalnością:
 
 **Stan lokalny:**
+
 - `formData: EditProfileFormData` - dane formularza
 - `originalNickname: string` - oryginalna wartość (do porównania)
 - `isLoading: boolean` - stan ładowania
@@ -91,19 +96,20 @@ Komponent formularza edycji profilu z pełną funkcjonalnością:
 - `isDirty: boolean` - czy formularz został zmieniony
 
 **Funkcjonalności:**
-- **Walidacja client-side**: 
+
+- **Walidacja client-side**:
   - Nickname wymagany
   - Maks. 50 znaków
   - Regex sprawdzający dozwolone znaki
 - **Real-time feedback**: Błędy czyszczone przy wpisywaniu
-- **Obsługa wysyłania**: 
+- **Obsługa wysyłania**:
   - PUT do `/api/user/profile`
   - Toast z sukcesem lub błędem
   - Przekierowanie do /login przy 401
-- **Przycisk Zapisz**: 
+- **Przycisk Zapisz**:
   - Wyłączony gdy formularz nie jest dirty lub podczas ładowania
   - Pokazuje "Zapisywanie..." podczas operacji
-- **Przycisk Anuluj**: 
+- **Przycisk Anuluj**:
   - Przywraca oryginalne wartości
   - Czyści błędy i stan dirty
 - **Accessibility**:
@@ -117,6 +123,7 @@ Komponent formularza edycji profilu z pełną funkcjonalnością:
 Komponent sekcji usuwania konta z pełną funkcjonalnością:
 
 **Główne elementy:**
+
 - **Nagłówek**: "Strefa niebezpieczna" z czerwonym kolorem (text-destructive)
 - **Alert ostrzegawczy**: Komponent Alert z Shadcn/ui, wariant destructive
   - Ikona AlertTriangle z lucide-react
@@ -131,9 +138,11 @@ Komponent sekcji usuwania konta z pełną funkcjonalnością:
 - **Dialog komponent**: Renderuje DeleteAccountDialog z kontrolą stanu isOpen
 
 **Stan lokalny:**
+
 - `isOpen: boolean` - kontrola widoczności dialogu
 
 **Accessibility:**
+
 - `aria-labelledby` dla sekcji
 - Semantic HTML (section, ul, li)
 - Czerwone obramowanie dla sekcji (border-destructive/50)
@@ -143,6 +152,7 @@ Komponent sekcji usuwania konta z pełną funkcjonalnością:
 Komponent dialogu potwierdzenia usunięcia konta:
 
 **Główne elementy:**
+
 - **AlertDialog**: Komponent z Shadcn/ui do potwierdzenia krytycznej akcji
 - **AlertDialogHeader**: Nagłówek z tytułem w kolorze destructive
 - **AlertDialogDescription**: Szczegółowy opis konsekwencji
@@ -153,10 +163,12 @@ Komponent dialogu potwierdzenia usunięcia konta:
 - **AlertDialogAction**: Przycisk potwierdzenia (czerwony, destructive)
 
 **Stan lokalny:**
+
 - `isDeleting: boolean` - wskazuje czy trwa proces usuwania
 - `error: string | null` - komunikat błędu jeśli operacja się nie powiedzie
 
 **Funkcjonalności:**
+
 - **Obsługa DELETE /api/user**:
   - Wysłanie żądania DELETE
   - Obsługa odpowiedzi 204 No Content (sukces)
@@ -167,12 +179,13 @@ Komponent dialogu potwierdzenia usunięcia konta:
   - Błędy: odpowiednie komunikaty
 - **Logout po usunięciu**: Wywołanie `/api/auth/logout`
 - **Przekierowanie**: Po 1 sekundzie redirect do `/`
-- **Przycisk w stanie ładowania**: 
+- **Przycisk w stanie ładowania**:
   - Tekst zmienia się na "Usuwanie..."
   - Przycisk wyłączony podczas operacji
 - **Obsługa anulowania**: Reset stanu i zamknięcie dialogu
 
 **Accessibility:**
+
 - `role="alert"` dla komunikatów błędów
 - Disabled state dla przycisków podczas operacji
 - Proper dialog semantics z AlertDialog
@@ -184,6 +197,7 @@ Utworzono kompletny plan testów manualnych:
 **Dokument**: `.ai-summary/profile-settings-manual-tests.md`
 
 **Zawartość planu testów:**
+
 1. **Test 1**: Dostęp do strony (zalogowani/niezalogowani)
 2. **Test 2**: Wyświetlanie danych profilu
 3. **Test 3**: Edycja profilu - Happy Path
@@ -198,12 +212,14 @@ Utworzono kompletny plan testów manualnych:
 12. **Test 12**: Performance
 
 **Uwagi dotyczące testów:**
+
 - Przekierowania do /login są zakomentowane - testy wymagające tego pomijamy
 - Test usuwania konta wymaga testowego użytkownika (RZECZYWIŚCIE usuwa konto!)
 - Niektóre testy wymagają symulacji (błędy serwera, wygaśnięcie sesji)
 - Plan zawiera template raportu z testów
 
 **Status weryfikacji:**
+
 - ✅ Wszystkie komponenty przeszły walidację TypeScript
 - ✅ Brak błędów kompilacji
 - ✅ Usunięto duplikaty typów
@@ -245,11 +261,13 @@ src/
 ## Następne kroki (plan na kolejne 3 działania)
 
 ### Krok 4: Utworzenie DeleteAccountSection.tsx
+
 - Komponent z przyciskiem "Usuń konto"
 - Ostrzeżenie o nieodwracalności operacji
 - Renderowanie DeleteAccountDialog
 
 ### Krok 5: Utworzenie DeleteAccountDialog.tsx
+
 - AlertDialog z Shadcn/ui
 - Stan: isOpen, isDeleting, error
 - Obsługa DELETE /api/user
@@ -257,6 +275,7 @@ src/
 - Toast z komunikatem
 
 ### Krok 6: Testy i weryfikacja ✅
+
 - Utworzono kompletny plan testów manualnych
 - Wszystkie komponenty przeszły walidację TypeScript
 - Usunięto duplikaty typów
@@ -265,6 +284,7 @@ src/
 ## Dodatkowe kroki wykonane
 
 ### Krok 7: Naprawa błędów TypeScript ✅
+
 - Usunięto duplikaty definicji typów w types.ts
 - Naprawiono konflikty w UpdateProfileRequest
 - Naprawiono konflikty w UpdateProfileResponse
@@ -274,7 +294,8 @@ src/
 
 **Procent wykonania**: ✅ 100% (KOMPLETNE)
 
-**Gotowe do testowania**: 
+**Gotowe do testowania**:
+
 - ✅ Strona settings.astro
 - ✅ Formularz edycji profilu (EditProfileSection.tsx)
 - ✅ Sekcja usuwania konta (DeleteAccountSection.tsx)
@@ -284,6 +305,7 @@ src/
 - ✅ Plan testów manualnych
 
 **Co działa**:
+
 - ✅ Pełna funkcjonalność edycji profilu
 - ✅ Walidacja client-side i server-side
 - ✅ Obsługa błędów (sieć, 401, 404, 500)
@@ -294,12 +316,14 @@ src/
 - ✅ Integracja z layout (sidebar, header, footer)
 
 **Wymagane testy manualne** (patrz: profile-settings-manual-tests.md):
+
 - ⏳ 12 kategorii testów do wykonania
 - ⏳ Testy accessibility
 - ⏳ Testy responsywności
 - ⏳ Testy integracji
 
 **Opcjonalnie do rozważenia w przyszłości**:
+
 - ❌ Testy jednostkowe (Vitest + Testing Library)
 - ❌ Testy integracyjne dla nowego PUT endpoint
 - ❌ Testy E2E (Playwright/Cypress)
@@ -309,7 +333,7 @@ src/
 ```
 src/
 ├── types.ts (zaktualizowany)
-│   └── Dodano: ProfileSettingsPageVM, EditProfileFormData, 
+│   └── Dodano: ProfileSettingsPageVM, EditProfileFormData,
 │                UpdateProfileRequest, UpdateProfileResponse, ValidationError
 ├── lib/
 │   └── services/
@@ -342,4 +366,3 @@ src/
 ## Logi błędów
 
 Brak błędów podczas implementacji. Wszystkie pliki przeszły walidację TypeScript bez problemów.
-

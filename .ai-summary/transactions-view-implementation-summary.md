@@ -7,12 +7,15 @@ Zaimplementowano kompletny widok transakcji zgodnie z planem z pliku `.ai/transa
 ## Zaimplementowane komponenty
 
 ### 1. Strona Astro (`/src/pages/transactions.astro`)
+
 - Główna strona dostępna pod adresem `/transactions`
 - Renderuje komponent `TransactionsView` z dyrektywą `client:load`
 - Chroniona przez middleware dla zalogowanych użytkowników
 
 ### 2. Hook `useTransactions` (`/src/components/hooks/useTransactions.ts`)
+
 Custom React hook zarządzający stanem transakcji:
+
 - **Stan:** `transactions`, `pagination`, `filters`, `isLoading`, `error`
 - **Funkcje:** `setFilters`, `setPage`, `refetch`
 - **Mapowanie danych:** Konwertuje `TransactionDto` na `TransactionVM` z formatowaniem:
@@ -22,12 +25,16 @@ Custom React hook zarządzający stanem transakcji:
 - **Pokrycie testami:** 10 testów jednostkowych (100% passed)
 
 ### 3. Hook `useMediaQuery` (`/src/components/hooks/useMediaQuery.ts`)
+
 Custom hook do wykrywania media queries:
+
 - Używany do responsywnego przełączania między widokiem tabelarycznym a kartami
 - Breakpoint: 768px (md)
 
 ### 4. Komponent `TransactionsView` (`/src/components/TransactionsView.tsx`)
+
 Główny komponent React zarządzający całym widokiem:
+
 - Integruje hook `useTransactions`
 - Zarządza dialogami (dodawanie/edycja, usuwanie)
 - Przełącza widok desktop/mobile
@@ -35,7 +42,9 @@ Główny komponent React zarządzający całym widokiem:
 - Obsługuje stany: ładowanie, błędy, brak danych
 
 ### 5. Komponent `TransactionsFilters` (`/src/components/TransactionsFilters.tsx`)
+
 Panel filtrów transakcji:
+
 - **Pole wyszukiwania:** Filtruje po opisie transakcji
 - **Wybór miesiąca:** Input typu `month` (YYYY-MM)
 - **Typ transakcji:** Select (wszystkie/przychody/wydatki)
@@ -43,7 +52,9 @@ Panel filtrów transakcji:
 - **Wybrane kategorie:** Wyświetlane jako badges z opcją usunięcia
 
 ### 6. Komponent `TransactionsTable` (`/src/components/TransactionsTable.tsx`)
+
 Widok tabelaryczny dla desktop:
+
 - Wykorzystuje komponenty shadcn/ui: `Table`, `TableHeader`, `TableBody`
 - Kolumny: Data, Opis, Kategoria, Typ, Kwota, Akcje
 - Ikona AI (✨) dla transakcji skategoryzowanych automatycznie
@@ -51,13 +62,17 @@ Widok tabelaryczny dla desktop:
 - Kolorowanie kwot: zielony (przychody), czerwony (wydatki)
 
 ### 7. Komponent `TransactionsList` (`/src/components/TransactionsList.tsx`)
+
 Widok kartowy dla mobile:
+
 - Wykorzystuje komponenty shadcn/ui: `Card`, `CardHeader`, `CardContent`
 - Responsywny layout z opcjami akcji
 - Wszystkie istotne informacje w kompaktowej formie
 
 ### 8. Komponent `AddTransactionDialog` (`/src/components/AddTransactionDialog.tsx`)
+
 Dialog dodawania/edycji transakcji:
+
 - **Tryb dodawania:** Pusty formularz
 - **Tryb edycji:** Formularz wypełniony danymi transakcji
 - **Pola:**
@@ -71,11 +86,13 @@ Dialog dodawania/edycji transakcji:
 - **Stany ładowania:** Disabled podczas zapisywania
 
 ### 9. Typy TypeScript (`/src/types.ts`)
+
 Rozszerzono o:
+
 ```typescript
 interface TransactionVM {
   id: number;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   amount: string; // Sformatowana kwota
   description: string;
   date: string; // Sformatowana data
@@ -89,7 +106,7 @@ interface TransactionFilters {
   month: string; // YYYY-MM
   page?: number;
   limit?: number;
-  type?: 'income' | 'expense';
+  type?: "income" | "expense";
   categoryId?: number[];
   search?: string;
 }
@@ -115,43 +132,51 @@ interface TransactionFilters {
 ## Funkcjonalności
 
 ### ✅ Przeglądanie transakcji
+
 - Lista transakcji z paginacją (20 na stronę)
 - Responsywny widok (tabela/karty)
 - Formatowanie kwot i dat
 - Wyróżnienie transakcji AI
 
 ### ✅ Filtrowanie
+
 - Po miesiącu (wymagane)
 - Po typie (przychód/wydatek)
 - Po kategoriach (wielokrotny wybór)
 - Po opisie (wyszukiwanie)
 
 ### ✅ Dodawanie transakcji
+
 - Formularz z walidacją
 - Automatyczne kategoryzowanie przez AI (backend)
 - Powiadomienie sukcesu
 
 ### ✅ Edycja transakcji
+
 - Formularz z danymi transakcji
 - Zachowanie oryginalnej daty
 - Powiadomienie sukcesu
 
 ### ✅ Usuwanie transakcji
+
 - Dialog potwierdzenia
 - Powiadomienie sukcesu/błędu
 - Odświeżenie listy
 
 ### ✅ Paginacja
+
 - Informacja o liczbie stron i transakcji
 - Przyciski nawigacji
 - Zachowanie filtrów przy zmianie strony
 
 ### ✅ Obsługa błędów
+
 - Komunikaty o błędach API
 - Komunikaty o braku danych
 - Stany ładowania
 
 ### ✅ Dostępność (a11y)
+
 - ARIA labels
 - Keyboard navigation
 - Focus management
@@ -160,11 +185,13 @@ interface TransactionFilters {
 ## Responsywność
 
 ### Desktop (≥768px)
+
 - Widok tabelaryczny z wszystkimi kolumnami
 - Kompaktowy layout filtrów w 4 kolumnach
 - Paginacja inline
 
 ### Mobile (<768px)
+
 - Widok kartowy z najważniejszymi informacjami
 - Filtry w kolumnie
 - Responsywna paginacja
@@ -172,6 +199,7 @@ interface TransactionFilters {
 ## Integracja z API
 
 ### Endpointy wykorzystane:
+
 - `GET /api/transactions` - Lista transakcji z filtrami i paginacją
 - `POST /api/transactions` - Dodawanie transakcji
 - `PUT /api/transactions/:id` - Edycja transakcji
@@ -181,6 +209,7 @@ interface TransactionFilters {
 ## Testy
 
 ### Hook useTransactions
+
 - ✅ 10 testów jednostkowych
 - ✅ Pokrycie: fetch, formatowanie, filtry, paginacja, błędy
 - ✅ 100% passed
@@ -188,6 +217,7 @@ interface TransactionFilters {
 ## Best Practices zastosowane
 
 ### React
+
 - ✅ Functional components z hooks
 - ✅ Custom hooks dla logiki biznesowej
 - ✅ useCallback dla event handlers
@@ -196,12 +226,14 @@ interface TransactionFilters {
 - ✅ Loading states
 
 ### TypeScript
+
 - ✅ Strict typing
 - ✅ ViewModels dla UI
 - ✅ Proper interfaces
 - ✅ Type guards
 
 ### Accessibility
+
 - ✅ ARIA labels
 - ✅ Semantic HTML
 - ✅ Keyboard navigation
@@ -209,12 +241,14 @@ interface TransactionFilters {
 - ✅ Screen reader support
 
 ### Tailwind CSS
+
 - ✅ Utility classes
 - ✅ Responsive design
 - ✅ Dark mode support (via shadcn)
 - ✅ Consistent spacing
 
 ### Code organization
+
 - ✅ Separation of concerns
 - ✅ Reusable components
 - ✅ Custom hooks
@@ -269,4 +303,3 @@ Widok transakcji został w pełni zaimplementowany zgodnie z planem. Wszystkie f
 **Liczba plików utworzonych:** 10
 **Liczba komponentów shadcn/ui:** 13
 **Liczba testów:** 10 (wszystkie passed)
-

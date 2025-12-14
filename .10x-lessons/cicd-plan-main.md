@@ -4,5 +4,6 @@ Na podstawie stanu projektu oraz dostepnych narzędzi zaimplementuj minimalny se
 Wykorzystaj dobre praktyki z #file:.github/copilot-instructions.md w sekcji GITHUB_ACTIONS.
 
 Scenariusz może być uruchamiany:
+
 - manualnie
 - po aktualizacji mastera

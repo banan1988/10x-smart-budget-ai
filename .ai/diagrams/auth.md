@@ -1,7 +1,9 @@
 <authentication_analysis>
+
 ### 1. Przepływy Autentykacji
 
 Na podstawie dokumentacji (`prd.md`, `auth-spec.md`) zidentyfikowano następujące przepływy autentykacji:
+
 - **Rejestracja Użytkownika:** Tworzenie nowego konta za pomocą adresu e-mail i hasła, z krokiem weryfikacji e-mail.
 - **Logowanie Użytkownika:** Uwierzytelnianie za pomocą e-maila i hasła w celu uzyskania dostępu do chronionych zasobów.
 - **Wylogowanie Użytkownika:** Bezpieczne zakończenie sesji użytkownika i unieważnienie tokenów.
@@ -31,6 +33,7 @@ Na podstawie dokumentacji (`prd.md`, `auth-spec.md`) zidentyfikowano następują
 
 </authentication_analysis>
 <mermaid_diagram>
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -111,5 +114,5 @@ sequenceDiagram
 
     Browser->>Browser: Przekierowanie na /login
 ```
-</mermaid_diagram>
 
+</mermaid_diagram>

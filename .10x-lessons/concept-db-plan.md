@@ -30,6 +30,7 @@ Na podstawie analizy PRD i tech stacku (Supabase z PostgreSQL), przeprowadzono i
 ### Tabele
 
 **users**
+
 - id (UUID PRIMARY KEY)
 - email (UNIQUE)
 - encrypted_password
@@ -38,6 +39,7 @@ Na podstawie analizy PRD i tech stacku (Supabase z PostgreSQL), przeprowadzono i
 - created_at (TIMESTAMPTZ)
 
 **transactions**
+
 - id (UUID PRIMARY KEY)
 - user_id (UUID FOREIGN KEY -> users.id)
 - category_id (UUID FOREIGN KEY -> categories.id)
@@ -49,23 +51,26 @@ Na podstawie analizy PRD i tech stacku (Supabase z PostgreSQL), przeprowadzono i
 - updated_at (TIMESTAMPTZ)
 
 **categories**
+
 - id (UUID PRIMARY KEY)
 - name (UNIQUE)
 - created_at (TIMESTAMPTZ)
 
-
 ### Relacje
+
 - users (1) -> transactions (many)
 - transactions (many) -> categories (1)
 
 ## Bezpieczeństwo i Skalowalność
 
 ### Row Level Security (RLS)
+
 - **transactions**: SELECT/INSERT/UPDATE/DELETE WHERE user_id = auth.uid()
 - **users**: SELECT/UPDATE WHERE id = auth.uid() (preferencje są częścią tabeli users)
 - **categories**: SELECT z autoryzacją API, INSERT/UPDATE/DELETE tylko dla adminów
 
 ### Indeksy
+
 - Indeks złożony na (user_id, date DESC) dla optymalizacji zapytań dashboard
 - Indeks na category_id dla łączenia z kategoriami
 - Indeks na name w categories dla pobierania listy przez AI
@@ -73,6 +78,7 @@ Na podstawie analizy PRD i tech stacku (Supabase z PostgreSQL), przeprowadzono i
 - Indeksy na foreign keys (automatyczne przez PostgreSQL)
 
 ### Skalowalność
+
 - Struktura kompatybilna z przyszłym partycjonowaniem po miesiącach
 - Brak cache'owania w MVP - do dodania w kolejnych iteracjach
 - Pola timestamp dla audytu i debugowania
@@ -112,7 +118,7 @@ Potrzebna weryfikacja czy PRD wymaga aktualizacji na podstawie ustalonych decyzj
 
 ```sql
 -- Dodanie nowej preferencji dla wszystkich użytkowników
-UPDATE users 
-SET preferences = preferences || '{"new_preference": "default_value"}' 
+UPDATE users
+SET preferences = preferences || '{"new_preference": "default_value"}'
 WHERE preferences->>'new_preference' IS NULL;
 ```

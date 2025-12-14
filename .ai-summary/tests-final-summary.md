@@ -3,6 +3,7 @@
 ### 1. ✅ Infrastruktura testowa (Vitest)
 
 **Wybór technologii:**
+
 - **Vitest 4.0.8** - Oficjalny framework testowy dla Astro/Vite
 - **@testing-library/react 16.3.0** - Do testów komponentów React
 - **@testing-library/jest-dom** - Dodatkowe matchery dla Vitest
@@ -15,6 +16,7 @@
 ✅ TypeScript first - bez dodatkowej konfiguracji
 
 **Pliki konfiguracyjne:**
+
 - `vitest.config.ts` - konfiguracja główna
 - `src/test/setup.ts` - setup globalny
 - `package.json` - skrypty testowe
@@ -22,10 +24,12 @@
 ### 2. ✅ Mocki testowe
 
 **src/test/mocks/supabase.mock.ts**
+
 - `createMockSupabaseClient()` - mock Supabase client
 - `createMockCategoryData()` - przykładowe dane kategorii
 
 **src/test/mocks/astro.mock.ts**
+
 - `createMockAPIContext()` - mock Astro API context
 
 ### 3. ✅ Testy jednostkowe - CategoryService (8 testów)

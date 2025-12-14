@@ -88,6 +88,7 @@
 ## Data Flow - Transaction Creation
 
 ### Synchronous Path (API Request)
+
 ```
 1. User submits transaction form
    ↓
@@ -111,6 +112,7 @@
 ```
 
 ### Asynchronous Path (Background Job)
+
 ```
 [Happens concurrently, non-blocking]
 
@@ -143,6 +145,7 @@
 ## Component Communication
 
 ### 1. Service Layer (Synchronous)
+
 ```typescript
 TransactionService.createTransaction()
   ├─ Returns immediately
@@ -151,6 +154,7 @@ TransactionService.createTransaction()
 ```
 
 ### 2. Background Layer (Asynchronous)
+
 ```typescript
 BackgroundCategorizationService.categorizeTransactionInBackground()
   ├─ Does NOT block API response
@@ -161,6 +165,7 @@ BackgroundCategorizationService.categorizeTransactionInBackground()
 ```
 
 ### 3. UI Layer (Polling)
+
 ```typescript
 useTransactions() hook
   ├─ Detects pending transactions: some(t => t.categorizationStatus === 'pending')
@@ -174,6 +179,7 @@ useTransactions() hook
 ## Error Handling Strategy
 
 ### Level 1: Input Validation (API Entry)
+
 ```
 POST /api/transactions
 ├─ Invalid JSON → 400 Bad Request
@@ -182,6 +188,7 @@ POST /api/transactions
 ```
 
 ### Level 2: Service Layer (Database Operation)
+
 ```
 TransactionService.createTransaction()
 ├─ Database insert error → Log error, throw 500
@@ -189,6 +196,7 @@ TransactionService.createTransaction()
 ```
 
 ### Level 3: Background Job (AI + Database)
+
 ```
 BackgroundCategorizationService
 ├─ AI Service Error
@@ -210,17 +218,20 @@ BackgroundCategorizationService
 ## Performance Characteristics
 
 ### API Response Time
+
 - **Without Background Job**: < 100ms (database insert only)
 - **With AI Categorization**: Still < 100ms (job queued, not awaited)
 - **Improvement**: 10-30 seconds → sub-100ms ✅
 
 ### Database Load
+
 - **Inserts**: 1 per transaction (fast)
 - **Queries**: 1 for category lookup (background, non-blocking)
 - **Updates**: 1 when background job completes
 - **Indexes**: Optimized for pending transaction queries
 
 ### UI Polling Load
+
 - **When No Pending Items**: 0 API calls (no polling)
 - **With 1-5 Pending Items**: 1 API call every 2 seconds
 - **With 5+ Pending Items**: Same 1 API call every 2 seconds
@@ -229,21 +240,25 @@ BackgroundCategorizationService
 ## Consistency & Durability
 
 ### Atomicity
+
 - Transaction insert is atomic (all-or-nothing)
 - Category update is atomic (all-or-nothing)
 - If AI fails, transaction remains usable
 
 ### Consistency
+
 - `categorization_status` accurately reflects state
 - Queries include status for filtering if needed
 - Default to 'completed' for legacy data
 
 ### Durability
+
 - Database persists all changes immediately
 - UI polling ensures eventual consistency
 - Failed updates logged for monitoring
 
 ### Isolation
+
 - Each user's transactions isolated by user_id
 - RLS (Row Level Security) enforces authorization
 - No cross-user data visibility
@@ -251,23 +266,25 @@ BackgroundCategorizationService
 ## Testing Strategy
 
 ### Unit Tests
+
 - **BackgroundCategorizationService**: 9 tests
   - Non-blocking behavior
   - Success/failure paths
   - Error handling
-  
 - **TransactionService**: 26 tests
   - CRUD operations
   - Status field inclusion
   - Background job queueing
 
 ### Integration Tests
+
 - **API Endpoints**: 15 tests
   - POST /api/transactions with background job mock
   - GET /api/transactions with status field
   - Error handling
 
 ### Test Coverage
+
 - Service logic: ✅ 100%
 - API endpoints: ✅ 100%
 - Component rendering: ✅ UI tests for spinner/success states
@@ -276,6 +293,7 @@ BackgroundCategorizationService
 ## Monitoring & Observability
 
 ### Logging Points
+
 ```
 1. Background job starts
    └─ "[Background] Starting categorization for transaction X"
@@ -291,6 +309,7 @@ BackgroundCategorizationService
 ```
 
 ### Metrics to Track
+
 - Background categorization success rate
 - Average categorization time
 - Failed categorizations by category
@@ -299,12 +318,13 @@ BackgroundCategorizationService
 ## Migration & Deployment
 
 ### Database Migration
+
 ```sql
 -- Add new column (no data loss)
 ALTER TABLE transactions ADD COLUMN categorization_status TEXT;
 
 -- Create index for efficient querying
-CREATE INDEX idx_transactions_categorization_status_pending ON transactions 
+CREATE INDEX idx_transactions_categorization_status_pending ON transactions
 WHERE categorization_status = 'pending' AND type = 'expense';
 
 -- Default existing transactions to 'completed' (no change in behavior)
@@ -312,12 +332,14 @@ WHERE categorization_status = 'pending' AND type = 'expense';
 ```
 
 ### Code Deployment
+
 1. Deploy service code (backward compatible)
 2. Run database migration
 3. Monitor categorization logs
 4. No user-facing changes required
 
 ### Rollback Plan
+
 - Revert code changes (background service becomes no-op)
 - Drop new column if needed
 - Existing transactions continue to work
@@ -326,20 +348,24 @@ WHERE categorization_status = 'pending' AND type = 'expense';
 ## Future Scaling Considerations
 
 ### Option 1: Background Job Queue (Current)
+
 - ✅ Works for low-volume apps
 - Suitable for: < 1000 categorizations/hour
 
 ### Option 2: Dedicated Job Queue Service
+
 - Redis Bull Queue or RabbitMQ
 - Suitable for: > 1000 categorizations/hour
 - Benefits: Persistent queue, retries, monitoring
 
 ### Option 3: Event-Driven Architecture
+
 - Publish transaction_created event
 - Separate service subscribes and categorizes
 - Benefits: Decoupled services, scalable
 
 ### Option 4: Real-Time WebSocket
+
 - Replace polling with WebSocket push
 - Categorization service emits updates
 - Benefits: Real-time UI, reduced API load
@@ -347,14 +373,15 @@ WHERE categorization_status = 'pending' AND type = 'expense';
 ## Summary
 
 This architecture successfully separates concerns:
+
 - **API Layer**: Fast response, queues background work
 - **Background Layer**: Non-blocking AI processing
 - **UI Layer**: Intelligent polling with auto-stop
 - **Database**: Tracks status for eventual consistency
 
 The result is a responsive, resilient system that:
+
 - Never blocks on AI calls
 - Handles failures gracefully
 - Provides visual feedback to users
 - Scales to thousands of concurrent users
-

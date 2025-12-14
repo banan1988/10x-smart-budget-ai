@@ -26,12 +26,14 @@ Zaimplementowano kompletny zestaw endpointów API do zarządzania transakcjami f
 ### Kluczowe komponenty
 
 **Serwis**: `src/lib/services/transaction.service.ts`
+
 - 7 metod statycznych
 - Pełna obsługa błędów
 - Transformacja danych do DTO
 - Integracja z Supabase
 
 **Endpointy API**:
+
 - `/api/transactions` - GET, POST
 - `/api/transactions/[id]` - PUT, DELETE
 - `/api/transactions/stats` - GET (z opcjonalnym AI summary)
@@ -60,11 +62,13 @@ Zaimplementowano kompletny zestaw endpointów API do zarządzania transakcjami f
 | `limit` | number | ❌ Nie | Elementów na stronę (1-100) | 20 |
 
 **Odpowiedź**:
+
 - `200 OK`: `PaginatedResponse<TransactionDto>`
 - `400 Bad Request`: Błąd walidacji
 - `500 Internal Server Error`: Błąd serwera
 
 **Przykład**:
+
 ```bash
 GET /api/transactions?month=2024-11&type=expense&categoryId=1,2&page=1&limit=10
 ```
@@ -78,6 +82,7 @@ GET /api/transactions?month=2024-11&type=expense&categoryId=1,2&page=1&limit=10
 **Funkcjonalność**: Tworzy nową transakcję (przychód lub wydatek).
 
 **Request Body**: `CreateTransactionCommand`
+
 ```typescript
 {
   type: 'income' | 'expense',  // Wymagany
@@ -88,11 +93,13 @@ GET /api/transactions?month=2024-11&type=expense&categoryId=1,2&page=1&limit=10
 ```
 
 **Odpowiedź**:
+
 - `201 Created`: `TransactionDto`
 - `400 Bad Request`: Błąd walidacji
 - `500 Internal Server Error`: Błąd serwera
 
 **Przykład**:
+
 ```bash
 POST /api/transactions
 Content-Type: application/json
@@ -114,9 +121,11 @@ Content-Type: application/json
 **Funkcjonalność**: Aktualizuje istniejącą transakcję.
 
 **URL Parameter**:
+
 - `id`: integer (ID transakcji)
 
 **Request Body**: `UpdateTransactionCommand` (wszystkie pola opcjonalne, minimum 1 wymagane)
+
 ```typescript
 {
   type?: 'income' | 'expense',
@@ -130,6 +139,7 @@ Content-Type: application/json
 **Uwaga**: Ręczna zmiana `categoryId` automatycznie ustawia `is_ai_categorized = false`.
 
 **Odpowiedź**:
+
 - `200 OK`: `TransactionDto` (zaktualizowana)
 - `400 Bad Request`: Błąd walidacji
 - `404 Not Found`: Transakcja nie istnieje lub nie należy do użytkownika
@@ -144,9 +154,11 @@ Content-Type: application/json
 **Funkcjonalność**: Usuwa transakcję.
 
 **URL Parameter**:
+
 - `id`: integer (ID transakcji)
 
 **Odpowiedź**:
+
 - `204 No Content`: Pomyślnie usunięto
 - `400 Bad Request`: Nieprawidłowe ID
 - `404 Not Found`: Transakcja nie istnieje lub nie należy do użytkownika
@@ -167,11 +179,13 @@ Content-Type: application/json
 | `includeAiSummary` | boolean | ❌ Nie | Czy dołączyć AI summary (domyślnie false) |
 
 **Odpowiedź**:
+
 - `200 OK`: `TransactionStatsDto`
 - `400 Bad Request`: Błąd walidacji
 - `500 Internal Server Error`: Błąd serwera
 
 **Przykłady**:
+
 ```bash
 # Bez AI summary (szybkie)
 GET /api/transactions/stats?month=2024-11
@@ -181,6 +195,7 @@ GET /api/transactions/stats?month=2024-11&includeAiSummary=true
 ```
 
 **Struktura odpowiedzi**:
+
 ```json
 {
   "month": "2024-11",
@@ -212,6 +227,7 @@ GET /api/transactions/stats?month=2024-11&includeAiSummary=true
 **Funkcjonalność**: Tworzy wiele transakcji jednocześnie (1-100).
 
 **Request Body**: `BulkCreateTransactionsCommand`
+
 ```typescript
 {
   transactions: CreateTransactionCommand[]  // Minimum 1, maksimum 100
@@ -219,7 +235,8 @@ GET /api/transactions/stats?month=2024-11&includeAiSummary=true
 ```
 
 **Odpowiedź**:
-- `201 Created`: 
+
+- `201 Created`:
   ```json
   {
     "created": 50,
@@ -238,6 +255,7 @@ GET /api/transactions/stats?month=2024-11&includeAiSummary=true
 **Funkcjonalność**: Usuwa wiele transakcji jednocześnie (1-100).
 
 **Request Body**: `BulkDeleteTransactionsCommand`
+
 ```typescript
 {
   ids: number[]  // Minimum 1, maksimum 100
@@ -245,7 +263,8 @@ GET /api/transactions/stats?month=2024-11&includeAiSummary=true
 ```
 
 **Odpowiedź**:
-- `200 OK`: 
+
+- `200 OK`:
   ```json
   {
     "deleted": 50
@@ -265,10 +284,10 @@ Reprezentacja pojedynczej transakcji w odpowiedziach API.
 ```typescript
 export type TransactionDto = {
   id: number;
-  type: 'income' | 'expense';
-  amount: number;                    // W groszach (integer)
+  type: "income" | "expense";
+  amount: number; // W groszach (integer)
   description: string;
-  date: string;                      // Format YYYY-MM-DD
+  date: string; // Format YYYY-MM-DD
   is_ai_categorized: boolean;
   category: CategoryDto | null;
 };
@@ -280,21 +299,21 @@ Statystyki finansowe dla miesiąca z opcjonalnym AI summary.
 
 ```typescript
 export interface TransactionStatsDto {
-  month: string;                     // Format YYYY-MM
-  totalIncome: number;               // W groszach
-  totalExpenses: number;             // W groszach
-  balance: number;                   // W groszach (income - expenses)
+  month: string; // Format YYYY-MM
+  totalIncome: number; // W groszach
+  totalExpenses: number; // W groszach
+  balance: number; // W groszach (income - expenses)
   transactionCount: number;
   categoryBreakdown: {
     categoryId: number | null;
     categoryName: string;
-    total: number;                   // W groszach
+    total: number; // W groszach
     count: number;
-    percentage: number;              // 0-100
+    percentage: number; // 0-100
   }[];
   aiCategorizedCount: number;
   manualCategorizedCount: number;
-  aiSummary?: string;                // 🆕 Opcjonalne (gdy includeAiSummary=true)
+  aiSummary?: string; // 🆕 Opcjonalne (gdy includeAiSummary=true)
 }
 ```
 
@@ -319,25 +338,25 @@ export interface PaginatedResponse<T> {
 ```typescript
 export type CategoryDto = {
   id: number;
-  key: string;                       // np. 'food', 'transport'
-  name: string;                      // Zlokalizowana nazwa (np. 'Jedzenie')
+  key: string; // np. 'food', 'transport'
+  name: string; // Zlokalizowana nazwa (np. 'Jedzenie')
 };
 ```
 
 ### Tabela `transactions` (Supabase)
 
-| Kolumna | Typ | Opis |
-|---------|-----|------|
-| `id` | bigserial | Klucz główny |
-| `user_id` | uuid | Referencja do auth.users |
-| `type` | varchar | 'income' lub 'expense' |
-| `amount` | integer | Dodatni, w groszach |
-| `description` | varchar | 1-255 znaków |
-| `date` | date | Data transakcji |
-| `category_id` | bigint | Opcjonalny, referencja do categories |
-| `is_ai_categorized` | boolean | Domyślnie false |
-| `created_at` | timestamptz | Auto-generowany |
-| `updated_at` | timestamptz | Auto-generowany |
+| Kolumna             | Typ         | Opis                                 |
+| ------------------- | ----------- | ------------------------------------ |
+| `id`                | bigserial   | Klucz główny                         |
+| `user_id`           | uuid        | Referencja do auth.users             |
+| `type`              | varchar     | 'income' lub 'expense'               |
+| `amount`            | integer     | Dodatni, w groszach                  |
+| `description`       | varchar     | 1-255 znaków                         |
+| `date`              | date        | Data transakcji                      |
+| `category_id`       | bigint      | Opcjonalny, referencja do categories |
+| `is_ai_categorized` | boolean     | Domyślnie false                      |
+| `created_at`        | timestamptz | Auto-generowany                      |
+| `updated_at`        | timestamptz | Auto-generowany                      |
 
 ---
 
@@ -345,12 +364,12 @@ export type CategoryDto = {
 
 ### ✅ CRUD Podstawowy
 
-| Operacja | Endpoint | Metoda | Status |
-|----------|----------|--------|--------|
-| Pobieranie | `/api/transactions` | GET | ✅ Zaimplementowane |
-| Tworzenie | `/api/transactions` | POST | ✅ Zaimplementowane |
-| Aktualizacja | `/api/transactions/[id]` | PUT | ✅ Zaimplementowane |
-| Usuwanie | `/api/transactions/[id]` | DELETE | ✅ Zaimplementowane |
+| Operacja     | Endpoint                 | Metoda | Status              |
+| ------------ | ------------------------ | ------ | ------------------- |
+| Pobieranie   | `/api/transactions`      | GET    | ✅ Zaimplementowane |
+| Tworzenie    | `/api/transactions`      | POST   | ✅ Zaimplementowane |
+| Aktualizacja | `/api/transactions/[id]` | PUT    | ✅ Zaimplementowane |
+| Usuwanie     | `/api/transactions/[id]` | DELETE | ✅ Zaimplementowane |
 
 ### ✅ Filtrowanie i Wyszukiwanie
 
@@ -423,6 +442,7 @@ export type CategoryDto = {
 **Plik**: `src/lib/services/transaction.service.test.ts`
 
 #### `getTransactions` (6 testów)
+
 - ✅ Zwracanie transakcji dla miesiąca z paginacją
 - ✅ Transformacja do TransactionDto format
 - ✅ Kategoria z polskim tłumaczeniem
@@ -431,23 +451,27 @@ export type CategoryDto = {
 - ✅ Rzucanie błędu przy niepowodzeniu zapytania
 
 #### `createTransaction` (4 testy)
+
 - ✅ Tworzenie transakcji income
 - ✅ Tworzenie transakcji expense
 - ✅ Rzucanie błędu przy niepowodzeniu insert
 - ✅ Rzucanie błędu gdy brak zwróconych danych
 
 #### `updateTransaction` (4 testy)
+
 - ✅ Aktualizacja pojedynczego pola (amount)
 - ✅ Aktualizacja wielu pól jednocześnie
 - ✅ Rzucanie błędu gdy transakcja nie znaleziona
 - ✅ Ustawienie `is_ai_categorized=false` przy ręcznej zmianie kategorii
 
 #### `deleteTransaction` (3 testy)
+
 - ✅ Pomyślne usunięcie transakcji
 - ✅ Rzucanie błędu gdy transakcja nie znaleziona
 - ✅ Rzucanie błędu przy niepowodzeniu operacji delete
 
 #### `getStats` (4 testy) 🆕
+
 - ✅ Zwracanie stats bez AI summary (domyślnie)
 - ✅ Zwracanie stats z AI summary (gdy requested)
 - ✅ Generowanie odpowiedniego mock dla ujemnego salda
@@ -455,11 +479,13 @@ export type CategoryDto = {
 
 ### Testy integracyjne
 
-**Pliki**: 
+**Pliki**:
+
 - `src/pages/api/transactions.test.ts` (15 testów)
 - `src/pages/api/transactions/[id].test.ts` (13 testów)
 
 Testy weryfikują:
+
 - Poprawne kody statusu HTTP (200, 201, 204, 400, 404, 500)
 - Walidację wszystkich parametrów i body
 - Strukturę odpowiedzi JSON
@@ -510,13 +536,15 @@ Testy weryfikują:
 #### Mock Implementation
 
 Obecna implementacja generuje proste podsumowanie:
+
 - Format kwoty: `${(amount / 100).toFixed(2)} zł`
 - Informacja o saldzie (pozytywne/negatywne)
 - Top kategoria wydatków z procentem
 
 **Przykład**:
+
 ```
-"W 2024-11 odnotowano 42 transakcji. Twoje saldo jest pozytywne: 650.00 zł. 
+"W 2024-11 odnotowano 42 transakcji. Twoje saldo jest pozytywne: 650.00 zł.
 Najwięcej wydałeś/aś na: Jedzenie (35.3%)."
 ```
 
@@ -525,11 +553,13 @@ Najwięcej wydałeś/aś na: Jedzenie (35.3%)."
 **Zobacz**: `.ai-summary/api-dashboard-vs-stats-analysis.md`
 
 **Wniosek**: Endpoint `/api/dashboard` NIE jest potrzebny, ponieważ:
+
 - `/api/transactions/stats` już dostarcza 99% wymaganych danych
 - Jedyna różnica to AI summary, które dodano jako opcjonalne pole
 - Unikamy duplikacji kodu i utrzymujemy spójną strukturę
 
 **Korzyści tego rozwiązania**:
+
 - ✅ Zero duplikacji kodu
 - ✅ Większa elastyczność (frontend wybiera co potrzebuje)
 - ✅ Więcej danych (dodatkowe pola analityczne)
@@ -542,12 +572,14 @@ Najwięcej wydałeś/aś na: Jedzenie (35.3%)."
 
 ### 1. Autentykacja użytkownika
 
-**Obecny stan**: 
+**Obecny stan**:
+
 ```typescript
 const userId = DEFAULT_USER_ID; // z src/db/constants.ts
 ```
 
 **Produkcja** (po implementacji middleware):
+
 ```typescript
 const userId = context.locals.user.id;
 ```
@@ -564,6 +596,7 @@ Kod jest przygotowany - wymaga tylko zamiany źródła `userId`.
 ```
 
 **Rekomendacja**: Google Gemini Flash (najtańszy)
+
 - Koszt: ~$0.01 za 1000 transakcji
 - Darmowy tier: 15 req/min, 1500 req/day
 - Alternatywy: GPT-4o Mini ($0.02), Claude Haiku ($0.03)
@@ -600,15 +633,18 @@ Implementacja w 100% zgodna z planem + rozszerzenia:
 ## Dokumentacja powiązana
 
 ### Analizy i plany
+
 - `.ai-summary/api-dashboard-vs-stats-analysis.md` - Analiza porównawcza Dashboard vs Stats
 - `.ai-summary/ai-summary-implementation-plan.md` - Kompletny plan implementacji AI
 - `.ai-summary/decision-log-dashboard-endpoint.md` - Log decyzji
 - `.ai-summary/dashboard-vs-stats-comparison.md` - Wizualizacje i przykłady
 
 ### Plan wyjściowy
+
 - `.ai/api-transactions-plan.md` - Oryginalny plan implementacji
 
 ### Kod źródłowy
+
 - `src/lib/services/transaction.service.ts` - Serwis
 - `src/pages/api/transactions.ts` - GET, POST
 - `src/pages/api/transactions/[id].ts` - PUT, DELETE
@@ -617,6 +653,7 @@ Implementacja w 100% zgodna z planem + rozszerzenia:
 - `src/types.ts` - Typy i schemas
 
 ### Testy
+
 - `src/lib/services/transaction.service.test.ts` - Testy jednostkowe
 - `src/pages/api/transactions.test.ts` - Testy integracyjne GET/POST
 - `src/pages/api/transactions/[id].test.ts` - Testy integracyjne PUT/DELETE
@@ -627,4 +664,3 @@ Implementacja w 100% zgodna z planem + rozszerzenia:
 **Ostatnia aktualizacja**: 18 listopada 2025  
 **Wersja**: 2.0  
 **Status**: ✅ Zakończone (podstawowa funkcjonalność + AI Summary mock)
-

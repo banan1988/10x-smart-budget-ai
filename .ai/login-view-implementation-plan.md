@@ -30,7 +30,7 @@ LoginPage (Astro)
 ### LoginPage (Astro - src/pages/login.astro)
 
 - **Opis komponentu:** Strona główna widoku logowania. Jest to wrapper Astro, który renderuje formularz logowania. Strona nie wymaga żadnej specjalnej logiki po stronie serwera, głównie renderuje layout i komponent React.
-- **Główne elementy:** 
+- **Główne elementy:**
   - Layout z wyłączonym headerem i footrem (tylko dla landing page)
   - Kontener główny z karką zawierającą formularz
   - Formularz logowania jako komponent React
@@ -61,7 +61,7 @@ LoginPage (Astro)
   - Hasło nie może być puste
   - Długość hasła minimum 6 znaków
   - API zwraca błędy: "Invalid login credentials", "Email not confirmed", "Too many login attempts"
-- **Typy:** 
+- **Typy:**
   - LoginFormState (interface do zarządzania stanem formularza)
   - LoginError (interface dla błędów)
 - **Propsy:** Brak - komponent jest samodzielny
@@ -164,7 +164,7 @@ interface LoginFormState {
 interface LoginError {
   code?: string;
   message: string;
-  field?: 'email' | 'password' | 'general';
+  field?: "email" | "password" | "general";
 }
 ```
 
@@ -224,8 +224,8 @@ interface LoginRequest {
 
 ```typescript
 const LoginRequestSchema = z.object({
-  email: z.string().email('Email jest wymagany i musi być prawidłowy'),
-  password: z.string().min(6, 'Hasło musi mieć co najmniej 6 znaków'),
+  email: z.string().email("Email jest wymagany i musi być prawidłowy"),
+  password: z.string().min(6, "Hasło musi mieć co najmniej 6 znaków"),
 });
 ```
 
@@ -348,17 +348,20 @@ const LoginRequestSchema = z.object({
 ## 11. Kroki implementacji
 
 ### Krok 1: Stworzenie strony Astro `/login`
+
 - Utwórz plik `src/pages/login.astro`
 - Skonfiguruj layout (bez headera i footera z landing page)
 - Dodaj redirect middleware: jeśli user jest zalogowany, redirect na `/dashboard`
 
 ### Krok 2: Stworzenie hook'a useLoginForm
+
 - Utwórz plik `src/components/hooks/useLoginForm.ts`
 - Zaimplementuj zarządzanie stanem formularza (useState)
 - Dodaj funkcje walidacji dla emaila i hasła
 - Dodaj funkcję `handleSubmit` do wysłania żądania do API
 
 ### Krok 3: Stworzenie komponentu LoginForm
+
 - Utwórz plik `src/components/LoginForm.tsx` (React component)
 - Zaimplementuj strukturę formularza z Card, Input, Button z shadcn/ui
 - Użyj hook'a `useLoginForm`
@@ -366,6 +369,7 @@ const LoginRequestSchema = z.object({
 - Zaimplementuj toggle widoczności hasła
 
 ### Krok 4: Stworzenie API endpointu `/api/auth/login`
+
 - Utwórz plik `src/pages/api/auth/login.ts`
 - Zaimplementuj Zod schema do walidacji requestu
 - Dodaj logikę `signInWithPassword` z Supabase
@@ -374,6 +378,7 @@ const LoginRequestSchema = z.object({
 - Zwrócenie odpowiedzi z user i session
 
 ### Krok 5: Testowanie
+
 - Napisz unit testy dla hook'a `useLoginForm` (vitest)
 - Napisz unit testy dla API endpointu `src/pages/api/auth/login.test.ts`
 - Testy należy mieć dla:
@@ -384,15 +389,15 @@ const LoginRequestSchema = z.object({
   - Błędów API
 
 ### Krok 6: Integracja z istniejącą aplikacją
+
 - Dodaj link do strony logowania na landing page (w header)
 - Dodaj link do rejestracji z strony logowania
 - Walidacja middleware - upewnij się, że `/login` nie jest dostępny dla zalogowanych użytkowników
 - Testowanie flow: landing page → logowanie → dashboard
 
 ### Krok 7: Poprawy i optymalizacje
+
 - Code review
 - Walidacja dostępności (ARIA labels, aria-live, aria-describedby)
 - Optymalizacja wydajności (memoization komponentów jeśli potrzebna)
 - Dark mode - walidacja że formularz wygląda dobrze w dark mode
-
-

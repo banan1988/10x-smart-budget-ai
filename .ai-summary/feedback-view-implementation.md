@@ -42,12 +42,14 @@ Implementacja kompletnego widoku opinii użytkowników (Feedback View) z fronten
 **`src/pages/api/feedbacks/index.ts`**
 
 #### GET /api/feedbacks
+
 - Pobiera paginowaną listę opinii (dla administratora)
 - Parametry: `page` (default: 1), `limit` (default: 10, max: 100)
 - Zwraca: `{data, page, limit, total}`
 - Integruje `FeedbackService.getAllFeedback()`
 
 #### POST /api/feedbacks
+
 - Przesyła nową opinię użytkownika
 - Body: `{rating: 1-5, comment: "max 1000 chars"}`
 - Sprawdza autentykację (auth.getSession())
@@ -59,23 +61,23 @@ Implementacja kompletnego widoku opinii użytkowników (Feedback View) z fronten
 
 ```typescript
 // Request/Response DTOs
-FeedbackRequest          // {rating, comment}
-FeedbackResponse         // {message}
+FeedbackRequest; // {rating, comment}
+FeedbackResponse; // {message}
 
 // Zod Schema
-CreateFeedbackCommandSchema  // rating: 1-5, comment: max 1000
-CreateFeedbackCommand        // Type z schematu
+CreateFeedbackCommandSchema; // rating: 1-5, comment: max 1000
+CreateFeedbackCommand; // Type z schematu
 
 // Form Data
-FeedbackFormData         // {rating: null|number, comment: string}
+FeedbackFormData; // {rating: null|number, comment: string}
 
 // API DTOs
-FeedbackDto              // {id, user_id, rating, comment, created_at}
-FeedbackStatsDto         // {averageRating, totalFeedbacks}
+FeedbackDto; // {id, user_id, rating, comment, created_at}
+FeedbackStatsDto; // {averageRating, totalFeedbacks}
 
 // ViewModels
-FeedbackButtonVM         // {isAuthenticated, userId?}
-FeedbackDialogVM         // {isOpen, title, description?}
+FeedbackButtonVM; // {isAuthenticated, userId?}
+FeedbackDialogVM; // {isOpen, title, description?}
 ```
 
 ### Integracja Layout (`src/layouts/Layout.astro`)
@@ -85,7 +87,9 @@ FeedbackDialogVM         // {isOpen, title, description?}
 import { FeedbackButton } from "../components/FeedbackButton";
 
 // Sprawdzenie sesji użytkownika
-const { data: { session } } = await Astro.locals.supabase.auth.getSession();
+const {
+  data: { session },
+} = await Astro.locals.supabase.auth.getSession();
 const isAuthenticated = !!session;
 ---
 
@@ -98,14 +102,17 @@ const isAuthenticated = !!session;
 ### Mocks i Testy
 
 **`src/test/mocks/supabase.mock.ts`** - Aktualizacja
+
 - Dodanie `auth.getSession()` do mock'u
 - Integracja z `DEFAULT_USER_ID` z constants
 
 **Testy API** - 21 testów przechodzą
+
 - `POST /api/feedbacks` - 9 testów (valid, errors, auth, db)
 - `GET /api/feedbacks` - 6 testów (pagination, limits, auth)
 
 **Testy Stats** - 6 testów przechodzą
+
 - Pobieranie statystyk
 - Obliczanie średniej oceny
 - Zaokrąglanie do 2 miejsc
@@ -117,7 +124,7 @@ const isAuthenticated = !!session;
 ```
 Layout.astro (serwer)
   └─ sprawdza session → isAuthenticated
-  
+
   └─ <FeedbackButton client:load> (React, hydratacja)
       ├─ State: isDialogOpen
       │
@@ -137,22 +144,23 @@ Layout.astro (serwer)
 
 ## 📊 Statystyki
 
-| Metrika | Wynik |
-|---------|-------|
-| Testy Przechodzące | ✅ 290/290 |
-| Testy API Feedbacks | ✅ 21/21 |
-| Testy Stats Feedbacks | ✅ 6/6 |
-| Build | ✅ Bez błędów |
-| Dev Server | ✅ Bez błędów |
-| Komponenty React | 3 szt. |
-| API Endpoints | 2 szt. (GET, POST) |
-| Nowe Typy | 9 szt. |
+| Metrika               | Wynik              |
+| --------------------- | ------------------ |
+| Testy Przechodzące    | ✅ 290/290         |
+| Testy API Feedbacks   | ✅ 21/21           |
+| Testy Stats Feedbacks | ✅ 6/6             |
+| Build                 | ✅ Bez błędów      |
+| Dev Server            | ✅ Bez błędów      |
+| Komponenty React      | 3 szt.             |
+| API Endpoints         | 2 szt. (GET, POST) |
+| Nowe Typy             | 9 szt.             |
 
 ---
 
 ## ✨ Funkcjonalności
 
 ### ✅ Dla Zalogowanych Użytkowników
+
 - Pływający przycisk dostępny na każdej stronie
 - Kliknięcie otwiera dialog z formularzem
 - Wybór oceny (1-5 gwiazdek)
@@ -165,11 +173,13 @@ Layout.astro (serwer)
 - Możliwość anulowania
 
 ### ✅ Dla Administratora
+
 - Pobieranie opinii (GET /api/feedbacks)
 - Paginacja (page, limit)
 - Pobieranie statystyk (GET /api/feedbacks/stats)
 
 ### ✅ Niezalogowani Użytkownicy
+
 - Przycisk nie jest widoczny
 - TODO: Przycisk z przełącznikiem do logowania (skomentowana logika)
 
@@ -244,24 +254,28 @@ src/
 ## 🧪 Testowanie
 
 ### Uruchom Wszystkie Testy
+
 ```bash
 npm test
 # Wynik: 290/290 passed
 ```
 
 ### Uruchom Testy Feedbacks
+
 ```bash
 npm test -- src/pages/api/feedbacks
 # Wynik: 21/21 passed (index), 6/6 passed (stats)
 ```
 
 ### Build Aplikacji
+
 ```bash
 npm run build
 # Wynik: ✅ Complete!
 ```
 
 ### Dev Server
+
 ```bash
 npm run dev
 # Wynik: astro ready in 306ms
@@ -272,17 +286,20 @@ npm run dev
 ## 🚀 Kolejne Kroki
 
 ### Easy (Krótkozas)
+
 - [ ] Toast notifications zamiast Alert
 - [ ] Email notification przy nowej opinii
 - [ ] Rating distribution chart
 
 ### Medium (Średniozas)
+
 - [ ] Optimistic UI updates (useOptimistic)
 - [ ] Admin panel z filtrowaniem opinii
 - [ ] Export opinii (CSV/JSON)
 - [ ] Rate limiting API
 
 ### Hard (Długozas)
+
 - [ ] AI sentiment analysis
 - [ ] Auto-categorization opinii
 - [ ] Feedback trends dashboard
@@ -349,5 +366,4 @@ npm run dev
 
 ---
 
-*Implementacja przeprowadzona przez GitHub Copilot na podstawie planu z `.ai/feedback-view-implementation-plan.md`*
-
+_Implementacja przeprowadzona przez GitHub Copilot na podstawie planu z `.ai/feedback-view-implementation-plan.md`_

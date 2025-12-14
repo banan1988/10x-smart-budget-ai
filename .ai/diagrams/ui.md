@@ -4,45 +4,50 @@ Na podstawie dostarczonych dokumentów, oto analiza architektury UI dla modułu 
 ### 1. Wymienione Komponenty
 
 **Strony Astro (`src/pages`):**
-*   `index.astro`: Publiczna strona docelowa.
-*   `login.astro`: Strona logowania zawierająca formularz.
-*   `register.astro`: Strona rejestracji zawierająca formularz.
-*   `forgot-password.astro`: Nowa strona do inicjowania resetu hasła.
-*   `profile/reset-password.astro`: Nowa strona do ustawiania nowego hasła po kliknięciu w link.
-*   `dashboard.astro`: Chroniony pulpit użytkownika.
-*   `transactions.astro`: Chroniona strona z listą transakcji.
-*   `profile.astro`: Chroniona strona profilu użytkownika.
+
+- `index.astro`: Publiczna strona docelowa.
+- `login.astro`: Strona logowania zawierająca formularz.
+- `register.astro`: Strona rejestracji zawierająca formularz.
+- `forgot-password.astro`: Nowa strona do inicjowania resetu hasła.
+- `profile/reset-password.astro`: Nowa strona do ustawiania nowego hasła po kliknięciu w link.
+- `dashboard.astro`: Chroniony pulpit użytkownika.
+- `transactions.astro`: Chroniona strona z listą transakcji.
+- `profile.astro`: Chroniona strona profilu użytkownika.
 
 **Layouty Astro (`src/layouts`):**
-*   `Layout.astro`: Główny layout aplikacji, który warunkowo renderuje elementy UI w zależności od stanu uwierzytelnienia.
+
+- `Layout.astro`: Główny layout aplikacji, który warunkowo renderuje elementy UI w zależności od stanu uwierzytelnienia.
 
 **Komponenty React (`src/components`):**
-*   `LoginForm.tsx`: Formularz logowania z walidacją.
-*   `RegisterForm.tsx`: Formularz rejestracji z walidacją.
-*   `ForgotPasswordForm.tsx`: Nowy formularz do wysyłania prośby o reset hasła.
-*   `ResetPasswordForm.tsx`: Nowy formularz do ustawiania nowego hasła.
-*   `AppHeader.tsx`: Nagłówek aplikacji, wyświetlający różne informacje dla zalogowanych i niezalogowanych użytkowników.
-*   `AppSidebar.tsx`: Panel boczny z nawigacją, widoczny tylko dla zalogowanych użytkowników.
-*   `AppFooter.tsx`: Stopka aplikacji.
+
+- `LoginForm.tsx`: Formularz logowania z walidacją.
+- `RegisterForm.tsx`: Formularz rejestracji z walidacją.
+- `ForgotPasswordForm.tsx`: Nowy formularz do wysyłania prośby o reset hasła.
+- `ResetPasswordForm.tsx`: Nowy formularz do ustawiania nowego hasła.
+- `AppHeader.tsx`: Nagłówek aplikacji, wyświetlający różne informacje dla zalogowanych i niezalogowanych użytkowników.
+- `AppSidebar.tsx`: Panel boczny z nawigacją, widoczny tylko dla zalogowanych użytkowników.
+- `AppFooter.tsx`: Stopka aplikacji.
 
 **Endpointy API (`src/pages/api/auth`):**
-*   `POST /api/auth/login`: Obsługuje logowanie.
-*   `POST /api/auth/register`: Obsługuje rejestrację.
-*   `POST /api/auth/logout`: Obsługuje wylogowanie.
-*   `POST /api/auth/forgot-password`: Inicjuje proces resetowania hasła.
-*   `POST /api/auth/reset-password`: Aktualizuje hasło użytkownika.
-*   `DELETE /api/user/account`: Usuwa konto użytkownika.
+
+- `POST /api/auth/login`: Obsługuje logowanie.
+- `POST /api/auth/register`: Obsługuje rejestrację.
+- `POST /api/auth/logout`: Obsługuje wylogowanie.
+- `POST /api/auth/forgot-password`: Inicjuje proces resetowania hasła.
+- `POST /api/auth/reset-password`: Aktualizuje hasło użytkownika.
+- `DELETE /api/user/account`: Usuwa konto użytkownika.
 
 **Middleware (`src/middleware/index.ts`):**
-*   Centralny punkt do zarządzania sesją, ochrony tras i egzekwowania ról.
+
+- Centralny punkt do zarządzania sesją, ochrony tras i egzekwowania ról.
 
 ### 2. Główne Strony i Ich Komponenty
 
-*   **Strona Logowania (`/login`):** Strona `login.astro` renderuje komponent `LoginForm.tsx`.
-*   **Strona Rejestracji (`/register`):** Strona `register.astro` renderuje komponent `RegisterForm.tsx`.
-*   **Strona Resetowania Hasła (`/forgot-password`):** Strona `forgot-password.astro` renderuje komponent `ForgotPasswordForm.tsx`.
-*   **Strona Ustawiania Nowego Hasła (`/profile/reset-password`):** Strona `profile/reset-password.astro` renderuje komponent `ResetPasswordForm.tsx`.
-*   **Strony Chronione (`/dashboard`, `/transactions`):** Używają `Layout.astro`, który wyświetla `AppHeader` w wariancie dla zalogowanego użytkownika oraz `AppSidebar`.
+- **Strona Logowania (`/login`):** Strona `login.astro` renderuje komponent `LoginForm.tsx`.
+- **Strona Rejestracji (`/register`):** Strona `register.astro` renderuje komponent `RegisterForm.tsx`.
+- **Strona Resetowania Hasła (`/forgot-password`):** Strona `forgot-password.astro` renderuje komponent `ForgotPasswordForm.tsx`.
+- **Strona Ustawiania Nowego Hasła (`/profile/reset-password`):** Strona `profile/reset-password.astro` renderuje komponent `ResetPasswordForm.tsx`.
+- **Strony Chronione (`/dashboard`, `/transactions`):** Używają `Layout.astro`, który wyświetla `AppHeader` w wariancie dla zalogowanego użytkownika oraz `AppSidebar`.
 
 ### 3. Przepływ Danych
 
@@ -57,13 +62,14 @@ Na podstawie dostarczonych dokumentów, oto analiza architektury UI dla modułu 
 
 ### 4. Opis Funkcjonalności Komponentów
 
-*   **`Layout.astro`**: Działa jako przełącznik, decydując na podstawie `context.locals.user`, czy wyświetlić interfejs dla gościa (linki do logowania/rejestracji), czy dla zalogowanego użytkownika (nawigacja, profil).
-*   **Formularze React (`LoginForm`, `RegisterForm`, etc.)**: Odpowiadają za interakcję z użytkownikiem, walidację danych wejściowych (przy użyciu Zod) i komunikację z odpowiednimi endpointami API.
-*   **Endpointy API**: Stanowią warstwę pośredniczącą między frontendem a Supabase. Hermetyzują logikę biznesową, walidują dane i obsługują błędy.
-*   **Middleware**: Pełni rolę strażnika aplikacji. Chroni strony i API, zarządza sesją i przekierowaniami oraz egzekwuje uprawnienia na podstawie ról.
+- **`Layout.astro`**: Działa jako przełącznik, decydując na podstawie `context.locals.user`, czy wyświetlić interfejs dla gościa (linki do logowania/rejestracji), czy dla zalogowanego użytkownika (nawigacja, profil).
+- **Formularze React (`LoginForm`, `RegisterForm`, etc.)**: Odpowiadają za interakcję z użytkownikiem, walidację danych wejściowych (przy użyciu Zod) i komunikację z odpowiednimi endpointami API.
+- **Endpointy API**: Stanowią warstwę pośredniczącą między frontendem a Supabase. Hermetyzują logikę biznesową, walidują dane i obsługują błędy.
+- **Middleware**: Pełni rolę strażnika aplikacji. Chroni strony i API, zarządza sesją i przekierowaniami oraz egzekwuje uprawnienia na podstawie ról.
 
 </architecture_analysis>
 <mermaid_diagram>
+
 ```mermaid
 flowchart TD
     classDef page fill:#D6EAF8,stroke:#3498DB,stroke-width:2px;
@@ -160,5 +166,5 @@ flowchart TD
     style API_ForgotPassword fill:#f96,stroke:#333,stroke-width:2px
     style API_ResetPassword fill:#f96,stroke:#333,stroke-width:2px
 ```
-</mermaid_diagram>
 
+</mermaid_diagram>

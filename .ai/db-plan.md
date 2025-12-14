@@ -22,12 +22,14 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 - **updated_at**: TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 ### Tabela: categories
+
 - **id**: BIGSERIAL PRIMARY KEY
 - **key**: VARCHAR UNIQUE NOT NULL (klucz kategorii dla AI, np. 'food', 'transport')
 - **translations**: JSONB NOT NULL (tłumaczenia nazw kategorii, np. {"pl": "Jedzenie", "en": "Food"})
 - **created_at**: TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 ### Tabela: transactions
+
 - **id**: BIGSERIAL PRIMARY KEY
 - **user_id**: UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
 - **category_id**: BIGSERIAL REFERENCES categories(id) ON DELETE RESTRICT (NULLable for income)
@@ -40,6 +42,7 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 - **updated_at**: TIMESTAMPTZ NOT NULL DEFAULT NOW()
 
 ### Tabela: feedback
+
 - **id**: BIGSERIAL PRIMARY KEY
 - **user_id**: UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
 - **rating**: INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5)
@@ -67,7 +70,7 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 
 - **user_profiles**: RLS włączone z polityką id = auth.uid() dla wszystkich operacji (SELECT, INSERT, UPDATE, DELETE). Użytkownik ma dostęp tylko do własnego profilu.
 - **transactions**: RLS włączone z polityką user_id = auth.uid() dla wszystkich operacji (SELECT, INSERT, UPDATE, DELETE). Zapewnia izolację danych użytkowników - każdy użytkownik widzi tylko swoje transakcje.
-- **feedback**: 
+- **feedback**:
   - **INSERT**: RLS włączone z polityką `user_id = auth.uid()`. Użytkownicy mogą dodawać opinie.
   - **SELECT**: Dostęp do odczytu powinien być ograniczony do ról administracyjnych (np. `service_role`) w celu ochrony prywatności. Zwykli użytkownicy nie powinni mieć dostępu do odczytu opinii innych.
 - **auth.users**: Dostęp zarządzany przez Supabase Auth - użytkownik ma dostęp tylko do własnych danych autentykacyjnych.
@@ -80,14 +83,14 @@ Tabela rozszerzająca dane użytkownika z relacją 1:1 do auth.users.
 - **Typy Danych**: amount jako INTEGER (grosze) dla precyzji finansowej, unikając problemów z float. description jako TEXT dla elastyczności długości.
 - **Bezpieczeństwo**: RLS zapewnia prywatność danych. Każdy użytkownik ma dostęp tylko do własnego profilu i transakcji. Kategorie globalne, ale chronione przed publicznym dostępem.
 - **Wydajność**: Indeksy zoptymalizowane pod zapytania dashboard i AI. Indeks GIN na preferences umożliwia wydajne zapytania JSONB. Brak partycjonowania w MVP, ale struktura kompatybilna z przyszłym dodaniem.
-- **Trigery**: 
+- **Trigery**:
   - Tabela `user_profiles` ma automatyczny trigger do aktualizacji `updated_at` przy zmianach.
   - Tabela `transactions` ma automatyczny trigger do aktualizacji `updated_at` przy zmianach.
   - Opcjonalnie: trigger tworzący pusty profil w `user_profiles` automatycznie przy rejestracji nowego użytkownika w `auth.users` (można zaimplementować jako PostgreSQL trigger lub w logice aplikacji).
 - **Walidacja**: Długość pól (np. description, nickname) walidowana w aplikacji, nie w DB, dla lepszej elastyczności.
 - **Zgodność z PRD**: Schemat obsługuje wszystkie wymagane funkcjonalności MVP, w tym CRUD transakcji, kategoryzację AI, dashboard i zbieranie opinii (przechowywane w dedykowanej tabeli `feedback`).
 - **Stack Technologiczny**: Zoptymalizowany dla Supabase/PostgreSQL z integracją Supabase Auth.
-- **Wielojęzyczność Kategorii**: 
+- **Wielojęzyczność Kategorii**:
   - Pole `key` przechowuje unikalny identyfikator kategorii w języku angielskim (np. 'food', 'transport'), który jest używany przez AI do kategoryzacji.
   - Pole `translations` jako JSONB przechowuje tłumaczenia nazw kategorii w różnych językach (np. {"pl": "Jedzenie", "en": "Food", "de": "Essen"}).
   - W MVP obsługiwany jest tylko język polski, ale struktura pozwala na łatwe dodanie nowych języków bez zmian w schemacie bazy danych.

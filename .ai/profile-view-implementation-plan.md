@@ -1,14 +1,17 @@
 # Plan implementacji widoku Profilu
 
 ## 1. Przegląd
+
 Widok Profilu (`/profile`) to strona przeznaczona dla zalogowanych użytkowników, na której wyświetlane są kluczowe informacje o ich koncie. Widok zawiera dane użytkownika pobrane z systemu autentykacji oraz dane z profilu użytkownika (nickname, preferencje). Stanowi punkt wejściowy do zarządzania kontem i zawiera link do bardziej zaawansowanych opcji edycji dostępnych w panelu Ustawień (`/profile/settings`).
 
 ## 2. Routing widoku
+
 - **Ścieżka:** `/profile`
 - **Dostęp:** Widok będzie dostępny tylko dla zalogowanych użytkowników. Dostęp do ścieżki będzie chroniony przez middleware weryfikujący sesję użytkownika.
 - **Uwagi:** Jeśli użytkownik nie jest zalogowany, middleware automatycznie przekieruje go na stronę logowania (`/login`).
 
 ## 3. Struktura komponentów
+
 Widok zostanie zaimplementowany jako strona Astro (`profile.astro`), która będzie renderować komponenty React do obsługi interaktywnych elementów.
 
 ```
@@ -22,48 +25,52 @@ ProfilePage.astro
 ## 4. Szczegóły komponentów
 
 ### `ProfilePage.astro`
+
 - **Opis:** Główny plik strony, który definiuje layout i integruje komponenty klienckie. Pobiera dane profilu użytkownika i dane sesji po stronie serwera i przekazuje je do komponentu `ProfileView`.
 - **Główne elementy:**
-    - `Layout.astro` jako główny szablon strony.
-    - Sekcja `<main>` z semantycznym tagiem `role="main"`.
-    - Komponent `<ProfileView client:load />` do renderowania interfejsu.
+  - `Layout.astro` jako główny szablon strony.
+  - Sekcja `<main>` z semantycznym tagiem `role="main"`.
+  - Komponent `<ProfileView client:load />` do renderowania interfejsu.
 - **Obsługiwane interakcje:** Brak bezpośrednich interakcji; deleguje renderowanie do komponentów potomnych.
 - **Obsługiwana walidacja:** Sprawdzenie, czy dane profilu zostały pobrane; obsługa przypadku, gdy profil nie istnieje.
 - **Typy:** `UserProfileDto`, `ProfilePageVM`.
 - **Propsy:** Brak.
 
 ### `ProfileView.tsx`
+
 - **Opis:** Komponent React główny dla widoku profilu. Odpowiada za renderowanie podstawowych informacji o użytkowniku oraz linków do akcji.
 - **Główne elementy:**
-    - `<ProfileCard />` - komponent wyświetlający dane profilu w postaci karty.
-    - `<ProfileActions />` - komponent zawierający przyciski i linki akcji.
-    - Elementy HTML do strukturyzacji zawartości (sekcje, nagłówki).
+  - `<ProfileCard />` - komponent wyświetlający dane profilu w postaci karty.
+  - `<ProfileActions />` - komponent zawierający przyciski i linki akcji.
+  - Elementy HTML do strukturyzacji zawartości (sekcje, nagłówki).
 - **Obsługiwane interakcje:** Brak stanu lokalnego; wszystkie interakcje są obsługiwane przez komponenty potomne.
 - **Obsługiwana walidacja:** Brak.
 - **Typy:** `ProfilePageVM`.
 - **Propsy:**
-    - `userProfile: ProfilePageVM` - dane profilu użytkownika do wyświetlenia.
+  - `userProfile: ProfilePageVM` - dane profilu użytkownika do wyświetlenia.
 
 ### `ProfileCard.tsx`
+
 - **Opis:** Komponent React renderujący kartę (Card z Shadcn/ui) zawierającą informacje o profilu użytkownika. Wyświetla datę rejestracji, email i nickname.
 - **Główne elementy:**
-    - `Card` (Shadcn/ui) jako główny kontener.
-    - `CardHeader` z tytułem "Informacje o profilu".
-    - `CardContent` zawierające listę pól z danymi (email, nickname, data rejestracji).
-    - Elementy HTML (`<div>`, `<p>`, `<span>`) do strukturyzacji informacji.
+  - `Card` (Shadcn/ui) jako główny kontener.
+  - `CardHeader` z tytułem "Informacje o profilu".
+  - `CardContent` zawierające listę pól z danymi (email, nickname, data rejestracji).
+  - Elementy HTML (`<div>`, `<p>`, `<span>`) do strukturyzacji informacji.
 - **Obsługiwane interakcje:** Brak.
 - **Obsługiwana walidacja:** Obsługa przypadku, gdy `nickname` ma wartość `null` (wyświetlenie tekstu "Nie ustawiono").
 - **Typy:** `ProfileCardData`.
 - **Propsy:**
-    - `email: string` - email użytkownika.
-    - `nickname: string | null` - nickname użytkownika lub null.
-    - `registeredAt: string` - data rejestracji użytkownika w formacie ISO.
+  - `email: string` - email użytkownika.
+  - `nickname: string | null` - nickname użytkownika lub null.
+  - `registeredAt: string` - data rejestracji użytkownika w formacie ISO.
 
 ### `ProfileActions.tsx`
+
 - **Opis:** Komponent React zawierający przyciski i linki akcji dostępne dla użytkownika z widoku profilu.
 - **Główne elementy:**
-    - `Button` (Shadcn/ui) do przejścia do `/profile/settings`.
-    - `Separator` (Shadcn/ui) do wizualnego rozdzielenia sekcji.
+  - `Button` (Shadcn/ui) do przejścia do `/profile/settings`.
+  - `Separator` (Shadcn/ui) do wizualnego rozdzielenia sekcji.
 - **Obsługiwane interakcje:** Kliknięcie przycisku "Edytuj ustawienia" przekierowuje do `/profile/settings`.
 - **Obsługiwana walidacja:** Brak.
 - **Typy:** Brak.
@@ -72,18 +79,23 @@ ProfilePage.astro
 ## 5. Typy
 
 ### `UserProfileDto` (DTO - Data Transfer Object)
+
 Typ danych zwracany przez endpoint `/api/user/profile`. Używany do komunikacji między backendem a frontendem.
+
 ```typescript
 interface UserProfileDto {
   nickname: string | null;
   preferences: Record<string, any> | null;
 }
 ```
+
 - **`nickname`**: Nazwa użytkownika do wyświetlenia. Może być `null`, jeśli nie została ustawiona.
 - **`preferences`**: Obiekt z preferencjami użytkownika (np. `{ "theme": "dark" }`). Może być `null`.
 
 ### `ProfilePageVM` (ViewModel)
+
 ViewModel używany do przekazywania danych z serwera (Astro) do komponentu React. Zawiera dane profilu oraz dane z sesji użytkownika.
+
 ```typescript
 interface ProfilePageVM {
   email: string;
@@ -92,13 +104,16 @@ interface ProfilePageVM {
   preferences: Record<string, any> | null;
 }
 ```
+
 - **`email`**: Email użytkownika pobierany z sesji (Supabase Auth).
 - **`nickname`**: Nazwa użytkownika pobierana z profilu. Może być `null`.
 - **`registeredAt`**: Data rejestracji użytkownika pobierana z sesji. Format ISO 8601.
 - **`preferences`**: Preferencje użytkownika pobierane z profilu. Może być `null`.
 
 ### `ProfileCardData` (ViewModel)
+
 ViewModel dla komponentu `ProfileCard`, zawierający dane potrzebne do wyświetlenia karty.
+
 ```typescript
 interface ProfileCardData {
   email: string;
@@ -106,11 +121,13 @@ interface ProfileCardData {
   registeredAt: string;
 }
 ```
+
 - **`email`**: Email użytkownika.
 - **`nickname`**: Nickname użytkownika lub `null`.
 - **`registeredAt`**: Data rejestracji w formacie ISO.
 
 ## 6. Zarządzanie stanem
+
 - **`ProfilePage.astro`**: Brak stanu po stronie serwera. Dane są pobierane jednorazowo i przekazywane do komponenty.
 - **`ProfileView.tsx`**: Brak stanu lokalnego. Komponent przyjmuje dane jako props i renderuje komponenty potomne.
 - **`ProfileCard.tsx`**: Brak stanu lokalnego. Komponent jest czysto prezentacyjny.
@@ -121,6 +138,7 @@ interface ProfileCardData {
 ## 7. Integracja API
 
 ### `GET /api/user/profile`
+
 - **Cel:** Pobranie danych profilu zalogowanego użytkownika.
 - **Miejsce wywołania:** Po stronie serwera w `ProfilePage.astro` przed renderowaniem.
 - **Typ odpowiedzi (sukces):** `UserProfileDto`
@@ -138,11 +156,12 @@ interface ProfileCardData {
 - **Obsługa błędów:** Patrz sekcja "Obsługa błędów".
 
 ## 8. Interakcje użytkownika
-1. **Użytkownik wchodzi na `/profile`**: 
+
+1. **Użytkownik wchodzi na `/profile`**:
    - Widzi kartę z informacjami o swoim profilu (email, nickname, data rejestracji).
    - Widzi przycisk "Edytuj ustawienia".
 
-2. **Użytkownik klika "Edytuj ustawienia"**: 
+2. **Użytkownik klika "Edytuj ustawienia"**:
    - Zostaje przekierowany na `/profile/settings`.
 
 3. **Edytowanie danych profilu** (jeśli będzie zaimplementowane w przyszłości):
@@ -202,7 +221,7 @@ interface ProfileCardData {
 
 2. **Definiowanie typów:** Dodać typy `UserProfileDto`, `ProfilePageVM` i `ProfileCardData` do `src/types.ts`.
 
-3. **Utworzenie strony Astro:** 
+3. **Utworzenie strony Astro:**
    - Stworzyć plik `src/pages/profile.astro`.
    - Zaimplementować logikę pobierania danych z `/api/user/profile` po stronie serwera.
    - Zamieniać dane API na `ProfilePageVM` (w połączeniu z danymi z `Astro.locals.session`).
@@ -241,5 +260,3 @@ interface ProfileCardData {
 10. **Przegląd kodu i dostępności:**
     - Przegląd kodu pod kątem zgodności z wytycznymi dostępności (ARIA, semantyczne tagi HTML).
     - Przegląd pod kątem wydajności i optymalizacji.
-
-

@@ -272,6 +272,7 @@
 ## 🎨 Visual Summary
 
 ### Before (Single Model, Loose Format)
+
 ```
 User Request
      │
@@ -280,9 +281,11 @@ User Request
 │ Llama3B │ → ✗ Fails → Return "other"
 └─────────┘
 ```
+
 **Problem:** Single point of failure!
 
 ### After (Multi-Model, Strict Schema)
+
 ```
 User Request
      │
@@ -295,6 +298,7 @@ User Request
           │ Llama3B │ → ✓ Success!
           └─────────┘
 ```
+
 **Solution:** Automatic failover!
 
 ---
@@ -302,6 +306,7 @@ User Request
 ## 🔍 JSON Schema Benefits Visualization
 
 ### json_object (old)
+
 ```json
 // AI can return anything:
 {
@@ -310,9 +315,11 @@ User Request
   "reasoning": "The trans"    ← Truncated! 😱
 }
 ```
+
 **Result:** Manual validation needed, error-prone
 
 ### json_schema strict (new)
+
 ```json
 // AI must follow exact schema:
 {
@@ -321,6 +328,7 @@ User Request
   "reasoning": "Shopping at store" ← Complete string ✓
 }
 ```
+
 **Result:** Validated by OpenRouter, guaranteed format!
 
 ---
@@ -343,4 +351,3 @@ Cost:                Same (mostly free models) 💰
 ---
 
 **The system is now much more robust and reliable!** 🚀
-

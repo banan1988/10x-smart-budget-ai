@@ -3,6 +3,7 @@
 ## Opcja 1: Przez migrację SQL (Zalecana)
 
 Utworzyłem migrację w pliku:
+
 ```
 supabase/migrations/20251120000000_disable_rls_dev.sql
 ```
@@ -20,6 +21,7 @@ supabase db push --local
 ## Opcja 2: Przez Supabase Studio (Najszybsza)
 
 1. Otwórz Supabase Studio w przeglądarce:
+
    ```
    http://localhost:54323
    ```
@@ -27,6 +29,7 @@ supabase db push --local
 2. Przejdź do **SQL Editor**
 
 3. Wklej i wykonaj następujący kod SQL:
+
    ```sql
    -- Wyłącz RLS na wszystkich tabelach
    ALTER TABLE public.user_profiles DISABLE ROW LEVEL SECURITY;
@@ -56,12 +59,13 @@ ALTER TABLE public.feedback DISABLE ROW LEVEL SECURITY;
 ## Sprawdzenie czy RLS jest wyłączony
 
 W SQL Editor wykonaj:
+
 ```sql
-SELECT 
+SELECT
   schemaname,
   tablename,
   rowsecurity
-FROM pg_tables 
+FROM pg_tables
 WHERE schemaname = 'public';
 ```
 
@@ -85,8 +89,8 @@ Teraz powinieneś móc dodawać transakcje bez błędu RLS. Aplikacja będzie dz
 ## Testowanie
 
 Po wyłączeniu RLS, spróbuj dodać transakcję przez interfejs:
+
 1. Otwórz http://localhost:4321/transactions
 2. Kliknij "Dodaj transakcję"
 3. Wypełnij formularz i zapisz
 4. Transakcja powinna zostać dodana bez błędu RLS
-

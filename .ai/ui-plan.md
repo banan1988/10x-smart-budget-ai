@@ -9,6 +9,7 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
 ## 2. Lista widoków
 
 ### Strona Główna (Landing Page)
+
 - **Ścieżka widoku:** `/`
 - **Główny cel:** Pierwsze wrażenie i konwersja. Zaprezentowanie wartości aplikacji: automatyczne kategoryzowanie wydatków dzięki AI, przejrzyste wykresy i raporty, pełna kontrola nad finansami.
 - **Kluczowe sekcje i informacje:**
@@ -36,6 +37,7 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
   - **Zachowanie zalogowanego użytkownika:** Middleware automatycznie przekieruje na `/dashboard` jeśli sesja istnieje.
 
 ### Strona Logowania
+
 - **Ścieżka widoku:** `/login`
 - **Główny cel:** Umożliwienie powracającym użytkownikom zalogowania się do aplikacji.
 - **Kluczowe informacje:** Formularz (email, hasło), link do rejestracji.
@@ -45,6 +47,7 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
 - **Bezpieczeństwo:** Brak ekspozycji danych; ochrona przed brute force (logika po stronie API).
 
 ### Strona Rejestracji
+
 - **Ścieżka widoku:** `/register`
 - **Główny cel:** Konwersja nowych użytkowników.
 - **Kluczowe informacje:** Formularz (email, hasło, powtórz hasło opcjonalnie) + komunikat o polityce prywatności.
@@ -54,126 +57,133 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
 - **Bezpieczeństwo:** Walidacja po stronie klienta + serwera; szyfrowane połączenie; brak logiki biznesowej w UI.
 
 ### Pulpit Nawigacyjny (Dashboard)
+
 - **Ścieżka widoku:** `/dashboard`
 - **Główny cel:** Prezentacja podsumowania sytuacji finansowej użytkownika w bieżącym miesiącu.
 - **Kluczowe informacje do wyświetlenia:**
-    - Suma przychodów, wydatków i bilans.
-    - Wykres słupkowy top 5 kategorii wydatków.
-    - Tekstowe podsumowanie wygenerowane przez AI.
+  - Suma przychodów, wydatków i bilans.
+  - Wykres słupkowy top 5 kategorii wydatków.
+  - Tekstowe podsumowanie wygenerowane przez AI.
 - **Kluczowe komponenty widoku:**
-    - `Card` (Shadcn/ui) do prezentacji kluczowych metryk (przychody, wydatki, bilans).
-    - `BarChart` (Recharts/Visx) do wizualizacji wydatków.
-    - `Button` (Shadcn/ui) "Dodaj transakcję", otwierający modal.
-    - `AddTransactionDialog` (komponent niestandardowy).
-    - `Skeleton` (Shadcn/ui) jako wskaźnik ładowania danych.
-    - Komponent stanu pustego (Empty State) z wezwaniem do działania (CTA), gdy brak transakcji.
+  - `Card` (Shadcn/ui) do prezentacji kluczowych metryk (przychody, wydatki, bilans).
+  - `BarChart` (Recharts/Visx) do wizualizacji wydatków.
+  - `Button` (Shadcn/ui) "Dodaj transakcję", otwierający modal.
+  - `AddTransactionDialog` (komponent niestandardowy).
+  - `Skeleton` (Shadcn/ui) jako wskaźnik ładowania danych.
+  - Komponent stanu pustego (Empty State) z wezwaniem do działania (CTA), gdy brak transakcji.
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Dane odświeżają się automatycznie po dodaniu nowej transakcji. Na urządzeniach mobilnych siatka kart zamienia się w jedną kolumnę.
-    - **Dostępność:** Wykresy muszą mieć alternatywę tekstową (np. tabela danych).
-    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware w Astro.
+  - **UX:** Dane odświeżają się automatycznie po dodaniu nowej transakcji. Na urządzeniach mobilnych siatka kart zamienia się w jedną kolumnę.
+  - **Dostępność:** Wykresy muszą mieć alternatywę tekstową (np. tabela danych).
+  - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware w Astro.
 
 ### Lista Transakcji
+
 - **Ścieżka widoku:** `/transactions`
 - **Główny cel:** Umożliwienie przeglądania, filtrowania i zarządzania wszystkimi transakcjami.
 - **Kluczowe informacje do wyświetlenia:** Tabela lub lista transakcji z podziałem na strony, zawierająca datę, opis, kwotę, typ i kategorię.
 - **Kluczowe komponenty widoku:**
-    - `Table` (Shadcn/ui) do wyświetlania transakcji na większych ekranach.
-    - `Card` (Shadcn/ui) do wyświetlania transakcji w formie listy na mniejszych ekranach.
-    - `Pagination` (Shadcn/ui) do nawigacji między stronami.
-    - `DropdownMenu` (Shadcn/ui) dla akcji (Edytuj, Usuń) przy każdej transakcji.
-    - `AddTransactionDialog` (współdzielony z pulpitem).
-    - `AlertDialog` (Shadcn/ui) do potwierdzenia usunięcia transakcji.
+  - `Table` (Shadcn/ui) do wyświetlania transakcji na większych ekranach.
+  - `Card` (Shadcn/ui) do wyświetlania transakcji w formie listy na mniejszych ekranach.
+  - `Pagination` (Shadcn/ui) do nawigacji między stronami.
+  - `DropdownMenu` (Shadcn/ui) dla akcji (Edytuj, Usuń) przy każdej transakcji.
+  - `AddTransactionDialog` (współdzielony z pulpitem).
+  - `AlertDialog` (Shadcn/ui) do potwierdzenia usunięcia transakcji.
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Responsywna tabela, która na telefonach zmienia się w listę kart. Paginacja po stronie klienta zapewnia szybkie przełączanie stron.
-    - **Dostępność:** Tabela powinna mieć odpowiednie nagłówki (`<th>`) i zakresy (`scope`).
-    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
+  - **UX:** Responsywna tabela, która na telefonach zmienia się w listę kart. Paginacja po stronie klienta zapewnia szybkie przełączanie stron.
+  - **Dostępność:** Tabela powinna mieć odpowiednie nagłówki (`<th>`) i zakresy (`scope`).
+  - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
 
 ### Strona Profilu
+
 - **Ścieżka widoku:** `/profile`
 - **Główny cel:** Wyświetlanie informacji o profilu użytkownika.
 - **Kluczowe informacje do wyświetlenia:** Dane profilu użytkownika (email, nazwa profilu, data rejestracji, itp.).
 - **Kluczowe komponenty widoku:**
-    - `Card` (Shadcn/ui) do wyświetlania informacji profilowych.
-    - Link do ustawień: "Edytuj ustawienia" prowadzący na `/profile/settings`.
+  - `Card` (Shadcn/ui) do wyświetlania informacji profilowych.
+  - Link do ustawień: "Edytuj ustawienia" prowadzący na `/profile/settings`.
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Czytelny layout z jasną strukturą informacji.
-    - **Dostępność:** Semantyczne tagi do opisu sekcji profilu.
-    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
+  - **UX:** Czytelny layout z jasną strukturą informacji.
+  - **Dostępność:** Semantyczne tagi do opisu sekcji profilu.
+  - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware.
 
 ### Strona Ustawień Profilu
+
 - **Ścieżka widoku:** `/profile/settings`
 - **Główny cel:** Zarządzanie ustawieniami konta użytkownika.
 - **Kluczowe informacje do wyświetlenia:** Opcje edycji profilu, opcja usunięcia konta.
 - **Kluczowe komponenty widoku:**
-    - Pola edycji danych profilu (nazwa, itp.) z przyciskami zapisu.
-    - `Button` (Shadcn/ui) z wariantem `destructive` do akcji "Usuń konto".
-    - `AlertDialog` (Shadcn/ui) do ostatecznego potwierdzenia usunięcia konta.
+  - Pola edycji danych profilu (nazwa, itp.) z przyciskami zapisu.
+  - `Button` (Shadcn/ui) z wariantem `destructive` do akcji "Usuń konto".
+  - `AlertDialog` (Shadcn/ui) do ostatecznego potwierdzenia usunięcia konta.
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Wyraźne ostrzeżenie o nieodwracalności usunięcia konta. Sekcje ustawień pogrupowane logicznie.
-    - **Dostępność:** Przycisk usuwania musi być jasno opisany. Powiązane etykiety dla pól edycji.
-    - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware. Walidacja zmian danych po stronie serwera.
+  - **UX:** Wyraźne ostrzeżenie o nieodwracalności usunięcia konta. Sekcje ustawień pogrupowane logicznie.
+  - **Dostępność:** Przycisk usuwania musi być jasno opisany. Powiązane etykiety dla pól edycji.
+  - **Bezpieczeństwo:** Dostęp do widoku chroniony przez middleware. Walidacja zmian danych po stronie serwera.
 
 ### Panel Administratora - Statystyki Feedbacków
+
 - **Ścieżka widoku:** `/admin/feedbacks`
 - **Główny cel:** Przeglądanie i analizowanie opinii użytkowników (ratings i komentarze).
 - **Wymagane uprawnienia:** Dostęp tylko dla użytkowników z rolą `admin` (zweryfikowany middleware i RLS w bazie).
 - **Kluczowe informacje do wyświetlenia:**
-    - Agregowane statystyki: średnia ocena (1-5), liczba wszystkich feedbacków, trend ocen (opcjonalnie).
-    - Tabela z listą feedbacków: data, rating (gwiazdki/liczba), komentarz użytkownika, ID użytkownika (bez danych osobowych).
-    - Paginacja do przeglądania większej liczby feedbacków.
-    - Filtry: zakres dat, rating (np. tylko 5-gwiazdkowe lub tylko poniżej 3).
+  - Agregowane statystyki: średnia ocena (1-5), liczba wszystkich feedbacków, trend ocen (opcjonalnie).
+  - Tabela z listą feedbacków: data, rating (gwiazdki/liczba), komentarz użytkownika, ID użytkownika (bez danych osobowych).
+  - Paginacja do przeglądania większej liczby feedbacków.
+  - Filtry: zakres dat, rating (np. tylko 5-gwiazdkowe lub tylko poniżej 3).
 - **Kluczowe komponenty widoku:**
-    - Metryka karty: średnia ocena, liczba feedbacków (Shadcn/ui `Card`).
-    - Wykres: rozkład ocen (bar chart - liczba feedbacków dla każdej oceny 1-5).
-    - Tabela feedbacków (Shadcn/ui `Table`): kolumny: Data, Rating, Komentarz, ID Użytkownika.
-    - `DropdownMenu` (Shadcn/ui) do sortowania/filtrowania.
-    - `Pagination` (Shadcn/ui) do nawigacji między stronami.
-    - `Skeleton` do ładowania danych.
-    - `AlertDialog` z opcją usunięcia spamu (jeśli feedback zaznaczony jako spam).
+  - Metryka karty: średnia ocena, liczba feedbacków (Shadcn/ui `Card`).
+  - Wykres: rozkład ocen (bar chart - liczba feedbacków dla każdej oceny 1-5).
+  - Tabela feedbacków (Shadcn/ui `Table`): kolumny: Data, Rating, Komentarz, ID Użytkownika.
+  - `DropdownMenu` (Shadcn/ui) do sortowania/filtrowania.
+  - `Pagination` (Shadcn/ui) do nawigacji między stronami.
+  - `Skeleton` do ładowania danych.
+  - `AlertDialog` z opcją usunięcia spamu (jeśli feedback zaznaczony jako spam).
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Czytelny layout z hierarchią informacji (najpierw agregaty, potem szczegóły w tabeli). Możliwość eksportu danych (CSV).
-    - **Dostępność:** Tabela z nagłówkami (`<th scope="col">`). Alternatywne teksty dla ikon gwiazdek.
-    - **Bezpieczeństwo:** Dostęp chroniony przez middleware - sprawdzenie roli admina. RLS w bazie danych. Logowanie akcji (kto, kiedy, co przejrzał).
+  - **UX:** Czytelny layout z hierarchią informacji (najpierw agregaty, potem szczegóły w tabeli). Możliwość eksportu danych (CSV).
+  - **Dostępność:** Tabela z nagłówkami (`<th scope="col">`). Alternatywne teksty dla ikon gwiazdek.
+  - **Bezpieczeństwo:** Dostęp chroniony przez middleware - sprawdzenie roli admina. RLS w bazie danych. Logowanie akcji (kto, kiedy, co przejrzał).
 
 ### Panel Administratora - Statystyki AI Kategoryzacji
+
 - **Ścieżka widoku:** `/admin/ai-stats`
 - **Główny cel:** Monitorowanie efektywności AI w kategoryzowaniu wydatków oraz identyfikowanie problemów.
 - **Wymagane uprawnienia:** Dostęp tylko dla użytkowników z rolą `admin`.
 - **Kluczowe informacje do wyświetlenia:**
-    - **Agregowane metryki:**
-        - Procent transakcji kategoryzowanych automatycznie przez AI vs. ręcznie.
-        - Liczba transakcji ogółem, w tym prawidłowo i nieprawidłowo skategoryzowanych (jeśli dostępne dane do weryfikacji).
-        - Kategorie, dla których AI ma najwyższy wskaźnik błędu (opcjonalnie).
-    - **Rozbicie po kategoriach:**
-        - Tabela: Kategoria, Liczba (AI), Liczba (ręczne), Procent AI, Trend (↑/↓).
-        - Wizualizacja: Pie chart lub donut chart pokazujący proporcje AI vs. ręczne dla każdej kategorii.
-    - **Trend w czasie (opcjonalnie):**
-        - Line chart pokazujący zmianę procentu AI kategoryzacji na przestrzeni ostatnich 30 dni.
-    - **Filtr czasowy:** Zakres dat (domyślnie ostatnie 30 dni).
+  - **Agregowane metryki:**
+    - Procent transakcji kategoryzowanych automatycznie przez AI vs. ręcznie.
+    - Liczba transakcji ogółem, w tym prawidłowo i nieprawidłowo skategoryzowanych (jeśli dostępne dane do weryfikacji).
+    - Kategorie, dla których AI ma najwyższy wskaźnik błędu (opcjonalnie).
+  - **Rozbicie po kategoriach:**
+    - Tabela: Kategoria, Liczba (AI), Liczba (ręczne), Procent AI, Trend (↑/↓).
+    - Wizualizacja: Pie chart lub donut chart pokazujący proporcje AI vs. ręczne dla każdej kategorii.
+  - **Trend w czasie (opcjonalnie):**
+    - Line chart pokazujący zmianę procentu AI kategoryzacji na przestrzeni ostatnich 30 dni.
+  - **Filtr czasowy:** Zakres dat (domyślnie ostatnie 30 dni).
 - **Kluczowe komponenty widoku:**
-    - Metryka karty: % AI, liczba transakcji AI, liczba ręcznych (Shadcn/ui `Card`).
-    - Wykres procentowy: Donut/Pie chart (Recharts) pokazujący proporcje AI vs. ręczne.
-    - Tabela kategorii: Shadcn/ui `Table` z kolumnami: Kategoria, AI, Ręczne, % AI, Trend.
-    - Line chart (Recharts): Trend AI kategoryzacji w czasie.
-    - `DatePicker` (Shadcn/ui lub input range) do wyboru zakresu dat.
-    - `Skeleton` do ładowania danych.
-    - `Badge` (Shadcn/ui) do wizualizacji trendu (zielony ↑, czerwony ↓, szary →).
+  - Metryka karty: % AI, liczba transakcji AI, liczba ręcznych (Shadcn/ui `Card`).
+  - Wykres procentowy: Donut/Pie chart (Recharts) pokazujący proporcje AI vs. ręczne.
+  - Tabela kategorii: Shadcn/ui `Table` z kolumnami: Kategoria, AI, Ręczne, % AI, Trend.
+  - Line chart (Recharts): Trend AI kategoryzacji w czasie.
+  - `DatePicker` (Shadcn/ui lub input range) do wyboru zakresu dat.
+  - `Skeleton` do ładowania danych.
+  - `Badge` (Shadcn/ui) do wizualizacji trendu (zielony ↑, czerwony ↓, szary →).
 - **UX, dostępność i względy bezpieczeństwa:**
-    - **UX:** Przejrzyste wizualizacje z możliwością drilldown (kliknięcie kategorii pokazuje szczegółowe transakcje - opcjonalnie dla MVP+). Eksport danych (CSV, PDF).
-    - **Dostępność:** Alternatywne teksty dla wykresów (np. tabela danych za wykresem). Kontrast kolorów dla legend.
-    - **Bezpieczeństwo:** Dostęp chroniony przez middleware - sprawdzenie roli admina. RLS w bazie - tylko statystyki, bez danych osobowych użytkowników.
+  - **UX:** Przejrzyste wizualizacje z możliwością drilldown (kliknięcie kategorii pokazuje szczegółowe transakcje - opcjonalnie dla MVP+). Eksport danych (CSV, PDF).
+  - **Dostępność:** Alternatywne teksty dla wykresów (np. tabela danych za wykresem). Kontrast kolorów dla legend.
+  - **Bezpieczeństwo:** Dostęp chroniony przez middleware - sprawdzenie roli admina. RLS w bazie - tylko statystyki, bez danych osobowych użytkowników.
 
 ### Panel Administratora - Layout i Nawigacja
+
 - **Ścieżka routu:** `/admin/*`
 - **Główny cel:** Centralne miejsce do zarządzania i monitorowania aplikacji.
 - **Struktura nawigacji:**
-    - **Sidebar lub Header navigation:** Linki do sekcji: "Statystyki Feedbacków" (`/admin/feedbacks`), "Statystyki AI" (`/admin/ai-stats`), ewentualnie "Użytkownicy" (`/admin/users`), "Logi" (`/admin/logs`).
-    - **Breadcrumb:** Ścieżka nawigacji (np. "Admin > Statystyki Feedbacków").
+  - **Sidebar lub Header navigation:** Linki do sekcji: "Statystyki Feedbacków" (`/admin/feedbacks`), "Statystyki AI" (`/admin/ai-stats`), ewentualnie "Użytkownicy" (`/admin/users`), "Logi" (`/admin/logs`).
+  - **Breadcrumb:** Ścieżka nawigacji (np. "Admin > Statystyki Feedbacków").
 - **Komponenty wspólne:**
-    - **AdminLayout:** Komponent Astro z header, sidebar i main content area.
-    - **ProtectedAdminRoute:** Middleware sprawdzające czy użytkownik ma rolę admin, inaczej redirect na `/dashboard` lub `/` z komunikatem błędu.
-    - **MetricsCard:** Reusable card do wyświetlania kluczowych metryk (liczba, procent, trend).
-    - **ExportButton:** Przycisk do eksportu danych w formacie CSV/PDF.
+  - **AdminLayout:** Komponent Astro z header, sidebar i main content area.
+  - **ProtectedAdminRoute:** Middleware sprawdzające czy użytkownik ma rolę admin, inaczej redirect na `/dashboard` lub `/` z komunikatem błędu.
+  - **MetricsCard:** Reusable card do wyświetlania kluczowych metryk (liczba, procent, trend).
+  - **ExportButton:** Przycisk do eksportu danych w formacie CSV/PDF.
 
 ## 3. Mapa podróży użytkownika
 
@@ -225,13 +235,13 @@ Struktura opiera się na kilku kluczowych widokach: stronie głównej (marketing
 Aplikacja będzie miała prosty, ale spójny układ oparty o komponent `Layout.astro`.
 
 - **Główny Layout:**
-    - **Nagłówek (Header):** Zawiera logo aplikacji, główne linki nawigacyjne oraz menu użytkownika.
-    - **Nawigacja główna (zalogowany):** Linki do "Pulpitu" (`/dashboard`) i "Transakcji" (`/transactions`).
-    - **Menu użytkownika - Admin:** Jeśli użytkownik ma rolę `admin`, w menu rozwijającym pojawia się dodatkowa opcja "Panel Admin" prowadząca do `/profile/admin/feedbacks`.
-    - **Nawigacja marketingowa (Landing Page):** Anchory do sekcji: Funkcje, Jak to działa, FAQ (np. `/#features`, `/#how-it-works`, `/#faq`).
-    - **Menu użytkownika:** Po zalogowaniu w prawym górnym rogu znajduje się ikona użytkownika z `DropdownMenu`, które zawiera link do "Profilu" (`/profile`), linkiem do "Ustawień" (`/profile/settings`) oraz opcją "Wyloguj".
-    - **Główna treść (Main):** Centralna część strony, w której renderowane są poszczególne widoki.
-    - **Stopka (Footer):** Zawiera informacje: rok, nazwa aplikacji, skrócone linki (Polityka prywatności, Regulamin – przyszłe rozszerzenia).
+  - **Nagłówek (Header):** Zawiera logo aplikacji, główne linki nawigacyjne oraz menu użytkownika.
+  - **Nawigacja główna (zalogowany):** Linki do "Pulpitu" (`/dashboard`) i "Transakcji" (`/transactions`).
+  - **Menu użytkownika - Admin:** Jeśli użytkownik ma rolę `admin`, w menu rozwijającym pojawia się dodatkowa opcja "Panel Admin" prowadząca do `/profile/admin/feedbacks`.
+  - **Nawigacja marketingowa (Landing Page):** Anchory do sekcji: Funkcje, Jak to działa, FAQ (np. `/#features`, `/#how-it-works`, `/#faq`).
+  - **Menu użytkownika:** Po zalogowaniu w prawym górnym rogu znajduje się ikona użytkownika z `DropdownMenu`, które zawiera link do "Profilu" (`/profile`), linkiem do "Ustawień" (`/profile/settings`) oraz opcją "Wyloguj".
+  - **Główna treść (Main):** Centralna część strony, w której renderowane są poszczególne widoki.
+  - **Stopka (Footer):** Zawiera informacje: rok, nazwa aplikacji, skrócone linki (Polityka prywatności, Regulamin – przyszłe rozszerzenia).
 
 - **Nawigacja dla niezalogowanych:** Nagłówek na stronie głównej (`/`) zawiera linki "Zaloguj się" (`/login`) i "Zarejestruj się" (`/register`) oraz anchor linki do sekcji. Na stronach `/login` i `/register` nawigacja jest minimalna (logo + link powrotu na `/`).
 - **Nawigacja dla zalogowanych:** Po zalogowaniu użytkownik ma dostęp do pełnej nawigacji aplikacyjnej bez sekcji marketingowych.

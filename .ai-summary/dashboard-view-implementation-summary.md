@@ -22,6 +22,7 @@
 ## 📊 Przegląd
 
 Widok Pulpitu Nawigacyjnego (Dashboard) został w pełni zaimplementowany zgodnie z planem. Umożliwia użytkownikom szybki przegląd kluczowych wskaźników finansowych za bieżący miesiąc, w tym:
+
 - Przychody, wydatki i bilans
 - Wykres top 5 kategorii wydatków
 - Podsumowanie AI sytuacji finansowej
@@ -34,6 +35,7 @@ Widok Pulpitu Nawigacyjnego (Dashboard) został w pełni zaimplementowany zgodni
 ## ✅ Zrealizowane funkcjonalności
 
 ### Kroki 1-3: Podstawowa struktura
+
 - ✅ **Typy ViewModels** - Dodano `MetricCardVM`, `CategoryBreakdownVM`, `DashboardVM` do `src/types.ts`
 - ✅ **Custom Hook** - Utworzono `useDashboardStats` z pełną logiką pobierania i mapowania danych
 - ✅ **Testy jednostkowe** - 5 testów dla hooka (wszystkie przechodzą)
@@ -43,12 +45,14 @@ Widok Pulpitu Nawigacyjnego (Dashboard) został w pełni zaimplementowany zgodni
   - `EmptyState` - stan pusty z CTA
 
 ### Kroki 4-6: Pełna funkcjonalność
+
 - ✅ **AiSummary** - komponent do wyświetlania podsumowania AI
 - ✅ **CategoriesBarChart** - wykres słupkowy z recharts
 - ✅ **DashboardView** - główny komponent orkiestrujący
 - ✅ **Strona Astro** - `/dashboard` z integracją React
 
 ### Funkcjonalności dodatkowe
+
 - ✅ Obsługa 4 stanów: loading, error, empty, success
 - ✅ Automatyczne odświeżanie po dodaniu transakcji
 - ✅ Interaktywne tooltips na wykresie
@@ -63,6 +67,7 @@ Widok Pulpitu Nawigacyjnego (Dashboard) został w pełni zaimplementowany zgodni
 ### Utworzone/zmodyfikowane pliki (11)
 
 #### Typy i ViewModels
+
 ```
 src/types.ts (rozszerzony)
 ├── MetricCardVM - typ dla karty metryki
@@ -71,6 +76,7 @@ src/types.ts (rozszerzony)
 ```
 
 #### Custom Hooks
+
 ```
 src/components/hooks/
 ├── useDashboardStats.ts (106 linii)
@@ -78,6 +84,7 @@ src/components/hooks/
 ```
 
 #### Komponenty React
+
 ```
 src/components/
 ├── MetricCard.tsx (25 linii)
@@ -89,12 +96,14 @@ src/components/
 ```
 
 #### Strony Astro
+
 ```
 src/pages/
 └── dashboard.astro (13 linii)
 ```
 
 #### Dokumentacja
+
 ```
 docs/
 ├── dashboard-implementation.md - szczegóły techniczne
@@ -135,6 +144,7 @@ export interface DashboardVM {
 ### 2. Custom Hook: `useDashboardStats`
 
 **Odpowiedzialności:**
+
 - Pobieranie danych z API `/api/transactions/stats`
 - Mapowanie `TransactionStatsDto` → `DashboardVM`
 - Formatowanie kwot do polskiej waluty
@@ -146,25 +156,25 @@ export interface DashboardVM {
 
 ```typescript
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('pl-PL', {
-    style: 'currency',
-    currency: 'PLN',
+  return new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: "PLN",
   }).format(amount / 100);
 }
 
 function mapToDashboardVM(dto: TransactionStatsDto): DashboardVM {
   // Mapowanie metryk
   const metrics = [
-    { title: 'Przychody', value: formatCurrency(dto.totalIncome) },
-    { title: 'Wydatki', value: formatCurrency(dto.totalExpenses) },
-    { title: 'Bilans', value: formatCurrency(dto.balance) },
+    { title: "Przychody", value: formatCurrency(dto.totalIncome) },
+    { title: "Wydatki", value: formatCurrency(dto.totalExpenses) },
+    { title: "Bilans", value: formatCurrency(dto.balance) },
   ];
 
   // Top 5 kategorii
   const categoryBreakdown = dto.categoryBreakdown
     .sort((a, b) => b.total - a.total)
     .slice(0, 5)
-    .map(cat => ({
+    .map((cat) => ({
       name: cat.categoryName,
       total: cat.total / 100,
     }));
@@ -174,10 +184,11 @@ function mapToDashboardVM(dto: TransactionStatsDto): DashboardVM {
 ```
 
 **API wywołanie:**
+
 ```typescript
 const params = new URLSearchParams({
-  month: 'YYYY-MM',
-  includeAiSummary: 'true',
+  month: "YYYY-MM",
+  includeAiSummary: "true",
 });
 const response = await fetch(`/api/transactions/stats?${params}`);
 ```
@@ -185,26 +196,31 @@ const response = await fetch(`/api/transactions/stats?${params}`);
 ### 3. Komponenty UI
 
 #### MetricCard
+
 - Wyświetla tytuł i wartość metryki
 - Używa Shadcn/ui Card components
 - Minimalistyczny design
 
 #### DashboardSkeleton
+
 - Naśladuje układ dashboardu
 - 3 karty metryk + wykres + AI summary
 - Płynne animacje ładowania
 
 #### EmptyState
+
 - Wyświetlany gdy brak transakcji
 - Ikona 📊 + przyjazny komunikat
 - Przycisk CTA "Dodaj transakcję"
 
 #### AiSummary
+
 - Wyświetla podsumowanie AI
 - Ikona 🤖 + tytuł
 - Ukrywa się automatycznie gdy brak danych
 
 #### CategoriesBarChart
+
 - Wykres słupkowy z recharts
 - Responsywny kontener
 - Customowy tooltip z formatowaniem PLN
@@ -213,6 +229,7 @@ const response = await fetch(`/api/transactions/stats?${params}`);
 - Maksymalnie 5 kategorii
 
 **Konfiguracja wykresu:**
+
 ```typescript
 <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
   <XAxis
@@ -237,18 +254,21 @@ const response = await fetch(`/api/transactions/stats?${params}`);
 **Główny komponent orkiestrujący wszystkie elementy.**
 
 **Stany aplikacji:**
+
 1. **Loading** → Wyświetla `DashboardSkeleton`
 2. **Error** → Alert z komunikatem + przycisk retry
 3. **Empty** → `EmptyState` gdy brak transakcji (wszystkie metryki = 0)
 4. **Success** → Pełny dashboard z danymi
 
 **Funkcjonalności:**
+
 - Automatyczne pobieranie danych dla bieżącego miesiąca
 - Otwieranie `AddTransactionDialog`
 - Odświeżanie po dodaniu transakcji
 - Wyświetlanie sformatowanej daty w nagłówku
 
 **Struktura renderowania:**
+
 ```tsx
 <div className="space-y-6">
   {/* Header + Button */}
@@ -279,8 +299,8 @@ const response = await fetch(`/api/transactions/stats?${params}`);
 
 ```astro
 ---
-import Layout from '@/layouts/Layout.astro';
-import { DashboardView } from '@/components/DashboardView';
+import Layout from "@/layouts/Layout.astro";
+import { DashboardView } from "@/components/DashboardView";
 ---
 
 <Layout title="Pulpit nawigacyjny - SmartBudgetAI">
@@ -291,6 +311,7 @@ import { DashboardView } from '@/components/DashboardView';
 ```
 
 **Kluczowe decyzje:**
+
 - `client:load` - hydratacja React na client side
 - Middleware obsługuje uwierzytelnienie
 - Layout zapewnia spójność z resztą aplikacji
@@ -360,22 +381,23 @@ npm run build
 ```
 
 **Bundle sizes:**
+
 - DashboardView: 324.32 kB (97.99 kB gzipped)
 - TransactionsView: 101.44 kB (29.18 kB gzipped)
 - Client: 175.52 kB (55.58 kB gzipped)
 
 ### Checklist jakości
 
-| Obszar | Status | Uwagi |
-|--------|--------|-------|
-| **TypeScript** | ✅ | 0 błędów, strict mode |
-| **Testy** | ✅ | 131/131 przechodzące |
-| **Build** | ✅ | Bez błędów |
-| **Linting** | ✅ | ESLint pass |
-| **Responsywność** | ✅ | Mobile-first |
-| **Accessibility** | ✅ | ARIA, semantic HTML |
-| **Performance** | ✅ | Lazy loading, memoization |
-| **Error handling** | ✅ | Wszystkie stany obsłużone |
+| Obszar             | Status | Uwagi                     |
+| ------------------ | ------ | ------------------------- |
+| **TypeScript**     | ✅     | 0 błędów, strict mode     |
+| **Testy**          | ✅     | 131/131 przechodzące      |
+| **Build**          | ✅     | Bez błędów                |
+| **Linting**        | ✅     | ESLint pass               |
+| **Responsywność**  | ✅     | Mobile-first              |
+| **Accessibility**  | ✅     | ARIA, semantic HTML       |
+| **Performance**    | ✅     | Lazy loading, memoization |
+| **Error handling** | ✅     | Wszystkie stany obsłużone |
 
 ---
 
@@ -388,6 +410,7 @@ Po pierwszej implementacji strona `/dashboard` była kompletnie pusta.
 
 **Diagnoza:**
 Dwa kluczowe pliki zostały utworzone, ale były puste (0 bajtów):
+
 - `src/pages/dashboard.astro`
 - `src/components/DashboardView.tsx`
 
@@ -395,6 +418,7 @@ Dwa kluczowe pliki zostały utworzone, ale były puste (0 bajtów):
 Podczas używania `create_file` zawartość nie została poprawnie zapisana.
 
 **Rozwiązanie:**
+
 ```bash
 # Użyto replace_string_in_file z pustym oldString
 replace_string_in_file(
@@ -436,6 +460,7 @@ function CustomTooltip({ active, payload }: any) {
 `DashboardSkeleton` wymagał komponentu Skeleton z shadcn/ui, który nie był zainstalowany.
 
 **Rozwiązanie:**
+
 ```bash
 npx shadcn@latest add skeleton
 ```
@@ -468,6 +493,7 @@ http://localhost:4321/dashboard
 ```
 
 **Wymagania:**
+
 - Użytkownik musi być uwierzytelniony (middleware)
 - Backend API musi działać
 - Endpoint `/api/transactions/stats` musi być dostępny
@@ -477,11 +503,13 @@ http://localhost:4321/dashboard
 **Przykład: Dodanie wyboru miesiąca**
 
 1. Dodaj state w `DashboardView`:
+
 ```tsx
 const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 ```
 
 2. Dodaj komponent wyboru:
+
 ```tsx
 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
   {/* opcje miesięcy */}
@@ -489,6 +517,7 @@ const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 ```
 
 3. Użyj w hooku:
+
 ```tsx
 const { data, isLoading, error } = useDashboardStats(selectedMonth);
 ```
@@ -575,9 +604,11 @@ Dokumentacja:         5 plików
 ### Zależności
 
 **Nowe:**
+
 - recharts: ^2.15.0
 
 **Wykorzystane z Shadcn/ui:**
+
 - Card, CardHeader, CardTitle, CardContent
 - Button
 - Alert, AlertDescription
@@ -664,6 +695,7 @@ src/
 ## ✅ Checklist finalna
 
 ### Implementacja
+
 - [x] Typy ViewModels
 - [x] Custom hook useDashboardStats
 - [x] Komponenty UI (6 sztuk)
@@ -676,6 +708,7 @@ src/
 - [x] Responsywność
 
 ### Jakość
+
 - [x] TypeScript strict mode
 - [x] ESLint pass
 - [x] Wszystkie testy przechodzą
@@ -685,6 +718,7 @@ src/
 - [x] Dokumentacja
 
 ### Deliverables
+
 - [x] Kod produkcyjny
 - [x] Testy jednostkowe
 - [x] Dokumentacja techniczna
@@ -704,13 +738,12 @@ Dashboard View został w pełni zaimplementowany zgodnie z planem. Wszystkie za�
 ✅ **Dodawanie transakcji** - integracja z dialogiem  
 ✅ **Responsywność** - działa na wszystkich urządzeniach  
 ✅ **Testy** - 131/131 przechodzi  
-✅ **Dokumentacja** - 5 plików opisujących implementację  
+✅ **Dokumentacja** - 5 plików opisujących implementację
 
 **Dashboard jest gotowy do użycia w produkcji!** 🚀
 
 ---
 
-*Implementacja wykonana: 21 listopada 2025*  
-*Autor: GitHub Copilot*  
-*Status: Production Ready ✅*
-
+_Implementacja wykonana: 21 listopada 2025_  
+_Autor: GitHub Copilot_  
+_Status: Production Ready ✅_

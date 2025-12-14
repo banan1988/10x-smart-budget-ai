@@ -3,9 +3,11 @@
 ## Zrealizowane zadania
 
 ### 1. Weryfikacja schematu bazy danych
+
 **Status:** Zweryfikowany
 
 Tabela `feedback` utworzona w migracji `20251025120000_initial_schema.sql`:
+
 - `id` (bigserial) - klucz główny
 - `user_id` (uuid) - referencja do auth.users z cascade delete
 - `rating` (integer) - ocena od 1 do 5 z walidacją CHECK
@@ -13,16 +15,20 @@ Tabela `feedback` utworzona w migracji `20251025120000_initial_schema.sql`:
 - `created_at` (timestamptz) - automatyczny timestamp
 
 **Indeksy:**
+
 - `idx_feedback_user_id` - dla wydajnych zapytań po user_id
 
 **Polityki RLS:**
+
 - Użytkownicy mogą wstawiać własne opinie (INSERT policy)
 - Domyślnie SELECT, UPDATE i DELETE są zabronione (pożądane zachowanie)
 
 ### 2. Utworzono serwis feedback
+
 **Plik:** `src/lib/services/feedback.service.ts`
 
 Serwis zawiera:
+
 - Klasę `FeedbackService` z trzema metodami statycznymi
 - `createFeedback()` - tworzy nowy wpis feedback w bazie danych
 - `getFeedbackStats()` - pobiera i oblicza statystyki opinii (średnia ocena, liczba opinii)
@@ -33,9 +39,11 @@ Serwis zawiera:
 ### 3. Utworzono punkty końcowe API
 
 #### POST /api/feedbacks
+
 **Plik:** `src/pages/api/feedbacks/index.ts`
 
 Endpoint zawiera:
+
 - Handler `POST` dla tworzenia nowych opinii
 - Konfigurację `prerender = false` dla SSR
 - Walidację Zod dla FeedbackRequest (rating: 1-5, comment: max 1000 znaków)
@@ -45,9 +53,11 @@ Endpoint zawiera:
 - Zwracanie komunikatu sukcesu w formacie JSON
 
 #### GET /api/feedbacks/stats
+
 **Plik:** `src/pages/api/feedbacks/stats.ts`
 
 Endpoint zawiera:
+
 - Handler `GET` dla ścieżki `/api/feedbacks/stats`
 - Publiczny endpoint (nie wymaga autoryzacji)
 - Konfigurację `prerender = false` dla SSR
@@ -56,10 +66,11 @@ Endpoint zawiera:
 - Zwracanie danych w formacie JSON (FeedbackStatsDto)
 
 #### GET /api/feedbacks
+
 **Plik:** `src/pages/api/feedbacks/index.ts`
 
-
 Endpoint zawiera:
+
 - Handler `GET` dla ścieżki `/api/feedbacks` (lista opinii dla administratora)
 - Wymagana autoryzacja: tylko administratorzy
 - Konfigurację `prerender = false` dla SSR
@@ -71,13 +82,15 @@ Endpoint zawiera:
 ## Struktura danych
 
 ### FeedbackDto
+
 ```typescript
-export type FeedbackDto = Pick<Tables<'feedback'>, 'id' | 'rating' | 'comment' | 'created_at'> & {
+export type FeedbackDto = Pick<Tables<"feedback">, "id" | "rating" | "comment" | "created_at"> & {
   user_id: string;
 };
 ```
 
 ### FeedbackStatsDto
+
 ```typescript
 export type FeedbackStatsDto = {
   averageRating: number;
@@ -86,6 +99,7 @@ export type FeedbackStatsDto = {
 ```
 
 ### Tabela `feedback` w bazie danych
+
 - `id`: bigserial (klucz główny)
 - `user_id`: uuid (referencja do auth.users)
 - `rating`: integer (1-5 z walidacją CHECK)
@@ -149,17 +163,20 @@ Implementacja jest w 100% zgodna z planem z poprawkami użytkownika:
 **Framework:** Vitest 4.0.8 (oficjalne narzędzie dla Astro/Vite)
 
 **Testy jednostkowe** (`src/lib/services/feedback.service.test.ts`):
+
 - ✅ createFeedback: success, comment handling, errors (3 testy)
 - ✅ getFeedbackStats: calculation, rounding, empty data, errors (5 testów)
 - ✅ getAllFeedback: pagination, range calculation, ordering, errors (5 testów)
 - **Total:** 13 testów
 
 **Testy integracyjne** (`src/pages/api/feedbacks/index.test.ts`):
+
 - ✅ POST: success with/without comment, validation (rating, comment length), invalid JSON, errors (9 testów)
 - ✅ GET: paginated list, default pagination, limit enforcement, admin authorization, errors (6 testów)
 - **Total:** 15 testów
 
 **Testy integracyjne** (`src/pages/api/feedbacks/stats.test.ts`):
+
 - ✅ Average rating calculation
 - ✅ DTO structure validation
 - ✅ Zero stats for empty data
@@ -169,5 +186,6 @@ Implementacja jest w 100% zgodna z planem z poprawkami użytkownika:
 - **Total:** 6 testów
 
 **Mocki testowe:**
+
 - `src/test/mocks/supabase.mock.ts` - Mock Supabase client
 - `src/test/mocks/astro.mock.ts` - Mock Astro API context

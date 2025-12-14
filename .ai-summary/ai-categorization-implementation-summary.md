@@ -7,11 +7,13 @@ Zaimplementowano `AiCategorizationService` - dedykowany serwis do automatycznej 
 ## Decyzja Architektoniczna
 
 ### ❌ Początkowo: API Endpoint
+
 ```
 Frontend → POST /api/transactions/categorize → OpenRouter
 ```
 
 **Problemy:**
+
 - Logika biznesowa w API layer
 - Trudne w testowaniu
 - Brak reużywalności
@@ -19,11 +21,13 @@ Frontend → POST /api/transactions/categorize → OpenRouter
 - Trudna kontrola kosztów
 
 ### ✅ Ostatecznie: Service Layer
+
 ```
 TransactionService → AiCategorizationService → OpenRouterService → OpenRouter API
 ```
 
 **Zalety:**
+
 - Czystsza architektura (Business Logic layer)
 - Reużywalność w całej aplikacji
 - Łatwe testowanie (unit tests)
@@ -46,23 +50,23 @@ src/lib/services/
 ```typescript
 class AiCategorizationService {
   // Kategoryzacja pojedynczej transakcji
-  async categorizeTransaction(description: string): Promise<CategorizationResult>
-  
+  async categorizeTransaction(description: string): Promise<CategorizationResult>;
+
   // Batch processing
-  async batchCategorize(descriptions: string[]): Promise<CategorizationResult[]>
+  async batchCategorize(descriptions: string[]): Promise<CategorizationResult[]>;
 }
 
 interface CategorizationResult {
-  categoryKey: string;    // np. 'restaurants', 'transport'
-  confidence: number;     // 0-1
-  reasoning: string;      // Wyjaśnienie AI
+  categoryKey: string; // np. 'restaurants', 'transport'
+  confidence: number; // 0-1
+  reasoning: string; // Wyjaśnienie AI
 }
 ```
 
 ### Kategorie (10)
 
 - `groceries` - Zakupy spożywcze
-- `transport` - Transport  
+- `transport` - Transport
 - `entertainment` - Rozrywka
 - `restaurants` - Restauracje
 - `utilities` - Media
@@ -99,6 +103,7 @@ OPENROUTER_MODEL=openai/gpt-4o-mini  # Płatny (najlepszy stosunek ceny do jako�
 ```
 
 **Zalecane modele:**
+
 - **Development**: `meta-llama/llama-3.2-3b-instruct:free` (darmowy, dobra jakość)
 - **Production**: `openai/gpt-4o-mini` ($0.15/$0.60 per 1M tokens)
 - **Premium**: `anthropic/claude-3.5-sonnet` (najwyższa jakość, $3/$15 per 1M tokens)
@@ -112,6 +117,7 @@ Zobacz: `.ai-summary/openrouter-model-configuration.md` dla pełnego przewodnika
 ### Test Cases:
 
 **categorizeTransaction (11 testów):**
+
 - ✅ Successful categorization
 - ✅ OpenRouter integration parameters
 - ✅ Empty description → 'other'
@@ -125,6 +131,7 @@ Zobacz: `.ai-summary/openrouter-model-configuration.md` dla pełnego przewodnika
 - ✅ Network errors handled
 
 **batchCategorize (4 testy):**
+
 - ✅ Multiple transactions processing
 - ✅ Empty array handling
 - ✅ Errors in batch → partial success
@@ -135,10 +142,10 @@ Zobacz: `.ai-summary/openrouter-model-configuration.md` dla pełnego przewodnika
 ### 1. Podstawowe
 
 ```typescript
-import { AiCategorizationService } from './lib/services/ai-categorization.service';
+import { AiCategorizationService } from "./lib/services/ai-categorization.service";
 
 const service = new AiCategorizationService();
-const result = await service.categorizeTransaction('Coffee at Starbucks');
+const result = await service.categorizeTransaction("Coffee at Starbucks");
 
 // {
 //   categoryKey: 'restaurants',
@@ -151,21 +158,21 @@ const result = await service.categorizeTransaction('Coffee at Starbucks');
 
 ```typescript
 // W TransactionService.createTransaction()
-import { AiCategorizationService } from './ai-categorization.service';
+import { AiCategorizationService } from "./ai-categorization.service";
 
 async function createTransaction(data: CreateTransactionData) {
   let categoryId = data.categoryId;
-  
+
   // Auto-kategoryzacja jeśli brak kategorii
   if (!categoryId && data.description) {
     const aiService = new AiCategorizationService();
     const result = await aiService.categorizeTransaction(data.description);
-    
+
     // Znajdź ID kategorii z bazy
     const category = await getCategoryByKey(result.categoryKey);
     categoryId = category?.id || null;
   }
-  
+
   return await insertTransaction({ ...data, categoryId });
 }
 ```
@@ -177,16 +184,13 @@ async function createTransaction(data: CreateTransactionData) {
 const service = new AiCategorizationService();
 const transactions = await getUncategorizedTransactions();
 
-const descriptions = transactions.map(t => t.description);
+const descriptions = transactions.map((t) => t.description);
 const results = await service.batchCategorize(descriptions);
 
 // Aktualizuj tylko wysoką pewność (>0.7)
 for (let i = 0; i < results.length; i++) {
   if (results[i].confidence > 0.7) {
-    await updateTransactionCategory(
-      transactions[i].id, 
-      results[i].categoryKey
-    );
+    await updateTransactionCategory(transactions[i].id, results[i].categoryKey);
   }
 }
 ```
@@ -216,27 +220,30 @@ if (result.confidence >= 0.8) {
 // Serwis ZAWSZE zwraca wynik
 const result = await service.categorizeTransaction(description);
 
-if (result.categoryKey === 'other') {
+if (result.categoryKey === "other") {
   // AI nie było pewne lub wystąpił błąd
-  console.log('Fallback:', result.reasoning);
+  console.log("Fallback:", result.reasoning);
 }
 ```
 
 ## Optymalizacja Kosztów
 
 ### 1. Cache (TODO)
+
 ```typescript
 // Implementuj cache dla częstych opisów
 // Redis lub in-memory, TTL: 24h
 ```
 
 ### 2. Rate Limiting (TODO)
+
 ```typescript
 // Limity per user/per day
 // Cost monitoring i alerty
 ```
 
 ### 3. Batch Processing
+
 ```typescript
 // Użyj batchCategorize() zamiast pętli
 // Szybsze i potencjalnie tańsze
@@ -245,6 +252,7 @@ if (result.categoryKey === 'other') {
 ## Best Practices
 
 ### ✅ DO:
+
 - Używaj batch processing dla wielu transakcji
 - Implementuj cache dla częstych opisów
 - Zapisuj confidence scores do analityki
@@ -252,6 +260,7 @@ if (result.categoryKey === 'other') {
 - Monitoruj koszty i accuracy
 
 ### ❌ DON'T:
+
 - Nie kategoryzuj ponownie już skategoryzowanych
 - Nie ignoruj confidence scores
 - Nie kategoryzuj przy każdej edycji
@@ -260,15 +269,15 @@ if (result.categoryKey === 'other') {
 
 ## Porównanie: Przed vs Po
 
-| Aspekt | API Endpoint ❌ | Service ✅ |
-|--------|----------------|-----------|
-| **Warstwa** | API Layer | Business Layer |
-| **Reużywalność** | Tylko HTTP | Wszędzie |
-| **Testowanie** | HTTP mocks | Unit tests |
-| **Integracja** | fetch() call | Direct call |
-| **UX** | Ręczny request | Auto-kategoryzacja |
-| **Kontrola kosztów** | Trudna | Łatwa |
-| **Maintenance** | Trudniejszy | Łatwiejszy |
+| Aspekt               | API Endpoint ❌ | Service ✅         |
+| -------------------- | --------------- | ------------------ |
+| **Warstwa**          | API Layer       | Business Layer     |
+| **Reużywalność**     | Tylko HTTP      | Wszędzie           |
+| **Testowanie**       | HTTP mocks      | Unit tests         |
+| **Integracja**       | fetch() call    | Direct call        |
+| **UX**               | Ręczny request  | Auto-kategoryzacja |
+| **Kontrola kosztów** | Trudna          | Łatwa              |
+| **Maintenance**      | Trudniejszy     | Łatwiejszy         |
 
 ## Zgodność z Regułami
 
@@ -277,31 +286,36 @@ if (result.categoryKey === 'other') {
 ✅ **TypeScript**: Pełna type safety  
 ✅ **Error Handling**: Early returns, guard clauses  
 ✅ **Clean Code**: Happy path last, no unnecessary else  
-✅ **Business Logic**: Oddzielona od API layer  
+✅ **Business Logic**: Oddzielona od API layer
 
 ## Następne Kroki
 
 ### 1. ✅ DONE: Infrastruktura
+
 - ✅ OpenRouterService
 - ✅ AiCategorizationService
 - ✅ Testy (26/26)
 
 ### 2. 🚀 TODO: Integracja
+
 - [ ] Auto-kategoryzacja w TransactionService.createTransaction()
 - [ ] Pole `auto_categorized` w tabeli transactions
 - [ ] Zapisywanie `confidence` i `reasoning`
 
 ### 3. 🚀 TODO: Cache Layer
+
 - [ ] Redis/in-memory cache
 - [ ] TTL: 24h dla popularnych opisów
 - [ ] Deduplication
 
 ### 4. 🚀 TODO: Rate Limiting
+
 - [ ] Limity per user/per day
 - [ ] Request queuing
 - [ ] Cost monitoring
 
 ### 5. 🚀 TODO: Analytics
+
 - [ ] User feedback loop
 - [ ] Accuracy tracking
 - [ ] Prompt optimization
@@ -335,11 +349,10 @@ A: Użytkownik może poprawić + zapisz feedback do przyszłych ulepszeń.
 ✅ **Implementacja kompletna**  
 ✅ **Wszystkie testy przechodzą**  
 ✅ **Lepsza architektura niż API endpoint**  
-✅ **Gotowe do integracji z TransactionService**  
+✅ **Gotowe do integracji z TransactionService**
 
 ---
 
 **Utworzono**: 2025-12-04  
 **Status**: Production Ready ✅  
 **Następny krok**: Integracja z TransactionService
-

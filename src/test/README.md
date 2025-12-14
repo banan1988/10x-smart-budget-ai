@@ -16,18 +16,24 @@ src/test/
 ## Files
 
 ### setup.ts
+
 Global setup file that runs before all tests. Configures:
+
 - Testing Library matchers
 - Mock Service Worker server lifecycle
 - Global test utilities
 
 ### mocks/server.ts
+
 Mock Service Worker (MSW) server configuration. Sets up:
+
 - API request intercepting
 - Error handling for unhandled requests
 
 ### mocks/handlers.ts
+
 Defines all mock API handlers. Add handlers here for:
+
 - Authentication endpoints
 - API routes
 - External service calls
@@ -58,4 +64,3 @@ npm run test:run
 # Coverage
 npm run test:coverage
 ```
-

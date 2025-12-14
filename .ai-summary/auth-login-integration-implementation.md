@@ -13,6 +13,7 @@ Przeprowadzono **kompletną implementację systemu autentykacji** dla aplikacji 
 ### 1. **Middleware Autentykacji** (`src/middleware/index.ts`)
 
 #### Główne Cechy:
+
 - ✅ **Supabase Server Instance** - Tworzenie nowej instancji dla każdego żądania
 - ✅ **Pobieranie Danych Użytkownika** - `supabase.auth.getUser()` (secure, z weryfikacją serwera)
 - ✅ **Przechowywanie w Locals** - Dane dostępne dla całej aplikacji:
@@ -27,10 +28,11 @@ Przeprowadzono **kompletną implementację systemu autentykacji** dla aplikacji 
   - Dla **API requests** - Pobiera minimalne dane (o ile potrzeba w `checkAdminRole`)
 
 #### Logika Ochrony Ścieżek:
+
 ```
-PUBLIC_PATHS: /, /login, /register, /forgot-password, /profile/reset-password, 
+PUBLIC_PATHS: /, /login, /register, /forgot-password, /profile/reset-password,
               /api/auth/*, /api/feedbacks/stats
-              
+
 PROTECTED_PATHS: /dashboard, /transactions, /profile, /admin
 
 ADMIN_PATHS: /profile/admin, /api/admin
@@ -44,6 +46,7 @@ Flow:
 ```
 
 #### Optymalizacja Wydajności:
+
 ```
 Przed: Każdy request = ~1-2s (zapytanie do bazy)
 Po:    Każdy request = ~100-200ms (bez zbędnych zapytań)
@@ -51,6 +54,7 @@ Po:    Każdy request = ~100-200ms (bez zbędnych zapytań)
 ```
 
 #### Błędy Naprawione:
+
 - ❌ **Przed**: `.catch()` na Supabase query (`.single().catch()`)
 - ✅ **Po**: Prawidłowa obsługa błędu poprzez destrukturyzację `{ data, error }`
 
@@ -61,6 +65,7 @@ Po:    Każdy request = ~100-200ms (bez zbędnych zapytań)
 Stworzono bibliotekę helperów do spójnego obsługiwania autentykacji i błędów:
 
 #### Funkcje:
+
 - ✅ **`checkAuthentication(context)`** - Sprawdzenie czy user jest zalogowany
   - Zwraca `401 Unauthorized` jeśli brak autentykacji
   - Sprawdza zarówno `locals.user` jak i `locals.supabase`
@@ -89,11 +94,13 @@ Stworzono bibliotekę helperów do spójnego obsługiwania autentykacji i błęd
 #### Aktualizowane Endpointy (11 total):
 
 **User Endpoints:**
+
 - ✅ `GET /api/user/profile` - Wymaga auth, zwraca dane z `locals.user`
 - ✅ `PUT /api/user/profile` - Wymaga auth, aktualizuje profil
 - ✅ `DELETE /api/user` - Wymaga auth, zwraca `401` jeśli brak
 
 **Transaction Endpoints:**
+
 - ✅ `GET /api/transactions` - Wymaga auth, zwraca `401` zamiast `400`
 - ✅ `POST /api/transactions` - Wymaga auth
 - ✅ `GET /api/transactions/stats` - Wymaga auth
@@ -103,18 +110,22 @@ Stworzono bibliotekę helperów do spójnego obsługiwania autentykacji i błęd
 - ✅ `DELETE /api/transactions/[id]` - Wymaga auth
 
 **Category Endpoints:**
+
 - ✅ `GET /api/categories` - Wymaga auth
 
 **Feedback Endpoints:**
+
 - ✅ `GET /api/feedbacks` - Wymaga auth + admin role (`403` jeśli non-admin)
 - ✅ `POST /api/feedbacks` - Wymaga auth
 - ✅ `GET /api/feedbacks/stats` - **Publiczny** (bez autentykacji)
 
 **Admin Endpoints:**
+
 - ✅ `GET /api/admin/ai-stats` - Wymaga auth + admin role
 - ✅ `GET /api/admin/feedbacks` - Wymaga auth + admin role
 
 #### HTTP Status Codes:
+
 ```
 401 Unauthorized    - Brak autentykacji
 403 Forbidden       - Brak uprawnień admin
@@ -139,6 +150,7 @@ Endpoint `/api/feedbacks/stats` **nie wymaga autentykacji** z celowych powodów:
 ### 4. **Optymalizacja Wydajności**
 
 #### Problem: Wolne strony `/profile`
+
 ```
 Przed: [200] /api/user/profile 9876ms 😱
 Po:    [200] /api/user/profile 50-100ms ✨
@@ -146,35 +158,42 @@ Po:    [200] /api/user/profile 50-100ms ✨
 ```
 
 #### Rozwiązanie:
+
 - ✅ `/api/user/profile` zwraca dane z `locals.user` zamiast z bazy
 - ✅ Profil pobierany raz w middleware dla page requests
 - ✅ API routes nie robią zbędnych zapytań do bazy
 - ✅ `createdAt` dodano do `locals.user` dla daty rejestracji
 
 #### Performance Metrics:
-| Metryka | Przed | Po | Zysk |
-|---------|-------|-----|------|
-| `/profile` load | ~10s | ~1s | 🚀 10x |
-| `/api/user/profile` | ~9876ms | ~100ms | 🚀 100x |
-| Middleware latency | ~1-2s | ~100-200ms | 🚀 5-10x |
+
+| Metryka             | Przed   | Po         | Zysk     |
+| ------------------- | ------- | ---------- | -------- |
+| `/profile` load     | ~10s    | ~1s        | 🚀 10x   |
+| `/api/user/profile` | ~9876ms | ~100ms     | 🚀 100x  |
+| Middleware latency  | ~1-2s   | ~100-200ms | 🚀 5-10x |
 
 ---
 
 ### 5. **Bezpieczeństwo - Usunięcie Insecure Warnings**
 
 #### Problem: Insecure `getSession()`
+
 ```typescript
 // ❌ Przed (insecure)
-const { data: { session } } = await Astro.locals.supabase.auth.getSession();
+const {
+  data: { session },
+} = await Astro.locals.supabase.auth.getSession();
 ```
 
 #### Rozwiązanie:
+
 ```typescript
 // ✅ Po (secure) - Z middleware, verified with getUser()
 const user = Astro.locals.user;
 ```
 
 #### Zaktualizowane Strony:
+
 - ✅ `src/pages/profile.astro` - Usunięto `getSession()`
 - ✅ `src/pages/profile/settings.astro` - Usunięto `getSession()`
 - ✅ `src/pages/profile/admin/stats.astro` - Usunięto zakomentowany `getSession()`
@@ -185,20 +204,23 @@ const user = Astro.locals.user;
 ### 6. **Client-Side Fetch Credentials**
 
 #### Problem: Brak cookies w client-side fetch
+
 ```typescript
 // ❌ Przed - cookies nie wysyłane
-fetch('/api/transactions')
+fetch("/api/transactions");
 ```
 
 #### Rozwiązanie:
+
 ```typescript
 // ✅ Po - cookies wysłane
-fetch('/api/transactions', {
-  credentials: 'include',
-})
+fetch("/api/transactions", {
+  credentials: "include",
+});
 ```
 
 #### Zaktualizowane:
+
 - ✅ 4 hooks (useTransactions, useDashboardStats, useAiStatsAdmin, useAdminFeedbacks)
 - ✅ 5 komponentów (TransactionsFilters, AddTransactionDialog, TransactionsView, DeleteAccountDialog, FeedbackForm)
 
@@ -207,6 +229,7 @@ fetch('/api/transactions', {
 ### 7. **Interfejs Użytkownika - Menu Użytkownika**
 
 #### Ulepszenia w `AppHeader.tsx`:
+
 - ✅ **Ikona + Nazwa jako jeden trigger** - Razem tworzą klikable element
 - ✅ **Przedrostek "Hi,"** - Np. "Hi, John"
 - ✅ **Kapitalizacja** - Pierwsza litera wielka
@@ -218,6 +241,7 @@ fetch('/api/transactions', {
 ### 8. **Admin Panel - Ukrywanie Sekcji**
 
 #### Zmiany w `AppSidebar.tsx`:
+
 - ✅ **Nowy prop `userRole`** - Odbiór roli użytkownika z serwera
 - ✅ **Warunkowe wyświetlanie admin items** - `{isAdmin &&}`
 - ✅ **Separator linii** - Pozioma linia (`border-t`) gdy menu zwinięte dla adminów
@@ -225,11 +249,13 @@ fetch('/api/transactions', {
 - ✅ **Niebieskie tło dla active admin item** - `bg-blue-600`
 
 #### Zachowanie:
+
 - Non-admin users: Admin sekcja całkowicie ukryta
 - Admin users (menu rozwinięte): Sekcja "Panel Administratora" widoczna z niebieskim kolorem
 - Admin users (menu zwinięte): Ikony admin z separatorem, niebieskie kolory
 
 #### Zaktualizowane Strony:
+
 ```
 ✅ src/pages/dashboard.astro
 ✅ src/pages/transactions.astro
@@ -244,11 +270,13 @@ fetch('/api/transactions', {
 ### 9. **Middleware Ochrony Admin Ścieżek**
 
 Dodano zabezpieczenie na poziomie middleware dla wszystkich ścieżek admin:
+
 - Niezalogowani użytkownicy → `redirect('/login')`
 - Non-admin użytkownicy → `redirect('/profile')`
 - Admin użytkownicy → Dostęp pozwolony
 
 **Ścieżki chronione:**
+
 - `/profile/admin/*` - Frontend admin strony
 - `/api/admin/*` - API admin endpointy
 
@@ -257,64 +285,75 @@ Dodano zabezpieczenie na poziomie middleware dla wszystkich ścieżek admin:
 ## 🎯 Kluczowe Poprawki i Usprawnienia
 
 ### Problem 1: Błąd `400 Bad Request` zamiast `401 Unauthorized`
+
 **Przed:**
+
 ```typescript
 export const GET: APIRoute = async ({ locals, url }) => {
   const supabase = locals.supabase; // undefined!
   // ... błąd 400 zamiast 401
-}
+};
 ```
 
 **Po:**
+
 ```typescript
 export const GET: APIRoute = async (context) => {
   const [isAuth, errorResponse] = checkAuthentication(context);
   if (!isAuth) return errorResponse!; // 401 Unauthorized
-  
+
   const { locals } = context;
   const supabase = locals.supabase!; // guaranteed not null
   // ...
-}
+};
 ```
 
 ### Problem 2: Landing Page zawsze przekierowywana
+
 **Przed:**
+
 ```typescript
-if (url.pathname === '/' && !user) {
-  return redirect('/login');
+if (url.pathname === "/" && !user) {
+  return redirect("/login");
 }
 ```
 
 **Po:**
+
 ```typescript
 // Strona / jest dostępna dla wszystkich
 // (usunięto logikę przekierowania)
 ```
 
 ### Problem 3: Middleware błąd `.catch()` na Supabase query
+
 **Przed:**
+
 ```typescript
 const { data: profile } = await supabase
-  .from('user_profiles')
-  .select('role, nickname')
-  .eq('user_id', user.id)
+  .from("user_profiles")
+  .select("role, nickname")
+  .eq("user_id", user.id)
   .single()
   .catch(() => ({ data: null })); // TypeError!
 ```
 
 **Po:**
+
 ```typescript
 const { data: profile, error } = await supabase
-  .from('user_profiles')
-  .select('role, nickname')
-  .eq('id', user.id) // Fixed: was 'user_id'
+  .from("user_profiles")
+  .select("role, nickname")
+  .eq("id", user.id) // Fixed: was 'user_id'
   .single();
 
 const userProfile = error ? null : profile; // Prawidłowa obsługa
 ```
 
 ### Problem 4: Admin sekcja widoczna dla all users
+
 **Przed:**
+
 ```typescript
 {!isExpanded && (
   <div className="space-y-1">
@@ -324,6 +363,7 @@ const userProfile = error ? null : profile; // Prawidłowa obsługa
 ```
 
 **Po:**
+
 ```typescript
 {!isExpanded && isAdmin && (
   <div>
@@ -336,29 +376,32 @@ const userProfile = error ? null : profile; // Prawidłowa obsługa
 ```
 
 ### Problem 5: "Invalid date" na stronie `/profile`
+
 **Przed:**
+
 ```typescript
-registeredAt: user.id // ❌ user.id zamiast daty
+registeredAt: user.id; // ❌ user.id zamiast daty
 ```
 
 **Po:**
+
 ```typescript
-registeredAt: profile?.createdAt || new Date().toISOString()
+registeredAt: profile?.createdAt || new Date().toISOString();
 ```
 
 ---
 
 ## 📊 Statystyki Implementacji
 
-| Kategoria | Ilość |
-|-----------|-------|
-| Zaktualizowanych Endpointów | 11 |
-| Zaktualizowanych Stron | 6 |
-| Zaktualizowanych Komponentów | 5 |
-| Zaktualizowanych Hooks | 4 |
-| Nowych Helper Functions | 5 |
-| Nowych Plików | 1 (`api-auth.ts`) |
-| **Linii Kodu Zmienione** | **~800+** |
+| Kategoria                    | Ilość             |
+| ---------------------------- | ----------------- |
+| Zaktualizowanych Endpointów  | 11                |
+| Zaktualizowanych Stron       | 6                 |
+| Zaktualizowanych Komponentów | 5                 |
+| Zaktualizowanych Hooks       | 4                 |
+| Nowych Helper Functions      | 5                 |
+| Nowych Plików                | 1 (`api-auth.ts`) |
+| **Linii Kodu Zmienione**     | **~800+**         |
 
 ---
 
@@ -377,6 +420,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 - ✅ Server-side session management
 
 ### Zgodność z PRD:
+
 ✅ Punkt 5.1: "Aplikacja NIE zezwala na dostęp do żadnych funkcjonalności bez aktywnej sesji"
 ✅ Punkt 5.2: "Wszystkie endpointy API (poza /api/auth/login, /api/auth/register, /api/auth/callback) są chronione i wymagają ważnego tokenu sesji"
 
@@ -385,6 +429,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 ## 📋 Podsumowanie Zmian - Część 1: Middleware & Auth
 
 ### Middleware (src/middleware/index.ts)
+
 ```
 ✅ Dodanie Supabase Server Instance w locals
 ✅ Pobieranie danych użytkownika z getUser()
@@ -395,6 +440,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 ```
 
 ### API Auth Helper (src/lib/api-auth.ts)
+
 ```
 ✅ checkAuthentication() - sprawdzenie logowania
 ✅ checkAdminRole() - sprawdzenie roli admin (async)
@@ -408,6 +454,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 ## 📋 Podsumowanie Zmian - Część 2: Endpointy API
 
 ### 11 Zaktualizowanych Endpointów
+
 ```
 ✅ /api/user/* (GET, PUT, DELETE) - optymalizacja profilu
 ✅ /api/transactions/* (GET, POST, PUT, DELETE, BULK)
@@ -418,6 +465,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 ```
 
 ### Standardowe Response'y
+
 ```
 ✅ 401 Unauthorized - brak auth
 ✅ 403 Forbidden - brak admin
@@ -432,6 +480,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 ## 📋 Podsumowanie Zmian - Część 3: Frontend & UX
 
 ### Client-Side Improvements
+
 ```
 ✅ Dodanie credentials: 'include' we wszystkich fetch'ach
 ✅ Ulepszenie menu użytkownika (Hi, John)
@@ -444,6 +493,7 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 ```
 
 ### Zaktualizowane Strony
+
 ```
 ✅ 6 stron Astro z logowaniem
 ✅ Usunięcie insecure getSession()
@@ -457,20 +507,20 @@ registeredAt: profile?.createdAt || new Date().toISOString()
 
 ## 🎯 Wymagania PRD - Sprawdzenie
 
-| Wymaganie | Status | Notatka |
-|-----------|--------|---------|
-| Autentykacja (Email/Password) | ✅ | Via Supabase |
-| Sesja (24h) | ✅ | Filesystem storage |
-| API Protected | ✅ | 11 endpointów |
-| Role-based access | ✅ | Admin/User roles |
-| Error handling | ✅ | Proper HTTP codes |
-| User isolation | ✅ | RLS + locals |
-| Middleware protection | ✅ | Server-side |
-| Landing page public | ✅ | / dostępna dla all |
-| Admin panel | ✅ | /profile/admin/* |
-| User profile | ✅ | /profile + API |
-| Wydajność | ✅ | 5-100x optymalizacja |
-| Bezpieczeństwo | ✅ | Bez insecure warnings |
+| Wymaganie                     | Status | Notatka               |
+| ----------------------------- | ------ | --------------------- |
+| Autentykacja (Email/Password) | ✅     | Via Supabase          |
+| Sesja (24h)                   | ✅     | Filesystem storage    |
+| API Protected                 | ✅     | 11 endpointów         |
+| Role-based access             | ✅     | Admin/User roles      |
+| Error handling                | ✅     | Proper HTTP codes     |
+| User isolation                | ✅     | RLS + locals          |
+| Middleware protection         | ✅     | Server-side           |
+| Landing page public           | ✅     | / dostępna dla all    |
+| Admin panel                   | ✅     | /profile/admin/\*     |
+| User profile                  | ✅     | /profile + API        |
+| Wydajność                     | ✅     | 5-100x optymalizacja  |
+| Bezpieczeństwo                | ✅     | Bez insecure warnings |
 
 ---
 
@@ -533,4 +583,3 @@ curl -X GET "http://localhost:3000/api/transactions" \
 **Build Status:** ✅ SUCCESS
 
 Aplikacja jest w pełni zabezpieczona, zoptymalizowana i gotowa do wdrożenia! 🚀
-

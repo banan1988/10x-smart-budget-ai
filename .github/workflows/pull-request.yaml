@@ -11,8 +11,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
       - run: npm ci
       - run: npm run lint:check
   unit-test:
@@ -22,8 +22,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
       - run: npm ci
       - run: npm run test:coverage
       - uses: actions/upload-artifact@v4
@@ -44,8 +44,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npm run test:e2e -- --coverage
@@ -67,22 +67,22 @@ jobs:
               repo: context.repo.repo,
               ref: context.sha
             });
-            
+
             const jobStatuses = checks.check_runs.reduce((acc, check) => {
               acc[check.name] = check.conclusion || check.status;
               return acc;
             }, {});
-            
+
             const lintStatus = jobStatuses['lint'] === 'success' ? '✅ Passed' : '❌ Failed';
             const unitTestStatus = jobStatuses['unit-test'] === 'success' ? '✅ Passed' : '❌ Failed';
             const e2eTestStatus = jobStatuses['e2e-test'] === 'success' ? '✅ Passed' : '❌ Failed';
-            
+
             const allPassed = jobStatuses['lint'] === 'success' && jobStatuses['unit-test'] === 'success' && jobStatuses['e2e-test'] === 'success';
-            
+
             const body = allPassed 
               ? `🎉 All checks passed successfully!\n\n- Lint: ${lintStatus}\n- Unit Tests: ${unitTestStatus}\n- E2E Tests: ${e2eTestStatus}\n\nCoverage reports are available in the artifacts: [Unit Coverage](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) and [E2E Coverage](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).`
               : `❌ Some checks failed. Please review the errors.\n\n- Lint: ${lintStatus}\n- Unit Tests: ${unitTestStatus}\n- E2E Tests: ${e2eTestStatus}\n\nCheck the workflow run for details: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            
+
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

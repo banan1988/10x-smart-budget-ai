@@ -3,13 +3,16 @@ Jesteś doświadczonym menedżerem produktu, którego zadaniem jest pomoc w stwo
 Prosimy o uważne zapoznanie się z poniższymi informacjami:
 
 <project_description>
+
 # Aplikacja - SmartBudgetAI (MVP)
 
 ### Główny problem
+
 Zarządzanie finansami osobistymi to powszechny ból — ludzie często nie wiedzą, na co faktycznie wydają pieniądze. Większość aplikacji tego typu wymaga ręcznego kategoryzowania wydatków, co szybko zniechęca. Automatyzacja tego procesu przez AI (np. przypisywanie kategorii po nazwie transakcji) to realna wartość dodana.
 Prosta aplikacja do śledzenia wydatków, w której AI automatycznie kategoryzuje transakcje i generuje podsumowania finansowe w języku naturalnym wydaje się super pomysłem!
 
 ### Najmniejszy zestaw funkcjonalności
+
 - Zapisywanie, odczytywanie, przeglądanie i usuwanie transakcji
 - Prosty system kont użytkowników do powiązania użytkownika z własnymi wydatkami
 - Głowna strona z wykresem wydatków per miesiąc
@@ -17,6 +20,7 @@ Prosta aplikacja do śledzenia wydatków, w której AI automatycznie kategoryzuj
 - Wyświetkanie listy transkacji skategoryzowana per miesiąc
 
 ### Co NIE wchodzi w zakres MVP
+
 - Integracja z bankiem
 - Udostępnianie lub współdzielenie wydatków z innym użytkownikiem
 - Interaktywnne wykresy
@@ -26,12 +30,14 @@ Prosta aplikacja do śledzenia wydatków, w której AI automatycznie kategoryzuj
 - Zaawansowane filtrowanie po kategorii czy kwocie
 
 ### Kryteria sukcesu
+
 - 80% wydatków jest poprawnie skategoryzowana przez AI
 - 50% użytkowników uważa aplikację za użyteczną i pomocną
-</project_description>
+  </project_description>
 
 Przeanalizuj dostarczone informacje, koncentrując się na aspektach istotnych dla tworzenia PRD. Rozważ następujące kwestie:
 <prd_analysis>
+
 1. Zidentyfikuj główny problem, który produkt ma rozwiązać.
 2. Określ kluczowe funkcjonalności MVP.
 3. Rozważ potencjalne historie użytkownika i ścieżki korzystania z produktu.
@@ -52,6 +58,7 @@ Na podstawie analizy wygeneruj listę 10 pytań i zaleceń w formie łączonej (
 Wymień tutaj swoje pytania i zalecenia, ponumerowane dla jasności:
 
 Przykładowo:
+
 1. Czy już od startu projektu planujesz wprowadzenie płatnych subskrypcji?
 
 Rekomendacja: Pierwszy etap projektu może skupić się na funkcjonalnościach darmowych, aby przyciągnąć użytkowników, a płatne funkcje można wprowadzić w późniejszym etapie.
