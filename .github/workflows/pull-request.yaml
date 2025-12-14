@@ -1,0 +1,91 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint:check
+  unit-test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: coverage/
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: lint
+    environment: integration
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run test:e2e -- --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2e-coverage
+          path: coverage/
+  pr-comment:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint, unit-test, e2e-test]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha
+            });
+            
+            const jobStatuses = checks.check_runs.reduce((acc, check) => {
+              acc[check.name] = check.conclusion || check.status;
+              return acc;
+            }, {});
+            
+            const lintStatus = jobStatuses['lint'] === 'success' ? '✅ Passed' : '❌ Failed';
+            const unitTestStatus = jobStatuses['unit-test'] === 'success' ? '✅ Passed' : '❌ Failed';
+            const e2eTestStatus = jobStatuses['e2e-test'] === 'success' ? '✅ Passed' : '❌ Failed';
+            
+            const allPassed = jobStatuses['lint'] === 'success' && jobStatuses['unit-test'] === 'success' && jobStatuses['e2e-test'] === 'success';
+            
+            const body = allPassed 
+              ? `🎉 All checks passed successfully!\n\n- Lint: ${lintStatus}\n- Unit Tests: ${unitTestStatus}\n- E2E Tests: ${e2eTestStatus}\n\nCoverage reports are available in the artifacts: [Unit Coverage](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) and [E2E Coverage](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).`
+              : `❌ Some checks failed. Please review the errors.\n\n- Lint: ${lintStatus}\n- Unit Tests: ${unitTestStatus}\n- E2E Tests: ${e2eTestStatus}\n\nCheck the workflow run for details: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
