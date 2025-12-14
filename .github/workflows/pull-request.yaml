@@ -37,9 +37,12 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+      OPENROUTER_MODEL: meta-llama/llama-3.3-70b-instruct:free
+      OPENROUTER_FALLBACK_MODELS: google/gemini-2.0-flash-exp:free
+      #
+      E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
